@@ -1,0 +1,55 @@
+import Image from "next/image";
+const features = [
+  "Tours in Real Trading Rooms",
+  "Practical Training from Day One",
+  "Free Monthly Trading Sessions",
+  "Meetings with Industry Experts",
+  "Market News via Our Platforms",
+  "Exclusive Discord Community",
+];
+
+export function WhyUsSection() {
+  return (
+    <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
+      <div className="max-w-7xl mx-auto">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+            At Stox, We Believe Success Starts with Combining Theory and
+            Practice
+          </h2>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            That&apos;s why we designed a comprehensive and balanced training
+            program that provides you with the necessary theoretical foundation
+            and gives you real practical experience during the learning period.
+          </p>
+        </div>
+        <div className="grid lg:grid-cols-2 gap-12 items-center">
+          <div className="grid sm:grid-cols-2 gap-6">
+            {features.map((feature, idx) => (
+              <div
+                key={idx}
+                className="p-6 bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow"
+              >
+                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+                  <span className="text-blue-600 text-2xl font-bold">✓</span>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  {feature}
+                </h3>
+              </div>
+            ))}
+          </div>
+          <div className="relative h-full min-h-[400px] rounded-2xl overflow-hidden shadow-xl">
+            <Image
+              src="/images/professionals.avif"
+              alt="Trading professionals at work"
+              className="w-full h-full object-cover"
+              width={1000}
+              height={1000}
+            />
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}

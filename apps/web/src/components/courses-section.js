@@ -63,7 +63,7 @@ const courses = [
             {courses.map((course, idx) => (
               <div
                 key={idx}
-                className={`bg-gradient-to-br ${course.bgGradient} rounded-3xl p-8 shadow-lg hover:shadow-xl transition-shadow`}
+                className={`bg-linear-to-br ${course.bgGradient} rounded-3xl p-8 shadow-lg hover:shadow-xl transition-shadow`}
               >
                 <div className="mb-6">
                   <span className={`inline-block px-4 py-2 ${course.badgeColor} text-sm font-semibold rounded-full mb-4`}>

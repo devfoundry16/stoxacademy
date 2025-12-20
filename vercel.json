@@ -3,10 +3,7 @@
   "builds": [
     {
       "src": "apps/web/package.json",
-      "use": "@vercel/next",
-      "config": {
-        "outputDirectory": ".next"
-      }
+      "use": "@vercel/next"
     },
     {
       "src": "apps/api/index.js",
@@ -22,5 +19,6 @@
       "src": "/(.*)",
       "dest": "apps/web/$1"
     }
-  ]
+  ],
+  "outputDirectory": "apps/web/.next"
 }

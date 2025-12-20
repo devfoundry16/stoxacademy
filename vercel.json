@@ -1,5 +1,6 @@
 {
   "version": 2,
+  "buildCommand": "cd apps/web && pnpm install && pnpm build && cd ../api && pnpm install && pnpm build",
   "builds": [
     {
       "src": "apps/web/package.json",
@@ -19,6 +20,5 @@
       "src": "/(.*)",
       "dest": "apps/web/$1"
     }
-  ],
-  "outputDirectory": "apps/web/.next"
+  ]
 }

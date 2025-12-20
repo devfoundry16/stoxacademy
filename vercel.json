@@ -1,6 +1,13 @@
 {
-    "framework": "nextjs",
-    "installCommand": "pnpm install",
-    "buildCommand": "pnpm build"
+  "framework": "nextjs",
+  "installCommand": "pnpm install",
+  "buildCommand": "pnpm build",
+  "projects": {
+    "web": {
+      "root": "apps/web"
+    },
+    "api": {
+      "root": "apps/api"
+    }
   }
-  
+}

@@ -1,10 +1,12 @@
 {
   "version": 2,
-  "buildCommand": "cd apps/web && pnpm install && pnpm build && cd ../api && pnpm install && pnpm build",
   "builds": [
     {
       "src": "apps/web/package.json",
-      "use": "@vercel/next"
+      "use": "@vercel/next",
+      "config": {
+        "outputDirectory": ".next"
+      }
     },
     {
       "src": "apps/api/index.js",

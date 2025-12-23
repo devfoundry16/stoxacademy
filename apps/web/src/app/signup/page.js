@@ -3,13 +3,13 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuthStore } from "@/store/authStore";
 import { authService } from "@/lib/auth";
 import { countries } from "@/lib/countries";
 
 export default function SignUpPage() {
   const router = useRouter();
-  const { signUp } = useAuth();
+  const signUp = useAuthStore((state) => state.signUp);
   const [formData, setFormData] = useState({
     email: "",
     password: "",

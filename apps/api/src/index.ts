@@ -17,10 +17,9 @@ app.get("/health", (_req, res) => {
 
 app.use("/api/auth", authRoutes);
 
-export default app;
-
-if (process.env.NODE_ENV === "development") {
+if (process.env.NODE_ENV === "DEVELOPMENT") {
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
   });
 }
+export default app;

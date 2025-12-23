@@ -18,6 +18,8 @@ function AuthCallbackContent() {
         // Handle PKCE flow with code exchange
         try {
           await authService.handleOAuthCallback(code);
+          // Dispatch event to update auth store
+          window.dispatchEvent(new Event("auth-storage-change"));
           router.push("/");
         } catch (err) {
           setError(err.response?.data?.error || "Authentication failed");
@@ -40,6 +42,8 @@ function AuthCallbackContent() {
         try {
           const user = await authService.getCurrentUser();
           localStorage.setItem("user", JSON.stringify(user));
+          // Dispatch event to update auth store
+          window.dispatchEvent(new Event("auth-storage-change"));
           router.push("/");
         } catch (err) {
           setError("Failed to fetch user data");

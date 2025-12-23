@@ -3,12 +3,12 @@
 import React from "react";
 import Link from "next/link";
 import { Menu, X, LogOut, User } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuthStore } from "@/store/authStore";
 import { useRouter } from "next/navigation";
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
-  const { user, signOut, isAuthenticated } = useAuth();
+  const { user, signOut, isAuthenticated } = useAuthStore();
   const router = useRouter();
 
   const handleSignOut = async () => {

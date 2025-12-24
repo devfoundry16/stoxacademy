@@ -2,32 +2,38 @@
 
 import React from "react"
 import { Play } from "lucide-react"
+import { cn } from "@/lib/utils"
 
-
-export function VideoPlayer({ videoUrl, thumbnailUrl }) {
+export function VideoPlayer({ videoUrl, thumbnailUrl, className }) {
+  const [hasStarted, setHasStarted] = React.useState(false)
   const [isPlaying, setIsPlaying] = React.useState(false)
   const videoRef = React.useRef(null)
 
   const handlePlay = () => {
     if (videoRef.current) {
       videoRef.current.play()
+      setHasStarted(true)
       setIsPlaying(true)
     }
   }
 
   return (
-    <div className="relative lg:w-1/2 w-2/3 justify-self-center h-auto bg-gray-900 rounded-2xl overflow-hidden shadow-2xl">
+    <div className={cn("relative justify-self-center bg-gray-900 rounded-2xl overflow-hidden shadow-2xl", className)}>
       <video
         ref={videoRef}
-        className="w-full h-full object-cover"
+        preload="none"
+        className="w-full h-full object-contain"
+        playsInline={true}
         poster={thumbnailUrl || "/video-thumbnail.png"}
-        controls={isPlaying}
-        onPlay={() => setIsPlaying(true)}
+        controls={hasStarted}
+        onPlay={() => {
+          setHasStarted(true)
+          setIsPlaying(true)
+        }}
         onPause={() => setIsPlaying(false)}
-      >
-        {videoUrl && <source src={videoUrl} type="video/mp4" />}
-        Your browser does not support the video tag.
-      </video>
+        onEnded={() => setIsPlaying(false)}
+        src={videoUrl}  
+      />
       {!isPlaying && (
         <button
           onClick={handlePlay}

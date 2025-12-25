@@ -1,3 +1,14 @@
+-- ⚠️ DEPRECATED: This SQL seed file has been replaced with JSON-based seeding
+-- 
+-- Use the following instead:
+--   cd apps/api
+--   pnpm seed
+--
+-- See: apps/api/seeds/README.md
+-- See: SEEDING_GUIDE.md
+--
+-- This file is kept for reference only.
+--
 -- Seed courses data
 -- Note: Run this after create_courses_table.sql
 

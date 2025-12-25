@@ -7,7 +7,10 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "build": "tsc",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "seed": "node scripts/seed.js",
+    "seed:reset": "node scripts/seed-reset.js",
+    "generate:course": "node scripts/generate-course-template.js"
   },
   "keywords": [],
   "author": "",

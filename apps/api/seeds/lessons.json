@@ -1,0 +1,99 @@
+[
+  {
+    "course_title": "Stock Market Fundamentals",
+    "title": "Introduction to Stock Markets",
+    "duration": "15:30",
+    "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+    "is_preview": true,
+    "order_index": 1
+  },
+  {
+    "course_title": "Stock Market Fundamentals",
+    "title": "Understanding Stock Prices",
+    "duration": "22:15",
+    "video_url": null,
+    "is_preview": false,
+    "order_index": 2
+  },
+  {
+    "course_title": "Stock Market Fundamentals",
+    "title": "Types of Stocks",
+    "duration": "18:45",
+    "video_url": null,
+    "is_preview": false,
+    "order_index": 3
+  },
+  {
+    "course_title": "Technical Analysis Mastery",
+    "title": "Reading Stock Charts",
+    "duration": "25:30",
+    "video_url": null,
+    "is_preview": false,
+    "order_index": 4
+  },
+  {
+    "course_title": "Technical Analysis Mastery",
+    "title": "Market Orders vs Limit Orders",
+    "duration": "20:00",
+    "video_url": null,
+    "is_preview": false,
+    "order_index": 5
+  },
+  {
+    "course_title": "Technical Analysis Mastery",
+    "title": "Risk Management Basics",
+    "duration": "28:15",
+    "video_url": null,
+    "is_preview": false,
+    "order_index": 6
+  },
+  {
+    "course_title": "Options Trading Strategies",
+    "title": "Introduction to Technical Analysis",
+    "duration": "12:00",
+    "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+    "is_preview": true,
+    "order_index": 1
+  },
+  {
+    "course_title": "Options Trading Strategies",
+    "title": "Chart Patterns and Trends",
+    "duration": "25:30",
+    "video_url": null,
+    "is_preview": false,
+    "order_index": 2
+  },
+  {
+    "course_title": "Options Trading Strategies",
+    "title": "Technical Indicators Overview",
+    "duration": "20:15",
+    "video_url": null,
+    "is_preview": false,
+    "order_index": 3
+  },
+  {
+    "course_title": "Cryptocurrency Investment",
+    "title": "Options Trading Basics",
+    "duration": "18:00",
+    "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+    "is_preview": true,
+    "order_index": 1
+  },
+  {
+    "course_title": "Cryptocurrency Investment",
+    "title": "Understanding Options Greeks",
+    "duration": "30:45",
+    "video_url": null,
+    "is_preview": false,
+    "order_index": 2
+  },
+  {
+    "course_title": "Risk Management & Portfolio Building",
+    "title": "Advanced Options Strategies",
+    "duration": "35:20",
+    "video_url": null,
+    "is_preview": false,
+    "order_index": 3
+  }
+]
+

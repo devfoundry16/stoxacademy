@@ -1,0 +1,213 @@
+[
+  {
+    "title": "Stock Market Fundamentals",
+    "description": "Learn the basics of stock market trading and investment strategies. This comprehensive course covers everything from understanding market mechanics to developing your first trading strategy.",
+    "thumbnail": "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=1200&h=600&fit=crop",
+    "duration": "4h 30m",
+    "lessons_count": 6,
+    "level": "Beginner",
+    "price": 49.99,
+    "rating": 4.8,
+    "students": 1234,
+    "instructor": "John Smith",
+    "instructor_avatar": "https://i.pravatar.cc/150?img=12",
+    "features": [
+      "Lifetime access",
+      "Certificate of completion",
+      "Downloadable resources",
+      "Mobile and desktop access",
+      "Community support"
+    ],
+    "requirements": [
+      "No prior trading experience required",
+      "Basic understanding of finance helpful",
+      "Computer or mobile device"
+    ],
+    "what_you_learn": [
+      "Understand how stock markets work",
+      "Read and interpret stock charts",
+      "Place different types of orders",
+      "Manage risk in your portfolio",
+      "Develop a trading strategy",
+      "Analyze market trends"
+    ],
+    "is_published": true
+  },
+  {
+    "title": "Technical Analysis Mastery",
+    "description": "Master chart patterns, indicators, and technical trading strategies",
+    "thumbnail": "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=800&h=450&fit=crop",
+    "duration": "6h 15m",
+    "lessons_count": 18,
+    "level": "Intermediate",
+    "price": 79.99,
+    "rating": 4.9,
+    "students": 892,
+    "instructor": "Sarah Johnson",
+    "instructor_avatar": "https://i.pravatar.cc/150?img=5",
+    "features": [
+      "Lifetime access",
+      "Certificate of completion",
+      "Downloadable resources",
+      "Mobile and desktop access",
+      "Community support"
+    ],
+    "requirements": [
+      "Basic understanding of stock markets",
+      "Familiarity with trading platforms",
+      "Computer or mobile device"
+    ],
+    "what_you_learn": [
+      "Master technical indicators",
+      "Identify chart patterns",
+      "Use trading tools effectively",
+      "Develop technical trading strategies",
+      "Understand support and resistance",
+      "Apply trend analysis"
+    ],
+    "is_published": true
+  },
+  {
+    "title": "Options Trading Strategies",
+    "description": "Comprehensive guide to options trading and advanced strategies",
+    "thumbnail": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&h=450&fit=crop",
+    "duration": "8h 20m",
+    "lessons_count": 24,
+    "level": "Advanced",
+    "price": 99.99,
+    "rating": 4.7,
+    "students": 645,
+    "instructor": "Michael Chen",
+    "instructor_avatar": "https://i.pravatar.cc/150?img=8",
+    "features": [
+      "Lifetime access",
+      "Certificate of completion",
+      "Downloadable resources",
+      "Mobile and desktop access",
+      "Community support",
+      "Advanced trading tools"
+    ],
+    "requirements": [
+      "Strong understanding of stock markets",
+      "Experience with stock trading",
+      "Understanding of derivatives",
+      "Computer or mobile device"
+    ],
+    "what_you_learn": [
+      "Master options trading basics",
+      "Implement advanced strategies",
+      "Manage options portfolio",
+      "Understand Greeks and volatility",
+      "Execute covered calls and puts",
+      "Apply spread strategies"
+    ],
+    "is_published": true
+  },
+  {
+    "title": "Cryptocurrency Investment",
+    "description": "Understanding blockchain, crypto trading, and portfolio management",
+    "thumbnail": "https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=800&h=450&fit=crop",
+    "duration": "5h 45m",
+    "lessons_count": 15,
+    "level": "Intermediate",
+    "price": 69.99,
+    "rating": 4.6,
+    "students": 1567,
+    "instructor": "Alex Rivera",
+    "instructor_avatar": "https://i.pravatar.cc/150?img=15",
+    "features": [
+      "Lifetime access",
+      "Certificate of completion",
+      "Downloadable resources",
+      "Mobile and desktop access",
+      "Community support"
+    ],
+    "requirements": [
+      "Basic understanding of financial markets",
+      "Internet connection",
+      "Crypto wallet setup helpful",
+      "Computer or mobile device"
+    ],
+    "what_you_learn": [
+      "Understand blockchain technology",
+      "Trade cryptocurrencies safely",
+      "Build crypto portfolio",
+      "Analyze crypto markets",
+      "Manage crypto risks",
+      "Use DeFi platforms"
+    ],
+    "is_published": true
+  },
+  {
+    "title": "Risk Management & Portfolio Building",
+    "description": "Learn to build and manage a diversified investment portfolio",
+    "thumbnail": "https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=800&h=450&fit=crop",
+    "duration": "3h 30m",
+    "lessons_count": 10,
+    "level": "Beginner",
+    "price": 39.99,
+    "rating": 4.9,
+    "students": 2103,
+    "instructor": "Emma Davis",
+    "instructor_avatar": "https://i.pravatar.cc/150?img=20",
+    "features": [
+      "Lifetime access",
+      "Certificate of completion",
+      "Downloadable resources",
+      "Mobile and desktop access",
+      "Community support"
+    ],
+    "requirements": [
+      "Basic understanding of investments",
+      "No prior experience required",
+      "Computer or mobile device"
+    ],
+    "what_you_learn": [
+      "Build diversified portfolio",
+      "Manage investment risks",
+      "Asset allocation strategies",
+      "Rebalancing techniques",
+      "Understand risk tolerance",
+      "Long-term wealth building"
+    ],
+    "is_published": true
+  },
+  {
+    "title": "Day Trading Bootcamp",
+    "description": "Intensive course on day trading strategies and execution",
+    "thumbnail": "https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=800&h=450&fit=crop",
+    "duration": "10h 00m",
+    "lessons_count": 30,
+    "level": "Advanced",
+    "price": 149.99,
+    "rating": 4.8,
+    "students": 523,
+    "instructor": "David Park",
+    "instructor_avatar": "https://i.pravatar.cc/150?img=25",
+    "features": [
+      "Lifetime access",
+      "Certificate of completion",
+      "Downloadable resources",
+      "Mobile and desktop access",
+      "Community support",
+      "Live trading sessions"
+    ],
+    "requirements": [
+      "Strong understanding of markets",
+      "Experience with trading platforms",
+      "Adequate trading capital",
+      "Computer with fast internet",
+      "Multiple monitors recommended"
+    ],
+    "what_you_learn": [
+      "Master day trading strategies",
+      "Execute trades efficiently",
+      "Manage trading psychology",
+      "Use advanced tools",
+      "Understand market microstructure",
+      "Develop disciplined approach"
+    ],
+    "is_published": true
+  }
+]
+

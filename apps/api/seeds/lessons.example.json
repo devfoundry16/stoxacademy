@@ -1,0 +1,27 @@
+[
+  {
+    "course_title": "Your Course Title",
+    "title": "Lesson 1: Introduction",
+    "duration": "15:30",
+    "video_url": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+    "is_preview": true,
+    "order_index": 1
+  },
+  {
+    "course_title": "Your Course Title",
+    "title": "Lesson 2: Getting Started",
+    "duration": "22:15",
+    "video_url": null,
+    "is_preview": false,
+    "order_index": 2
+  },
+  {
+    "course_title": "Your Course Title",
+    "title": "Lesson 3: Advanced Topics",
+    "duration": "28:45",
+    "video_url": null,
+    "is_preview": false,
+    "order_index": 3
+  }
+]
+

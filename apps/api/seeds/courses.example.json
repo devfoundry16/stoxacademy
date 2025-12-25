@@ -1,0 +1,36 @@
+[
+  {
+    "title": "Your Course Title",
+    "description": "A comprehensive description of your course. Explain what students will learn and why they should take this course.",
+    "thumbnail": "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=1200&h=600&fit=crop",
+    "duration": "5h 30m",
+    "lessons_count": 10,
+    "level": "Beginner",
+    "price": 59.99,
+    "rating": 4.5,
+    "students": 0,
+    "instructor": "Your Name",
+    "instructor_avatar": "https://i.pravatar.cc/150?img=12",
+    "features": [
+      "Lifetime access",
+      "Certificate of completion",
+      "Downloadable resources",
+      "Mobile and desktop access",
+      "Community support"
+    ],
+    "requirements": [
+      "No prior experience required",
+      "Computer or mobile device",
+      "Internet connection"
+    ],
+    "what_you_learn": [
+      "Skill or concept #1",
+      "Skill or concept #2",
+      "Skill or concept #3",
+      "Skill or concept #4",
+      "Skill or concept #5"
+    ],
+    "is_published": true
+  }
+]
+

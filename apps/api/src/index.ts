@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import authRoutes from "./routes/authRoutes";
+import courseRoutes from "./routes/courseRoutes";
 
 dotenv.config();
 
@@ -16,6 +17,7 @@ app.get("/health", (_req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
+app.use("/api/courses", courseRoutes);
 
 if (process.env.NODE_ENV === "DEVELOPMENT") {
   app.listen(PORT, () => {

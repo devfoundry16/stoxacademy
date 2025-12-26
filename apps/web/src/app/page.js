@@ -6,6 +6,7 @@ import { CoursesSection } from "@/components/courses-section"
 import { WhyChooseUsSection } from "@/components/why-choose-us-section"
 import { TestimonialsSection } from "@/components/testimonials-section"
 import { SkillsSection } from "@/components/skills-section"
+import { TeamSection } from "@/components/team-section"
 import { FinalCTASection } from "@/components/final-cta-section"
 import { Footer } from "@/components/footer"
 
@@ -20,6 +21,7 @@ export default function StoxAcademy() {
       <WhyChooseUsSection />
       <TestimonialsSection />
       <SkillsSection />
+      <TeamSection />
       <FinalCTASection />
       <Footer />
     </div>

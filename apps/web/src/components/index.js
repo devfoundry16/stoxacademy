@@ -10,4 +10,5 @@ export { PageLayout } from "./PageLayout";
 // Existing Components
 export { Header } from "./header";
 export { VideoPlayer } from "./video-player";
+export { TeamSection } from "./team-section";
 

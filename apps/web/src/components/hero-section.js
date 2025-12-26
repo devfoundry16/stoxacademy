@@ -22,7 +22,7 @@ export function HeroSection() {
           </div>
           <div className="w-full flex justify-center">
             <div className="w-full max-w-2xl">
-              <VideoPlayer className="w-[283px] h-[467px]" videoUrl="https://video.wixstatic.com/video/fabad3_833a8bb8b0c54caba161c3f2e9ab517b/720p/mp4/file.mp4" thumbnailUrl="/images/hero_thumbnail.avif"/>
+              <VideoPlayer videoUrl="https://video.wixstatic.com/video/fabad3_833a8bb8b0c54caba161c3f2e9ab517b/720p/mp4/file.mp4" thumbnailUrl="/images/hero_thumbnail.png"/>
             </div>
           </div>
         </div>

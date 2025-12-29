@@ -3,6 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import authRoutes from "./routes/authRoutes";
 import courseRoutes from "./routes/courseRoutes";
+import checklistRoutes from "./routes/checklistRoutes";
 
 dotenv.config();
 
@@ -18,6 +19,7 @@ app.get("/health", (_req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/courses", courseRoutes);
+app.use("/api/checklist", checklistRoutes);
 
 if (process.env.NODE_ENV === "DEVELOPMENT") {
   app.listen(PORT, () => {

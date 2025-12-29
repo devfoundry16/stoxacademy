@@ -1,6 +1,6 @@
 import { Header } from "@/components/header"
 import { HeroSection } from "@/components/hero-section"
-import { RegistrationFormSection } from "@/components/registration-form-section"
+import { ChecklistFlow } from "@/components/ChecklistFlow"
 import { WhyUsSection } from "@/components/why-us-section"
 import { CoursesSection } from "@/components/courses-section"
 import { WhyChooseUsSection } from "@/components/why-choose-us-section"
@@ -15,12 +15,12 @@ export default function StoxAcademy() {
     <div className="min-h-screen bg-white font-sans">
       <Header />
       <HeroSection />
-      <RegistrationFormSection />
       <WhyUsSection />
       <CoursesSection />
       <WhyChooseUsSection />
       <TestimonialsSection />
       <SkillsSection />
+      <ChecklistFlow />
       <TeamSection />
       <FinalCTASection />
       <Footer />

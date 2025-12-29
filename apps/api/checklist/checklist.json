@@ -1,0 +1,99 @@
+[
+  {
+    "question": "What is your real goal in financial markets?",
+    "options": [
+      "Build an extra income",
+      "Achieve stable monthly incomes",
+      "Grow existing capital",
+      "Learn trading professionally",
+      "Still exploring my direction"
+    ]
+  },
+  {
+    "question": "How would you describe your current level?",
+    "options": [
+      "Complete beginner",
+      "Basic theoretical knowledge",
+      "Tried trading and faced losses",
+      "Trading without a clear system",
+      "Trading with a system and results"
+    ]
+  },
+  {
+    "question": "What type of results are you looking for?",
+    "options": [
+      "Short-term profits",
+      "Long-term investment",
+      "Monthly cash flow",
+      "A mix of both",
+      "Not sure yet"
+    ]
+  },
+  {
+    "question": "How much capital can you start with?",
+    "options": [
+      "Less than $1,000",
+      "$1,000 - $5,000",
+      "$5,000 - $15,000",
+      "More than $15,000",
+      "I want to learn first"
+    ]
+  },
+  {
+    "question": "How do you deal with risk?",
+    "options": [
+      "Very cautious",
+      "Calculated risk",
+      "High risk tolerance",
+      "I need guidance"
+    ]
+  },
+  {
+    "question": "Which market interests you most?",
+    "options": [
+      "Stocks",
+      "Options",
+      "Crypto",
+      "Forex & Gold",
+      "Need professional guidance"
+    ]
+  },
+  {
+    "question": "How much time can you dedicate weekly?",
+    "options": [
+      "Less than 3 hours",
+      "3 - 6 hours",
+      "6 - 10 hours",
+      "More than 10 hours"
+    ]
+  },
+  {
+    "question": "Preferred learning style?",
+    "options": [
+      "Recorded online",
+      "Live group sessions",
+      "1-on-1 mentorship",
+      "Results matter most"
+    ]
+  },
+  {
+    "question": "Your biggest challenge right now?",
+    "options": [
+      "Fear of loss",
+      "Lack of understanding",
+      "No clear system",
+      "Discipline issues",
+      "Lack of guidance"
+    ]
+  },
+  {
+    "question": "Desired monthly income in 12 months?",
+    "options": [
+      "$500 - $1,000",
+      "$1,000 - $3,000",
+      "$3,000 - $7,000",
+      "$7,000+",
+      "Not defined yet"
+    ]
+  }
+]

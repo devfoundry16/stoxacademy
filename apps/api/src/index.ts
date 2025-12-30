@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import authRoutes from "./routes/authRoutes";
 import courseRoutes from "./routes/courseRoutes";
 import checklistRoutes from "./routes/checklistRoutes";
+import { startEmailWorker } from "./jobs/emailWorker";
 
 dotenv.config();
 
@@ -24,6 +25,12 @@ app.use("/api/checklist", checklistRoutes);
 if (process.env.NODE_ENV === "DEVELOPMENT") {
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
+    // Start email worker for processing scheduled emails
+    startEmailWorker();
   });
+} else {
+  // In production, start the worker regardless
+  startEmailWorker();
 }
+
 export default app;

@@ -1,5 +1,7 @@
 import { Request, Response } from "express";
 import { getSupabaseClient } from "../config/supabase";
+import { calculateChecklistScore } from "../utils/checklistScoring";
+import { sendEmailImmediately, scheduleAllEmails } from "../services/emailQueueService";
 import fs from "fs";
 import path from "path";
 
@@ -32,7 +34,11 @@ export const submitChecklistResponse = async (req: Request, res: Response) => {
             });
         }
 
-        // Insert new response
+        // Calculate score and stage
+        const scoreResult = calculateChecklistScore(answers);
+        const { score, stage } = scoreResult;
+
+        // Insert new response with score and stage
         const { data, error } = await supabase
             .from("checklist_responses")
             .insert([
@@ -43,6 +49,8 @@ export const submitChecklistResponse = async (req: Request, res: Response) => {
                     age,
                     country,
                     answers,
+                    score,
+                    stage,
                 },
             ])
             .select();
@@ -52,7 +60,47 @@ export const submitChecklistResponse = async (req: Request, res: Response) => {
             return res.status(500).json({ error: "Failed to save response" });
         }
 
-        return res.status(201).json({ success: true, data });
+        const checklistResponseId = data[0].id;
+        const submittedAt = new Date(data[0].created_at || new Date());
+
+        // Send Email #1 immediately (score delivery)
+        try {
+            await sendEmailImmediately(
+                email,
+                full_name,
+                score,
+                stage as 'awareness' | 'builder' | 'professional' | 'investor',
+                'score_delivery'
+            );
+        } catch (emailError) {
+            console.error("Error sending immediate email:", emailError);
+            // Don't fail the request if email fails
+        }
+
+        // Schedule remaining emails (+24h, +48h, +72h)
+        try {
+            await scheduleAllEmails(
+                checklistResponseId,
+                email,
+                full_name,
+                score,
+                stage as 'awareness' | 'builder' | 'professional' | 'investor',
+                submittedAt
+            );
+        } catch (scheduleError) {
+            console.error("Error scheduling emails:", scheduleError);
+            // Don't fail the request if scheduling fails
+        }
+
+        return res.status(201).json({ 
+            success: true, 
+            data: {
+                ...data[0],
+                score,
+                stage,
+                pillarScores: scoreResult.pillarScores,
+            }
+        });
     } catch (error) {
         console.error("Server error:", error);
         return res.status(500).json({ error: "Internal server error" });

@@ -40,7 +40,8 @@ export async function scheduleEmail(params: ScheduleEmailParams): Promise<string
                 stage: params.stage,
                 score: params.score,
                 scheduled_for: params.scheduledFor.toISOString(),
-                status: 'pending',
+                status: params.emailType === 'score_delivery' ? 'sent' : 'pending',
+                sent_at: params.emailType === 'score_delivery' ? new Date().toISOString() : null,
             },
         ])
         .select()

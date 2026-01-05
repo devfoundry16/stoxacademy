@@ -1,6 +1,8 @@
+"use client"
 import { ImageCarousel } from "./image-carousel"
-
+import { useRouter } from "next/navigation"
 export function FinalCTASection() {
+  const router = useRouter()
   return (
     <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
       <div className="max-w-6xl mx-auto">
@@ -10,7 +12,8 @@ export function FinalCTASection() {
             Register now and learn how to trade independently in just two months! Your opportunity to launch towards
             financial freedom starts here.
           </p>
-          <button className="px-8 py-4 bg-blue-600 text-white text-lg font-semibold rounded-full hover:bg-blue-700 transition-all transform hover:scale-105 mb-12">
+          <button className="px-8 py-4 bg-blue-600 text-white text-lg font-semibold rounded-full hover:bg-blue-700 transition-all transform hover:scale-105 mb-12"
+            onClick={() => router.push("/signup")}>
             Register Now
           </button>
         </div>

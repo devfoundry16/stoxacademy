@@ -28,7 +28,7 @@ export const getAllCourses = async (req: Request, res: Response) => {
     let purchasedCourseIds: string[] = [];
     if (token) {
       const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
-      
+
       if (!userError && userData.user) {
         const { data: purchases } = await supabaseAdmin
           .from("user_courses")
@@ -97,7 +97,7 @@ export const getCourseById = async (req: Request, res: Response) => {
     let isPurchased = false;
     if (token) {
       const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
-      
+
       if (!userError && userData.user) {
         const { data: purchase } = await supabaseAdmin
           .from("user_courses")
@@ -134,7 +134,7 @@ export const purchaseCourse = async (req: Request, res: Response) => {
 
     // Get user
     const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
-    
+
     if (userError || !userData.user) {
       return res.status(401).json({ error: "Invalid token" });
     }
@@ -196,7 +196,7 @@ export const getUserCourses = async (req: Request, res: Response) => {
     }
 
     const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
-    
+
     if (userError || !userData.user) {
       return res.status(401).json({ error: "Invalid token" });
     }
@@ -231,7 +231,7 @@ export const updateLessonProgress = async (req: Request, res: Response) => {
     }
 
     const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
-    
+
     if (userError || !userData.user) {
       return res.status(401).json({ error: "Invalid token" });
     }
@@ -255,6 +255,38 @@ export const updateLessonProgress = async (req: Request, res: Response) => {
     }
 
     return res.status(200).json({ progress });
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message });
+  }
+};
+export const getCourseLessons = async (req: Request, res: Response) => {
+  try {
+    const { courseId } = req.params;
+    const authHeader = req.headers.authorization;
+    const token = authHeader && authHeader.split(" ")[1];
+
+    if (!token) {
+      return res.status(401).json({ error: "No token provided" });
+    }
+
+    const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
+
+    if (userError || !userData.user) {
+      return res.status(401).json({ error: "Invalid token" });
+    }
+
+    // Get course lessons
+    const { data: lessons, error: lessonsError } = await supabaseAdmin
+      .from("lessons")
+      .select("*")
+      .eq("course_id", courseId)
+      .order("order_index", { ascending: true });
+
+    if (lessonsError) {
+      return res.status(400).json({ error: lessonsError.message });
+    }
+
+    return res.status(200).json({ lessons });
   } catch (error: any) {
     return res.status(500).json({ error: error.message });
   }

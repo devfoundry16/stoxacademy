@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { supabaseAdmin, getSupabaseClient } from "../config/supabase";
+import { supabaseAdmin, getSupabaseClient, getSupabaseServerClient } from "../config/supabase";
 
 export const signUpWithEmail = async (req: Request, res: Response) => {
   try {
@@ -22,6 +22,7 @@ export const signUpWithEmail = async (req: Request, res: Response) => {
           phone_number: phoneNumber,
           age,
           country,
+          role: "student",
         },
       });
 
@@ -40,6 +41,7 @@ export const signUpWithEmail = async (req: Request, res: Response) => {
         phone_number: phoneNumber || null,
         age: age ? parseInt(age) : null,
         country: country || null,
+        role: "student",
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       });
@@ -47,8 +49,8 @@ export const signUpWithEmail = async (req: Request, res: Response) => {
     if (dbError) {
       // If database insert fails, try to delete the auth user to maintain consistency
       await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
-      return res.status(400).json({ 
-        error: `Failed to create user profile: ${dbError.message}` 
+      return res.status(400).json({
+        error: `Failed to create user profile: ${dbError.message}`
       });
     }
 
@@ -88,7 +90,6 @@ export const signInWithEmail = async (req: Request, res: Response) => {
     if (error) {
       return res.status(401).json({ error: error.message });
     }
-
     return res.status(200).json({
       user: data.user,
       session: data.session,
@@ -101,12 +102,13 @@ export const signInWithEmail = async (req: Request, res: Response) => {
 export const signInWithGoogle = async (req: Request, res: Response) => {
   try {
     // Use regular client with anon key for OAuth flows, not service role
-    const supabase = getSupabaseClient();
-    
+    const supabase = getSupabaseServerClient(req, res);
+
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
         redirectTo: `${process.env.FRONTEND_URL}/auth/callback`,
+        skipBrowserRedirect: true,
         queryParams: {
           access_type: 'offline',
           prompt: 'consent',
@@ -117,7 +119,7 @@ export const signInWithGoogle = async (req: Request, res: Response) => {
     if (error) {
       return res.status(400).json({ error: error.message });
     }
-    
+
     return res.status(200).json({ url: data.url });
   } catch (error: any) {
     return res.status(500).json({ error: error.message });
@@ -133,8 +135,8 @@ export const handleOAuthCallback = async (req: Request, res: Response) => {
     }
 
     // Use regular client with anon key for OAuth callback, not service role
-    const supabase = getSupabaseClient();
-    
+    const supabase = getSupabaseServerClient(req, res);
+
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (error) {
@@ -153,7 +155,7 @@ export const handleOAuthCallback = async (req: Request, res: Response) => {
       const userMetadata = data.user.user_metadata || {};
       const firstName = userMetadata.full_name?.split(" ")[0] || userMetadata.first_name || "";
       const lastName = userMetadata.full_name?.split(" ").slice(1).join(" ") || userMetadata.last_name || "";
-      
+
       // Create user profile in database
       const { error: dbError } = await supabaseAdmin
         .from("users")
@@ -165,6 +167,7 @@ export const handleOAuthCallback = async (req: Request, res: Response) => {
           phone_number: null,
           age: null,
           country: null,
+          role: "student",
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         });

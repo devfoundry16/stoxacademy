@@ -1,4 +1,7 @@
 import apiClient from "./api";
+import axios from "axios";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
 export const authService = {
   signUp: async (userData) => {
@@ -31,12 +34,39 @@ export const authService = {
   },
 
   signInWithGoogle: async () => {
-    const response = await apiClient.post("/api/auth/google");
+    const token = localStorage.getItem("access_token");
+    const config = {
+      headers: {
+        "Content-Type": "application/json",
+      },
+      withCredentials: true
+    };
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    const response = await axios.post(
+      `${API_URL}/api/auth/google`,
+      {},
+      config
+    );
     return response.data;
   },
 
   handleOAuthCallback: async (code) => {
-    const response = await apiClient.get(`/api/auth/callback?code=${code}`);
+    const token = localStorage.getItem("access_token");
+    const config = {
+      headers: {
+        "Content-Type": "application/json",
+      },
+      withCredentials: true
+    };
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    const response = await axios.get(
+      `${API_URL}/api/auth/callback?code=${code}`,
+      config
+    );
     if (response.data.session) {
       localStorage.setItem("access_token", response.data.session.access_token);
       localStorage.setItem(
@@ -81,4 +111,3 @@ export const authService = {
     return !!localStorage.getItem("access_token");
   },
 };
-

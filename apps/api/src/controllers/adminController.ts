@@ -430,6 +430,7 @@ export const createLiveSession = async (req: Request, res: Response) => {
             .single();
 
         if (error) {
+            console.log("Error creating live session:", error);
             return res.status(400).json({ error: error.message });
         }
 

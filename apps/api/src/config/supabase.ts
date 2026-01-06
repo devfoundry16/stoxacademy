@@ -60,7 +60,13 @@ export const getSupabaseServerClient = (req: Request, res: Response) => {
         },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value, options }) => {
-            res.cookie(name, value, options as any);
+            res.cookie(name, value, {
+              ...options,
+              httpOnly: true,
+              secure: true,          // REQUIRED for HTTPS
+              sameSite: "none",      // REQUIRED for cross-site
+              path: "/",
+            });
           });
         },
       },

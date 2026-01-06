@@ -287,6 +287,7 @@ export const updateCourse = async (req: Request, res: Response) => {
             updated_at: new Date().toISOString()
         };
 
+        console.log('id:', id);
         // Update the course
         const { data: course, error } = await supabaseAdmin
             .from("courses")
@@ -314,28 +315,26 @@ export const updateCourse = async (req: Request, res: Response) => {
             }
 
             // Insert new lessons if any
-            if (lessons.length > 0) {
-                const lessonsToInsert = lessons.map((lesson: any, index: number) => ({
-                    id: randomUUID(),
-                    course_id: id,
-                    course_title: course.title,
-                    title: lesson.title || `Lesson ${index + 1}`,
-                    duration: lesson.duration || "0:00",
-                    video_url: lesson.video_url || null,
-                    is_preview: lesson.is_preview || false,
-                    order_index: lesson.order_index || index + 1,
-                    created_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString(),
-                }));
+            const lessonsToInsert = lessons.map((lesson: any, index: number) => ({
+                id: randomUUID(),
+                course_id: id,
+                course_title: course.title,
+                title: lesson.title || `Lesson ${index + 1}`,
+                duration: lesson.duration || "0:00",
+                video_url: lesson.video_url || null,
+                is_preview: lesson.is_preview || false,
+                order_index: lesson.order_index || index + 1,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+            }));
 
-                const { error: lessonsError } = await supabaseAdmin
-                    .from("lessons")
-                    .insert(lessonsToInsert);
+            const { error: lessonsError } = await supabaseAdmin
+                .from("lessons")
+                .insert(lessonsToInsert);
 
-                if (lessonsError) {
-                    console.log("Error creating lessons:", lessonsError);
-                    return res.status(400).json({ error: `Course updated but lessons failed: ${lessonsError.message}` });
-                }
+            if (lessonsError) {
+                console.log("Error creating lessons:", lessonsError);
+                return res.status(400).json({ error: `Course updated but lessons failed: ${lessonsError.message}` });
             }
         }
 

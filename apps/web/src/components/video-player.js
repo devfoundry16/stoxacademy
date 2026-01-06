@@ -32,7 +32,7 @@ export function VideoPlayer({ videoUrl, thumbnailUrl, className }) {
         }}
         onPause={() => setIsPlaying(false)}
         onEnded={() => setIsPlaying(false)}
-        src={videoUrl}  
+        src={videoUrl}
       />
       {!isPlaying && (
         <button

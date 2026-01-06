@@ -261,7 +261,7 @@ export const updateLessonProgress = async (req: Request, res: Response) => {
 };
 export const getCourseLessons = async (req: Request, res: Response) => {
   try {
-    const { courseId } = req.params;
+    const { id } = req.params;
     const authHeader = req.headers.authorization;
     const token = authHeader && authHeader.split(" ")[1];
 
@@ -279,10 +279,11 @@ export const getCourseLessons = async (req: Request, res: Response) => {
     const { data: lessons, error: lessonsError } = await supabaseAdmin
       .from("lessons")
       .select("*")
-      .eq("course_id", courseId)
+      .eq("course_id", id)
       .order("order_index", { ascending: true });
 
     if (lessonsError) {
+      console.log(lessonsError);
       return res.status(400).json({ error: lessonsError.message });
     }
 

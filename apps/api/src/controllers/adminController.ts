@@ -480,3 +480,97 @@ export const deleteLiveSession = async (req: Request, res: Response) => {
         return res.status(500).json({ error: error.message });
     }
 };
+
+// ==================== Checklist Submissions Management ====================
+
+export const getChecklistSubmissions = async (req: Request, res: Response) => {
+    try {
+        const { page = 1, limit = 10, search = "", stage = "", sortBy = "created_at", sortOrder = "desc" } = req.query;
+        const offset = (Number(page) - 1) * Number(limit);
+
+        let query = supabaseAdmin
+            .from("checklist_responses")
+            .select("*", { count: "exact" })
+            .order(sortBy as string, { ascending: sortOrder === "asc" });
+
+        // Apply search filter
+        if (search) {
+            query = query.or(
+                `full_name.ilike.%${search}%,email.ilike.%${search}%,phone_number.ilike.%${search}%`
+            );
+        }
+
+        // Apply stage filter
+        if (stage) {
+            query = query.eq("stage", stage);
+        }
+
+        // Apply pagination
+        query = query.range(offset, offset + Number(limit) - 1);
+
+        const { data: submissions, error, count } = await query;
+
+        if (error) {
+            return res.status(400).json({ error: error.message });
+        }
+
+        // Get overall statistics (without filters)
+        const { data: allSubmissions } = await supabaseAdmin
+            .from("checklist_responses")
+            .select("stage, score");
+
+        const stats = {
+            total: allSubmissions?.length || 0,
+            byStage: {
+                awareness: allSubmissions?.filter((s) => s.stage === "awareness").length || 0,
+                builder: allSubmissions?.filter((s) => s.stage === "builder").length || 0,
+                professional: allSubmissions?.filter((s) => s.stage === "professional").length || 0,
+                investor: allSubmissions?.filter((s) => s.stage === "investor").length || 0,
+            },
+            avgScore: 0,
+        };
+
+        // Calculate average score
+        if (allSubmissions && allSubmissions.length > 0) {
+            const validScores = allSubmissions
+                .map((s) => parseFloat(s.score))
+                .filter((score) => !isNaN(score));
+            if (validScores.length > 0) {
+                stats.avgScore = validScores.reduce((sum, score) => sum + score, 0) / validScores.length;
+            }
+        }
+
+        return res.status(200).json({
+            submissions: submissions || [],
+            pagination: {
+                total: count || 0,
+                page: Number(page),
+                limit: Number(limit),
+                totalPages: Math.ceil((count || 0) / Number(limit)),
+            },
+            stats,
+        });
+    } catch (error: any) {
+        return res.status(500).json({ error: error.message });
+    }
+};
+
+export const getChecklistSubmissionById = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+
+        const { data: submission, error } = await supabaseAdmin
+            .from("checklist_responses")
+            .select("*")
+            .eq("id", id)
+            .single();
+
+        if (error || !submission) {
+            return res.status(404).json({ error: "Submission not found" });
+        }
+
+        return res.status(200).json({ submission });
+    } catch (error: any) {
+        return res.status(500).json({ error: error.message });
+    }
+};

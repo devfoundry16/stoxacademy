@@ -13,6 +13,8 @@ import {
     createLiveSession,
     updateLiveSession,
     deleteLiveSession,
+    getChecklistSubmissions,
+    getChecklistSubmissionById,
 } from "../controllers/adminController";
 
 const router = Router();
@@ -39,5 +41,9 @@ router.get("/live-sessions", getLiveSessions);
 router.post("/live-sessions", createLiveSession);
 router.put("/live-sessions/:id", updateLiveSession);
 router.delete("/live-sessions/:id", deleteLiveSession);
+
+// Checklist submissions routes
+router.get("/checklist-submissions", getChecklistSubmissions);
+router.get("/checklist-submissions/:id", getChecklistSubmissionById);
 
 export default router;

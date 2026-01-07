@@ -114,3 +114,20 @@ export const deleteLiveSession = async (id) => {
     });
     return response.data;
 };
+
+// ==================== Checklist Submissions Management ====================
+
+export const getChecklistSubmissions = async (params = {}) => {
+    const response = await axios.get(`${API_URL}/api/admin/checklist-submissions`, {
+        headers: getAuthHeaders(),
+        params,
+    });
+    return response.data;
+};
+
+export const getChecklistSubmissionById = async (id) => {
+    const response = await axios.get(`${API_URL}/api/admin/checklist-submissions/${id}`, {
+        headers: getAuthHeaders(),
+    });
+    return response.data;
+};

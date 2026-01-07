@@ -7,6 +7,7 @@ import {
     Users,
     BookOpen,
     Video,
+    FileText,
     LogOut,
     Menu,
     X
@@ -18,6 +19,7 @@ const menuItems = [
     { name: 'Users', href: '/admin/users', icon: Users },
     { name: 'Courses', href: '/admin/courses', icon: BookOpen },
     { name: 'Live Sessions', href: '/admin/live-sessions', icon: Video },
+    { name: 'Checklist', href: '/admin/checklist', icon: FileText },
 ];
 
 export default function AdminSidebar() {

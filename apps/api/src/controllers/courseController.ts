@@ -177,6 +177,32 @@ export const purchaseCourse = async (req: Request, res: Response) => {
       return res.status(400).json({ error: purchaseError.message });
     }
 
+    // Increment the students count for the course
+    // Get current student count
+    const { data: currentCourse } = await supabaseAdmin
+      .from("courses")
+      .select("students")
+      .eq("id", courseId)
+      .single();
+
+    if (currentCourse) {
+      const newStudentCount = (currentCourse.students || 0) + 1;
+
+      // Update student count (don't fail purchase if this fails, just log it)
+      const { error: updateError } = await supabaseAdmin
+        .from("courses")
+        .update({ 
+          students: newStudentCount,
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", courseId);
+
+      if (updateError) {
+        console.error('Failed to update student count:', updateError);
+        // Don't fail the purchase, just log the error
+      }
+    }
+
     return res.status(201).json({
       message: "Course purchased successfully",
       purchase,

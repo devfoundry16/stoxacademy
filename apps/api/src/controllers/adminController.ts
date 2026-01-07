@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { supabaseAdmin } from "../config/supabase";
-import { randomUUID } from "node:crypto";
+import { randomUUID } from "crypto";
 
 // ==================== Dashboard Statistics ====================
 
@@ -406,7 +406,7 @@ export const createLiveSession = async (req: Request, res: Response) => {
             instructor_id,
             max_participants,
         } = req.body;
-
+        console.log(course_id, title, scheduled_at, duration, meeting_url, instructor_id, max_participants);
         if (!course_id || !title || !scheduled_at) {
             return res.status(400).json({ error: "Missing required fields" });
         }

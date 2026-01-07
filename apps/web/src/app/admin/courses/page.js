@@ -255,7 +255,7 @@ export default function CoursesPage() {
                 </div>
                 <button
                     onClick={handleCreateNew}
-                    className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg hover:shadow-lg transition-shadow"
+                    className="flex items-center gap-2 px-6 py-3 bg-linear-to-r from-blue-500 to-purple-500 text-white rounded-lg hover:shadow-lg transition-shadow"
                 >
                     <Plus size={20} />
                     Create Course
@@ -558,7 +558,7 @@ export default function CoursesPage() {
                         </button>
                         <button
                             type="submit"
-                            className="px-6 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg hover:shadow-lg transition-shadow"
+                            className="px-6 py-2 bg-linear-to-r from-blue-500 to-purple-500 text-white rounded-lg hover:shadow-lg transition-shadow"
                         >
                             {selectedCourse ? 'Update Course' : 'Create Course'}
                         </button>

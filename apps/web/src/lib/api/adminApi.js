@@ -131,3 +131,37 @@ export const getChecklistSubmissionById = async (id) => {
     });
     return response.data;
 };
+
+export const exportChecklistSubmissionsToExcel = async (filters = {}) => {
+    const params = new URLSearchParams();
+    if (filters.search) params.append('search', filters.search);
+    if (filters.stage) params.append('stage', filters.stage);
+
+    const response = await axios.get(`${API_URL}/api/admin/checklist-submissions/export/excel?${params.toString()}`, {
+        headers: getAuthHeaders(),
+        responseType: 'blob', // Important for file download
+    });
+    
+    // Create download link
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    
+    // Extract filename from Content-Disposition header or use default
+    const contentDisposition = response.headers['content-disposition'];
+    let filename = 'checklist_submissions.xlsx';
+    if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+        if (filenameMatch) {
+            filename = filenameMatch[1];
+        }
+    }
+    
+    link.setAttribute('download', filename);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+    
+    return response.data;
+};

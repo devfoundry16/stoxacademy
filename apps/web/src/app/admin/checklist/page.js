@@ -1,10 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Eye, TrendingUp, Users, Target, Award, Filter } from 'lucide-react';
+import { Eye, TrendingUp, Users, Target, Award, Filter, Download } from 'lucide-react';
 import DataTable from '@/components/admin/DataTable';
 import Modal from '@/components/admin/Modal';
-import { getChecklistSubmissions, getChecklistSubmissionById } from '@/lib/api/adminApi';
+import { getChecklistSubmissions, getChecklistSubmissionById, exportChecklistSubmissionsToExcel } from '@/lib/api/adminApi';
 
 // Stage configuration with colors and labels
 const STAGE_CONFIG = {
@@ -123,6 +123,21 @@ export default function ChecklistSubmissionsPage() {
         }
     };
 
+    const handleExportToExcel = async () => {
+        try {
+            setLoading(true);
+            await exportChecklistSubmissionsToExcel({
+                search: searchTerm,
+                stage: stageFilter,
+            });
+        } catch (error) {
+            console.error('Failed to export to Excel:', error);
+            alert('Failed to export data to Excel. Please try again.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const formatDate = (dateString) => {
         if (!dateString) return 'N/A';
         return new Date(dateString).toLocaleDateString('en-US', {
@@ -195,6 +210,14 @@ export default function ChecklistSubmissionsPage() {
                     <h1 className="text-3xl font-bold text-gray-900">Checklist Submissions</h1>
                     <p className="text-gray-600 mt-1">View and analyze customer financial readiness assessments</p>
                 </div>
+                <button
+                    onClick={handleExportToExcel}
+                    disabled={loading || pagination.total === 0}
+                    className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-lg"
+                >
+                    <Download size={20} />
+                    Export to Excel
+                </button>
             </div>
 
             {/* Statistics Cards */}

@@ -6,6 +6,7 @@ import authRoutes from "./routes/authRoutes";
 import courseRoutes from "./routes/courseRoutes";
 import checklistRoutes from "./routes/checklistRoutes";
 import adminRoutes from "./routes/adminRoutes";
+import liveSessionRoutes from "./routes/liveSessionRoutes";
 import { startEmailWorker } from "./jobs/emailWorker";
 
 dotenv.config();
@@ -28,6 +29,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/courses", courseRoutes);
 app.use("/api/checklist", checklistRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/live-sessions", liveSessionRoutes);
 
 
 if (process.env.NODE_ENV === "DEVELOPMENT") {

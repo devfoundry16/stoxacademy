@@ -15,6 +15,7 @@ import {
     deleteLiveSession,
     getChecklistSubmissions,
     getChecklistSubmissionById,
+    exportChecklistSubmissionsToExcel,
 } from "../controllers/adminController";
 
 const router = Router();
@@ -45,5 +46,6 @@ router.delete("/live-sessions/:id", deleteLiveSession);
 // Checklist submissions routes
 router.get("/checklist-submissions", getChecklistSubmissions);
 router.get("/checklist-submissions/:id", getChecklistSubmissionById);
+router.get("/checklist-submissions/export/excel", exportChecklistSubmissionsToExcel);
 
 export default router;

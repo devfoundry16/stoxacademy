@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { supabaseAdmin } from "../config/supabase";
 import { randomUUID } from "crypto";
+import * as XLSX from "xlsx";
 
 // ==================== Dashboard Statistics ====================
 
@@ -511,6 +512,7 @@ export const getChecklistSubmissions = async (req: Request, res: Response) => {
         const { data: submissions, error, count } = await query;
 
         if (error) {
+            console.log(error);
             return res.status(400).json({ error: error.message });
         }
 
@@ -571,6 +573,108 @@ export const getChecklistSubmissionById = async (req: Request, res: Response) =>
 
         return res.status(200).json({ submission });
     } catch (error: any) {
+        return res.status(500).json({ error: error.message });
+    }
+};
+
+export const exportChecklistSubmissionsToExcel = async (req: Request, res: Response) => {
+    try {
+        const { search = "", stage = "" } = req.query;
+
+        let query = supabaseAdmin
+            .from("checklist_responses")
+            .select("*")
+            .order("created_at", { ascending: false });
+
+        // Apply search filter
+        if (search) {
+            query = query.or(
+                `full_name.ilike.%${search}%,email.ilike.%${search}%,phone_number.ilike.%${search}%`
+            );
+        }
+
+        // Apply stage filter
+        if (stage) {
+            query = query.eq("stage", stage);
+        }
+
+        const { data: submissions, error } = await query;
+
+        if (error) {
+            return res.status(400).json({ error: error.message });
+        }
+
+        if (!submissions || submissions.length === 0) {
+            return res.status(404).json({ error: "No submissions found to export" });
+        }
+
+        // Transform data for Excel export
+        const excelData = submissions.map((submission, index) => {
+            const row: any = {
+                "#": index + 1,
+                "Full Name": submission.full_name || "",
+                "Email": submission.email || "",
+                "Phone Number": submission.phone_number || "",
+                "Age": submission.age || "",
+                "Country": submission.country || "",
+                "Score": submission.score || "",
+                "Stage": submission.stage ? submission.stage.charAt(0).toUpperCase() + submission.stage.slice(1) : "",
+                "Submitted At": submission.created_at ? new Date(submission.created_at).toLocaleString() : "",
+            };
+
+            // Add answers as separate columns
+            if (submission.answers && Array.isArray(submission.answers)) {
+                submission.answers.forEach((answer: any, idx: number) => {
+                    row[`Q${idx + 1} - ${answer.question || `Question ${idx + 1}`}`] = answer.answer || "";
+                });
+            }
+
+            return row;
+        });
+
+        // Create workbook and worksheet
+        const workbook = XLSX.utils.book_new();
+        const worksheet = XLSX.utils.json_to_sheet(excelData);
+
+        // Set column widths for better readability
+        const columnWidths = [
+            { wch: 5 },   // #
+            { wch: 25 },  // Full Name
+            { wch: 30 },  // Email
+            { wch: 15 },  // Phone Number
+            { wch: 8 },   // Age
+            { wch: 20 },  // Country
+            { wch: 10 },  // Score
+            { wch: 15 },  // Stage
+            { wch: 20 },  // Submitted At
+        ];
+
+        // Add widths for answer columns if they exist
+        if (submissions[0]?.answers && Array.isArray(submissions[0].answers)) {
+            submissions[0].answers.forEach(() => {
+                columnWidths.push({ wch: 40 }); // Question columns
+            });
+        }
+
+        worksheet["!cols"] = columnWidths;
+
+        // Add worksheet to workbook
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Checklist Submissions");
+
+        // Generate Excel file buffer
+        const excelBuffer = XLSX.write(workbook, {
+            type: "buffer",
+            bookType: "xlsx",
+        });
+
+        // Set response headers for file download
+        const filename = `checklist_submissions_${new Date().toISOString().split("T")[0]}.xlsx`;
+        res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+
+        return res.status(200).send(excelBuffer);
+    } catch (error: any) {
+        console.error("Export error:", error);
         return res.status(500).json({ error: error.message });
     }
 };

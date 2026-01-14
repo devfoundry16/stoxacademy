@@ -7,6 +7,8 @@ import { Header } from "@/components/header";
 import { useAuthStore } from "@/store/authStore";
 import { courseService } from "@/lib/courseService";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { paymentService } from "@/lib/paymentService";
+import StripeCheckoutModal from "@/components/StripeCheckoutModal";
 import { ErrorState } from "@/components/ErrorState";
 import { EmptyState } from "@/components/EmptyState";
 import { LevelBadge } from "@/components/LevelBadge";
@@ -31,6 +33,9 @@ export default function CourseDetailPage({ params }) {
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
+  const [clientSecret, setClientSecret] = useState(null);
+  const [paymentIntentId, setPaymentIntentId] = useState(null);
   const { id } = React.use(params);
   // Fetch course from API
   useEffect(() => {
@@ -72,14 +77,39 @@ export default function CourseDetailPage({ params }) {
     }
     
     try {
-      await courseService.purchaseCourse(course.id);
+      setLoading(true);
+      // Create payment intent
+      const { clientSecret, paymentIntentId } = await paymentService.createCoursePaymentIntent(course.id);
+      setClientSecret(clientSecret);
+      setPaymentIntentId(paymentIntentId);
+      setCheckoutModalOpen(true);
+    } catch (err) {
+      alert(err.response?.data?.error || "Failed to initialize payment. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePaymentSuccess = async (paymentIntent) => {
+    try {
+      setLoading(true);
+      // Confirm payment on backend
+      await paymentService.confirmCoursePayment(paymentIntent.id);
+      setCheckoutModalOpen(false);
       alert("Course purchased successfully!");
       // Refresh course data
       const data = await courseService.getCourseById(id);
       setCourse(data.course);
     } catch (err) {
-      alert(err.response?.data?.error || "Purchase failed. Please try again.");
+      alert(err.response?.data?.error || "Payment confirmation failed. Please contact support.");
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const handlePaymentError = (error) => {
+    console.error("Payment error:", error);
+    alert(error.message || "Payment failed. Please try again.");
   };
 
   if (loading) {
@@ -394,6 +424,19 @@ export default function CourseDetailPage({ params }) {
           </div>
         </div>
       </div>
+
+      {/* Stripe Checkout Modal */}
+      {clientSecret && (
+        <StripeCheckoutModal
+          isOpen={checkoutModalOpen}
+          onClose={() => setCheckoutModalOpen(false)}
+          clientSecret={clientSecret}
+          amount={parseFloat(course.price)}
+          itemName={course.title}
+          onSuccess={handlePaymentSuccess}
+          onError={handlePaymentError}
+        />
+      )}
     </div>
   );
 }

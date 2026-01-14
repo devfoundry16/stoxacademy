@@ -6,6 +6,8 @@ import { Calendar, Clock, Users, DollarSign, Video, ExternalLink, Lock, CheckCir
 import { Header, LoadingSpinner, ErrorState } from '@/components';
 import { liveSessionService } from '@/lib/liveSessionService';
 import { authService } from '@/lib/auth';
+import { paymentService } from '@/lib/paymentService';
+import StripeCheckoutModal from '@/components/StripeCheckoutModal';
 
 export default function LiveSessionDetailPage({ params }) {
     const router = useRouter();
@@ -14,7 +16,10 @@ export default function LiveSessionDetailPage({ params }) {
     const [error, setError] = useState(null);
     const [enrolling, setEnrolling] = useState(false);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const { id } = React.use(params);
+    const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
+    const [clientSecret, setClientSecret] = useState(null);
+    const [paymentIntentId, setPaymentIntentId] = useState(null);
+    const { id} = React.use(params);
 
     useEffect(() => {
         setIsAuthenticated(authService.isAuthenticated());
@@ -44,15 +49,37 @@ export default function LiveSessionDetailPage({ params }) {
 
         try {
             setEnrolling(true);
-            await liveSessionService.enrollInLiveSession(session.id);
+            // Create payment intent
+            const { clientSecret, paymentIntentId } = await paymentService.createLiveSessionPaymentIntent(session.id);
+            setClientSecret(clientSecret);
+            setPaymentIntentId(paymentIntentId);
+            setCheckoutModalOpen(true);
+        } catch (err) {
+            alert(err.response?.data?.error || 'Failed to initialize payment. Please try again.');
+        } finally {
+            setEnrolling(false);
+        }
+    };
+
+    const handlePaymentSuccess = async (paymentIntent) => {
+        try {
+            setEnrolling(true);
+            // Confirm payment on backend
+            await paymentService.confirmLiveSessionPayment(paymentIntent.id);
+            setCheckoutModalOpen(false);
             alert('Successfully enrolled in live session!');
             // Refresh session data
             await fetchSession();
         } catch (err) {
-            alert(err.response?.data?.error || 'Failed to enroll. Please try again.');
+            alert(err.response?.data?.error || 'Payment confirmation failed. Please contact support.');
         } finally {
             setEnrolling(false);
         }
+    };
+
+    const handlePaymentError = (error) => {
+        console.error('Payment error:', error);
+        alert(error.message || 'Payment failed. Please try again.');
     };
 
     const handleJoinSession = () => {
@@ -272,6 +299,19 @@ export default function LiveSessionDetailPage({ params }) {
                     </div>
                 </div>
             </div>
+
+            {/* Stripe Checkout Modal */}
+            {clientSecret && (
+                <StripeCheckoutModal
+                    isOpen={checkoutModalOpen}
+                    onClose={() => setCheckoutModalOpen(false)}
+                    clientSecret={clientSecret}
+                    amount={parseFloat(session.price || 0)}
+                    itemName={session.title}
+                    onSuccess={handlePaymentSuccess}
+                    onError={handlePaymentError}
+                />
+            )}
         </div>
     );
 }

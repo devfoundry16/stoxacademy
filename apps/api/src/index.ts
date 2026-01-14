@@ -7,6 +7,7 @@ import courseRoutes from "./routes/courseRoutes";
 import checklistRoutes from "./routes/checklistRoutes";
 import adminRoutes from "./routes/adminRoutes";
 import liveSessionRoutes from "./routes/liveSessionRoutes";
+import paymentRoutes from "./routes/paymentRoutes";
 import { startEmailWorker } from "./jobs/emailWorker";
 
 dotenv.config();
@@ -30,6 +31,7 @@ app.use("/api/courses", courseRoutes);
 app.use("/api/checklist", checklistRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/live-sessions", liveSessionRoutes);
+app.use("/api/payments", paymentRoutes);
 
 
 if (process.env.NODE_ENV === "DEVELOPMENT") {

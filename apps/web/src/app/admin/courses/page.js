@@ -6,6 +6,7 @@ import DataTable from '@/components/admin/DataTable';
 import Modal from '@/components/admin/Modal';
 import axios from 'axios';
 import { createCourse, updateCourse, deleteCourse } from '@/lib/api/adminApi';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
@@ -239,9 +240,7 @@ export default function CoursesPage() {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center h-64">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            </div>
+            <LoadingSpinner fullScreen />
         );
     }
 

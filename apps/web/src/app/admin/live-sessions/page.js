@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Edit, Trash2, Plus, Calendar, Clock, Users as UsersIcon } from 'lucide-react';
 import DataTable from '@/components/admin/DataTable';
 import Modal from '@/components/admin/Modal';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
 import axios from 'axios';
 import {
     getLiveSessions,
@@ -181,9 +182,7 @@ export default function LiveSessionsPage() {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center h-64">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            </div>
+            <LoadingSpinner fullScreen />
         );
     }
 

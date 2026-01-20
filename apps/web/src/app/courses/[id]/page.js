@@ -19,8 +19,6 @@ import {
   Clock, 
   CheckCircle, 
   Users,
-  Award,
-  Share2,
   BookOpen
 } from "lucide-react";
 import { VideoPlayer } from "@/components/video-player";
@@ -245,17 +243,6 @@ export default function CourseDetailPage({ params }) {
                       ))}
                     </div>
                   )}
-
-                  <div className="flex gap-2 mt-6 pt-6 border-t border-gray-200">
-                    <button className="flex-1 flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                      <Share2 className="w-4 h-4" />
-                      <span>Share</span>
-                    </button>
-                    <button className="flex-1 flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                      <Award className="w-4 h-4" />
-                      <span>Gift</span>
-                    </button>
-                  </div>
                 </div>
               </div>
             </div>

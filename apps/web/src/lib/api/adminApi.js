@@ -28,6 +28,14 @@ export const getDashboardStats = async () => {
     return response.data;
 };
 
+export const getRecentActivity = async (limit = 10) => {
+    const response = await axios.get(`${API_URL}/api/admin/recent-activity`, {
+        headers: getAuthHeaders(),
+        params: { limit },
+    });
+    return response.data;
+};
+
 // ==================== User Management ====================
 
 export const getAllUsers = async (params = {}) => {

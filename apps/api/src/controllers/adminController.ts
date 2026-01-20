@@ -58,6 +58,120 @@ export const getDashboardStats = async (req: Request, res: Response) => {
     }
 };
 
+export const getRecentActivity = async (req: Request, res: Response) => {
+    try {
+        const { limit = 10 } = req.query;
+        const activities: any[] = [];
+
+        // Get recent user registrations
+        const { data: recentUsers } = await supabaseAdmin
+            .from("users")
+            .select("id, email, first_name, last_name, created_at")
+            .order("created_at", { ascending: false })
+            .limit(Number(limit));
+
+        if (recentUsers) {
+            recentUsers.forEach((user) => {
+                activities.push({
+                    id: `user-${user.id}`,
+                    type: "user_registration",
+                    description: `New user registration: ${user.first_name || ""} ${user.last_name || ""} (${user.email})`,
+                    timestamp: user.created_at,
+                    metadata: {
+                        userId: user.id,
+                        userName: `${user.first_name || ""} ${user.last_name || ""}`.trim() || user.email,
+                        userEmail: user.email,
+                    },
+                });
+            });
+        }
+
+        // Get recent course purchases
+        const { data: recentPurchases } = await supabaseAdmin
+            .from("user_courses")
+            .select(`
+                id,
+                created_at,
+                user_id,
+                course_id,
+                users:user_id(first_name, last_name, email),
+                courses:course_id(title, price)
+            `)
+            .order("created_at", { ascending: false })
+            .limit(Number(limit));
+
+        if (recentPurchases) {
+            recentPurchases.forEach((purchase: any) => {
+                const userName = purchase.users
+                    ? `${purchase.users.first_name || ""} ${purchase.users.last_name || ""}`.trim() || purchase.users.email
+                    : "Unknown User";
+                const courseTitle = purchase.courses?.title || "Unknown Course";
+                const coursePrice = purchase.courses?.price || 0;
+
+                activities.push({
+                    id: `purchase-${purchase.id}`,
+                    type: "course_purchase",
+                    description: `Course purchased: ${courseTitle} by ${userName} ($${coursePrice})`,
+                    timestamp: purchase.created_at,
+                    metadata: {
+                        userId: purchase.user_id,
+                        userName,
+                        courseId: purchase.course_id,
+                        courseTitle,
+                        price: coursePrice,
+                    },
+                });
+            });
+        }
+
+        // Get recent live session schedules
+        const { data: recentSessions } = await supabaseAdmin
+            .from("live_sessions")
+            .select(`
+                id,
+                title,
+                scheduled_at,
+                created_at,
+                course_id,
+                courses:course_id(title)
+            `)
+            .order("created_at", { ascending: false })
+            .limit(Number(limit));
+
+        if (recentSessions) {
+            recentSessions.forEach((session: any) => {
+                const courseTitle = session.courses?.title || "Unknown Course";
+                activities.push({
+                    id: `session-${session.id}`,
+                    type: "live_session_scheduled",
+                    description: `Live session scheduled: ${session.title} for ${courseTitle}`,
+                    timestamp: session.created_at,
+                    metadata: {
+                        sessionId: session.id,
+                        sessionTitle: session.title,
+                        courseId: session.course_id,
+                        courseTitle,
+                        scheduledAt: session.scheduled_at,
+                    },
+                });
+            });
+        }
+
+        // Sort all activities by timestamp (most recent first)
+        activities.sort((a, b) => {
+            return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+        });
+
+        // Return the most recent activities (limited)
+        return res.status(200).json({
+            activities: activities.slice(0, Number(limit)),
+        });
+    } catch (error: any) {
+        console.error("Error fetching recent activity:", error);
+        return res.status(500).json({ error: error.message });
+    }
+};
+
 // ==================== User Management ====================
 
 export const getAllUsers = async (req: Request, res: Response) => {

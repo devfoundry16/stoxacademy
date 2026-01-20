@@ -17,12 +17,12 @@ export function CourseStats({ duration, lessonsCount, rating, className = "" }) 
           <span>{lessonsCount} lessons</span>
         </div>
       )}
-      {rating !== undefined && (
+      {/* {rating !== undefined && (
         <div className="flex items-center gap-1">
           <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
           <span>{rating}</span>
         </div>
-      )}
+      )} */}
     </div>
   );
 }

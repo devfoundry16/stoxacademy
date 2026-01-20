@@ -2,6 +2,7 @@ import { Router } from "express";
 import { requireAdmin } from "../middleware/adminMiddleware";
 import {
     getDashboardStats,
+    getRecentActivity,
     getAllUsers,
     getUserById,
     updateUserRole,
@@ -25,6 +26,7 @@ router.use(requireAdmin);
 
 // Dashboard statistics
 router.get("/stats", getDashboardStats);
+router.get("/recent-activity", getRecentActivity);
 
 // User management routes
 router.get("/users", getAllUsers);

@@ -1,26 +1,65 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Users, BookOpen, DollarSign, Video } from 'lucide-react';
+import { Users, BookOpen, DollarSign, Video, FileText } from 'lucide-react';
 import StatCard from '@/components/admin/StatCard';
-import { getDashboardStats } from '@/lib/api/adminApi';
+import { getDashboardStats, getRecentActivity } from '@/lib/api/adminApi';
+import { useRouter } from 'next/navigation';
 
 export default function AdminDashboard() {
     const [stats, setStats] = useState(null);
+    const [activities, setActivities] = useState([]);
     const [loading, setLoading] = useState(true);
-
+    const router = useRouter();
+    
     useEffect(() => {
-        fetchStats();
+        fetchData();
     }, []);
 
-    const fetchStats = async () => {
+    const fetchData = async () => {
         try {
-            const data = await getDashboardStats();
-            setStats(data);
+            const [statsData, activityData] = await Promise.all([
+                getDashboardStats(),
+                getRecentActivity(10)
+            ]);
+            setStats(statsData);
+            setActivities(activityData.activities || []);
         } catch (error) {
-            console.error('Failed to fetch stats:', error);
+            console.error('Failed to fetch data:', error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const formatTimeAgo = (timestamp) => {
+        const now = new Date();
+        const past = new Date(timestamp);
+        const diffInSeconds = Math.floor((now - past) / 1000);
+
+        if (diffInSeconds < 60) {
+            return 'Just now';
+        } else if (diffInSeconds < 3600) {
+            const minutes = Math.floor(diffInSeconds / 60);
+            return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+        } else if (diffInSeconds < 86400) {
+            const hours = Math.floor(diffInSeconds / 3600);
+            return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+        } else {
+            const days = Math.floor(diffInSeconds / 86400);
+            return `${days} day${days > 1 ? 's' : ''} ago`;
+        }
+    };
+
+    const getActivityColors = (type) => {
+        switch (type) {
+            case 'user_registration':
+                return { bgColor: 'bg-blue-50', dotColor: 'bg-blue-500' };
+            case 'course_purchase':
+                return { bgColor: 'bg-green-50', dotColor: 'bg-green-500' };
+            case 'live_session_scheduled':
+                return { bgColor: 'bg-purple-50', dotColor: 'bg-purple-500' };
+            default:
+                return { bgColor: 'bg-gray-50', dotColor: 'bg-gray-500' };
         }
     };
 
@@ -74,28 +113,29 @@ export default function AdminDashboard() {
                 {/* Recent Activity */}
                 <div className="bg-white rounded-xl shadow-lg p-6">
                     <h2 className="text-xl font-bold text-gray-900 mb-4">Recent Activity</h2>
-                    <div className="space-y-4">
-                        <div className="flex items-center gap-4 p-4 bg-blue-50 rounded-lg">
-                            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                            <div className="flex-1">
-                                <p className="text-sm font-medium text-gray-900">New user registration</p>
-                                <p className="text-xs text-gray-500">2 minutes ago</p>
+                    <div className="space-y-3 max-h-96 overflow-y-auto">
+                        {loading ? (
+                            <div className="flex items-center justify-center py-8">
+                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                             </div>
-                        </div>
-                        <div className="flex items-center gap-4 p-4 bg-green-50 rounded-lg">
-                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                            <div className="flex-1">
-                                <p className="text-sm font-medium text-gray-900">Course purchased</p>
-                                <p className="text-xs text-gray-500">15 minutes ago</p>
+                        ) : activities.length > 0 ? (
+                            activities.map((activity) => {
+                                const { bgColor, dotColor } = getActivityColors(activity.type);
+                                return (
+                                    <div key={activity.id} className={`flex items-start gap-4 p-4 ${bgColor} rounded-lg`}>
+                                        <div className={`w-2 h-2 ${dotColor} rounded-full mt-1.5`}></div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-sm font-medium text-gray-900 wrap-break-word">{activity.description}</p>
+                                            <p className="text-xs text-gray-500 mt-1">{formatTimeAgo(activity.timestamp)}</p>
+                                        </div>
+                                    </div>
+                                );
+                            })
+                        ) : (
+                            <div className="text-center py-8">
+                                <p className="text-gray-500">No recent activity</p>
                             </div>
-                        </div>
-                        <div className="flex items-center gap-4 p-4 bg-purple-50 rounded-lg">
-                            <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                            <div className="flex-1">
-                                <p className="text-sm font-medium text-gray-900">Live session scheduled</p>
-                                <p className="text-xs text-gray-500">1 hour ago</p>
-                            </div>
-                        </div>
+                        )}
                     </div>
                 </div>
 
@@ -103,28 +143,32 @@ export default function AdminDashboard() {
                 <div className="bg-white rounded-xl shadow-lg p-6">
                     <h2 className="text-xl font-bold text-gray-900 mb-4">Quick Actions</h2>
                     <div className="grid grid-cols-2 gap-4">
-                        <button className="p-4 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-lg hover:shadow-lg transition-shadow">
+                        <button className="p-4 bg-linear-to-br from-blue-500 to-blue-600 text-white rounded-lg hover:shadow-lg transition-shadow"
+                        onClick={() => router.push('/admin/users')}>
                             <Users className="mx-auto mb-2" size={24} />
                             <p className="text-sm font-medium">Add User</p>
                         </button>
-                        <button className="p-4 bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-lg hover:shadow-lg transition-shadow">
+                        <button className="p-4 bg-linear-to-br from-purple-500 to-purple-600 text-white rounded-lg hover:shadow-lg transition-shadow"
+                        onClick={() => router.push('/admin/courses')}>
                             <BookOpen className="mx-auto mb-2" size={24} />
                             <p className="text-sm font-medium">Create Course</p>
                         </button>
-                        <button className="p-4 bg-gradient-to-br from-green-500 to-green-600 text-white rounded-lg hover:shadow-lg transition-shadow">
+                        <button className="p-4 bg-linear-to-br from-green-500 to-green-600 text-white rounded-lg hover:shadow-lg transition-shadow"
+                        onClick={() => router.push('/admin/live-sessions')}>
                             <Video className="mx-auto mb-2" size={24} />
                             <p className="text-sm font-medium">Schedule Session</p>
                         </button>
-                        <button className="p-4 bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-lg hover:shadow-lg transition-shadow">
-                            <DollarSign className="mx-auto mb-2" size={24} />
-                            <p className="text-sm font-medium">View Reports</p>
+                        <button className="p-4 bg-linear-to-br from-orange-500 to-orange-600 text-white rounded-lg hover:shadow-lg transition-shadow"
+                        onClick={() => router.push('/admin/checklist')}>
+                            <FileText className="mx-auto mb-2" size={24} />
+                            <p className="text-sm font-medium">View Checklist</p>
                         </button>
                     </div>
                 </div>
             </div>
 
             {/* Stats Summary */}
-            <div className="mt-6 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl shadow-lg p-6 text-white">
+            <div className="mt-6 bg-linear-to-br from-blue-500 to-purple-500 rounded-xl shadow-lg p-6 text-white">
                 <h2 className="text-2xl font-bold mb-2">Platform Overview</h2>
                 <p className="text-blue-100 mb-4">
                     You have {stats?.totalEnrollments || 0} total enrollments across all courses

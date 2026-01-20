@@ -124,7 +124,6 @@ export default function CoursesPage() {
             className="px-4 py-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
           >
             <option value="popular">Most Popular</option>
-            <option value="rating">Highest Rated</option>
             <option value="price-low">Price: Low to High</option>
             <option value="price-high">Price: High to Low</option>
           </select>

@@ -29,13 +29,13 @@ export default function StatCard({ title, value, icon: Icon, trend, color = 'blu
                     >
                         {value}
                     </motion.p>
-                    {trend && (
+                    {trend !== undefined && trend !== 0 && (
                         <p className={`text-sm mt-2 ${trend > 0 ? 'text-green-600' : 'text-red-600'}`}>
                             {trend > 0 ? '↑' : '↓'} {Math.abs(trend)}% from last week
                         </p>
                     )}
                 </div>
-                <div className={`p-3 rounded-lg bg-gradient-to-br ${colorClasses[color]} shadow-lg`}>
+                <div className={`p-3 rounded-lg bg-linear-to-br ${colorClasses[color]} shadow-lg`}>
                     <Icon className="text-white" size={24} />
                 </div>
             </div>

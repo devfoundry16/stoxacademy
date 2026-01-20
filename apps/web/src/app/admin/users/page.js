@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Edit, Trash2, Shield } from 'lucide-react';
 import DataTable from '@/components/admin/DataTable';
 import Modal from '@/components/admin/Modal';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { getAllUsers, updateUserRole, deleteUser } from '@/lib/api/adminApi';
 
 export default function UsersPage() {
@@ -124,9 +125,7 @@ export default function UsersPage() {
 
     if (loading && users.length === 0) {
         return (
-            <div className="flex items-center justify-center h-64">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            </div>
+            <LoadingSpinner fullScreen />
         );
     }
 

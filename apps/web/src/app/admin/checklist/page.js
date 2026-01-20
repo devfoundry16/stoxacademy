@@ -5,7 +5,7 @@ import { Eye, TrendingUp, Users, Target, Award, Filter, Download } from 'lucide-
 import DataTable from '@/components/admin/DataTable';
 import Modal from '@/components/admin/Modal';
 import { getChecklistSubmissions, getChecklistSubmissionById, exportChecklistSubmissionsToExcel } from '@/lib/api/adminApi';
-
+import { LoadingSpinner } from '@/components/LoadingSpinner';
 // Stage configuration with colors and labels
 const STAGE_CONFIG = {
     awareness: {
@@ -196,9 +196,7 @@ export default function ChecklistSubmissionsPage() {
 
     if (loading && submissions.length === 0) {
         return (
-            <div className="flex items-center justify-center h-64">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            </div>
+            <LoadingSpinner fullScreen />
         );
     }
 

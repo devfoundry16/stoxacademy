@@ -28,7 +28,7 @@ export default function LiveSessionsPage() {
         duration: 60,
         meeting_url: '',
         max_participants: '',
-        price: '',
+        price: 0,
     });
 
     useEffect(() => {
@@ -71,6 +71,7 @@ export default function LiveSessionsPage() {
             duration: 60,
             meeting_url: '',
             max_participants: '',
+            price: 0,
         });
         setIsModalOpen(true);
     };
@@ -85,7 +86,7 @@ export default function LiveSessionsPage() {
             duration: session.duration,
             meeting_url: session.meeting_url || '',
             max_participants: session.max_participants || '',
-            price: session.price || '',
+            price: session.price || 0,
         });
         setIsModalOpen(true);
     };

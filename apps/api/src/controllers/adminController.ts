@@ -288,7 +288,6 @@ export const updateCourse = async (req: Request, res: Response) => {
             updated_at: new Date().toISOString()
         };
 
-        console.log('id:', id);
         // Update the course
         const { data: course, error } = await supabaseAdmin
             .from("courses")
@@ -406,6 +405,7 @@ export const createLiveSession = async (req: Request, res: Response) => {
             meeting_url,
             instructor_id,
             max_participants,
+            price,
         } = req.body;
         console.log(course_id, title, scheduled_at, duration, meeting_url, instructor_id, max_participants);
         if (!course_id || !title || !scheduled_at) {
@@ -423,6 +423,7 @@ export const createLiveSession = async (req: Request, res: Response) => {
                 meeting_url: meeting_url || null,
                 instructor_id: instructor_id || null,
                 max_participants: max_participants || null,
+                price: price || 0,
                 status: "scheduled",
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString(),

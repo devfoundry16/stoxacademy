@@ -10,9 +10,11 @@ import {
     FileText,
     LogOut,
     Menu,
-    X
+    X,
+    User
 } from 'lucide-react';
 import { useState } from 'react';
+import { useAuthStore } from '@/store/authStore';
 
 const menuItems = [
     { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
@@ -25,7 +27,9 @@ const menuItems = [
 export default function AdminSidebar() {
     const pathname = usePathname();
     const router = useRouter();
+    const { user } = useAuthStore();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
     const handleLogout = () => {
         localStorage.removeItem('access_token');
@@ -47,15 +51,15 @@ export default function AdminSidebar() {
             {/* Sidebar */}
             <aside
                 className={`
-          fixed top-0 left-0 h-screen w-64 bg-gradient-to-b from-slate-900 to-slate-800 
+          fixed top-0 left-0 h-screen w-64 bg-linear-to-b from-slate-900 to-slate-800 
           text-white shadow-2xl z-40 transition-transform duration-300 ease-in-out
           ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}
             >
                 <div className="flex flex-col h-full">
                     {/* Logo/Brand */}
-                    <div className="p-6 border-b border-slate-700">
-                        <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                    <div className="p-6 border-b border-slate-700 text-center">
+                        <h1 className="text-2xl font-bold bg-linear-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
                             Stox Academy
                         </h1>
                         <p className="text-sm text-slate-400 mt-1">Admin Panel</p>
@@ -75,7 +79,7 @@ export default function AdminSidebar() {
                                     className={`
                     flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200
                     ${isActive
-                                            ? 'bg-gradient-to-r from-blue-500 to-purple-500 shadow-lg shadow-blue-500/50'
+                                            ? 'bg-linear-to-r from-blue-500 to-purple-500 shadow-lg shadow-blue-500/50'
                                             : 'hover:bg-slate-700/50'
                                         }
                   `}
@@ -89,13 +93,73 @@ export default function AdminSidebar() {
 
                     {/* User section */}
                     <div className="p-4 border-t border-slate-700">
-                        <button
-                            onClick={handleLogout}
-                            className="flex items-center gap-3 px-4 py-3 w-full rounded-lg hover:bg-red-500/20 transition-colors duration-200 text-red-400"
-                        >
-                            <LogOut size={20} />
-                            <span className="font-medium">Logout</span>
-                        </button>
+                        {user && (
+                            <div className="relative">
+                                {/* User Info - Clickable */}
+                                <button
+                                    onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                                    className="flex items-center gap-3 px-3 py-3 bg-slate-700/50 rounded-lg w-full hover:bg-slate-700 transition-all duration-200 group"
+                                >
+                                    <div className="w-10 h-10 bg-linear-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center shrink-0 group-hover:shadow-lg group-hover:shadow-blue-500/50 transition-shadow">
+                                        <User size={20} className="text-white" />
+                                    </div>
+                                    <div className="flex-1 min-w-0 text-left">
+                                        <p className="text-sm font-semibold text-white truncate">
+                                            {user.user_metadata.first_name} {user.user_metadata.last_name.charAt(0).toUpperCase()}.
+                                        </p>
+                                        <p className="text-xs text-slate-400 truncate">Admin</p>
+                                    </div>
+                                    <svg
+                                        className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${
+                                            isUserMenuOpen ? 'rotate-180' : ''
+                                        }`}
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </button>
+
+                                {/* Dropdown Menu - Appears on the right */}
+                                {isUserMenuOpen && (
+                                    <>
+                                        {/* Backdrop for mobile */}
+                                        <div 
+                                            className="lg:hidden fixed inset-0 bg-black/20 z-40"
+                                            onClick={() => setIsUserMenuOpen(false)}
+                                        />
+                                        
+                                        {/* Menu positioned to the right */}
+                                        <div className="absolute bottom-full mb-2 left-0 right-0 lg:left-auto lg:right-0 lg:bottom-0 lg:mb-0 lg:ml-2 lg:translate-x-full w-full lg:w-56 bg-slate-800 rounded-lg shadow-2xl border border-slate-600/50 overflow-hidden z-50 animate-in fade-in slide-in-from-bottom-2 duration-200">
+                                            <div className="p-2">
+                                                {/* User info in menu */}
+                                                <div className="px-3 py-2 border-b border-slate-700/50 mb-2">
+                                                    <p className="text-xs font-semibold text-white truncate">
+                                                        {user.user_metadata.first_name} {user.user_metadata.last_name}
+                                                    </p>
+                                                    <p className="text-xs text-slate-400 truncate">{user.email}</p>
+                                                </div>
+                                                
+                                                {/* Logout button blended with user section */}
+                                                <button
+                                                    onClick={() => {
+                                                        handleLogout();
+                                                        setIsUserMenuOpen(false);
+                                                    }}
+                                                    className="flex items-center gap-3 px-3 py-2.5 w-full rounded-md hover:bg-slate-700 transition-all duration-200 group"
+                                                >
+                                                    <div className="w-8 h-8 bg-red-500/10 rounded-lg flex items-center justify-center group-hover:bg-red-500/20 transition-colors">
+                                                        <LogOut size={16} className="text-red-400" />
+                                                    </div>
+                                                    <span className="text-sm font-medium text-slate-200 group-hover:text-white">Logout</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </div>
             </aside>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Edit, Trash2, Plus, Eye, X } from 'lucide-react';
+import toast from 'react-hot-toast';
 import DataTable from '@/components/admin/DataTable';
 import Modal from '@/components/admin/Modal';
 import axios from 'axios';
@@ -123,14 +124,16 @@ export default function CoursesPage() {
 
             if (selectedCourse) {
                 await updateCourse(selectedCourse.id, payload);
+                toast.success('Course updated successfully!');
             } else {
                 await createCourse(payload);
+                toast.success('Course created successfully!');
             }
             setIsModalOpen(false);
             fetchCourses();
         } catch (error) {
             console.error('Failed to save course:', error);
-            alert('Failed to save course');
+            toast.error('Failed to save course');
         }
     };
 
@@ -138,10 +141,11 @@ export default function CoursesPage() {
         if (confirm(`Are you sure you want to delete "${course.title}"?`)) {
             try {
                 await deleteCourse(course.id);
+                toast.success('Course deleted successfully!');
                 fetchCourses();
             } catch (error) {
                 console.error('Failed to delete course:', error);
-                alert('Failed to delete course');
+                toast.error('Failed to delete course');
             }
         }
     };
@@ -449,14 +453,15 @@ export default function CoursesPage() {
                                             <div className="grid grid-cols-2 gap-3">
                                                 <div>
                                                     <label className="block text-xs font-medium text-gray-600 mb-1">
-                                                        Duration
+                                                        Duration *
                                                     </label>
                                                     <input
                                                         type="text"
-                                                        value={lesson.duration}
+                                                        value={lesson.duration || ''}
                                                         onChange={(e) => updateLesson(index, 'duration', e.target.value)}
                                                         className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                                         placeholder="10:30"
+                                                        required
                                                     />
                                                 </div>
 
@@ -475,14 +480,15 @@ export default function CoursesPage() {
 
                                             <div>
                                                 <label className="block text-xs font-medium text-gray-600 mb-1">
-                                                    Video URL
+                                                    Video URL *
                                                 </label>
                                                 <input
                                                     type="url"
-                                                    value={lesson.video_url}
+                                                    value={lesson.video_url || ''}
                                                     onChange={(e) => updateLesson(index, 'video_url', e.target.value)}
                                                     className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                                     placeholder="https://..."
+                                                    required
                                                 />
                                             </div>
                                         </div>

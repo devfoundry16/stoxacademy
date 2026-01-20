@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Calendar, Clock, Users, DollarSign, Video, ExternalLink, Lock, CheckCircle, ArrowLeft } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { Header, LoadingSpinner, ErrorState } from '@/components';
 import { liveSessionService } from '@/lib/liveSessionService';
 import { authService } from '@/lib/auth';
@@ -42,7 +43,7 @@ export default function LiveSessionDetailPage({ params }) {
 
     const handleEnroll = async () => {
         if (!isAuthenticated) {
-            alert('Please sign in to enroll in this live session');
+            toast.error('Please sign in to enroll in this live session');
             router.push('/login');
             return;
         }
@@ -55,7 +56,7 @@ export default function LiveSessionDetailPage({ params }) {
             setPaymentIntentId(paymentIntentId);
             setCheckoutModalOpen(true);
         } catch (err) {
-            alert(err.response?.data?.error || 'Failed to initialize payment. Please try again.');
+            toast.error(err.response?.data?.error || 'Failed to initialize payment. Please try again.');
         } finally {
             setEnrolling(false);
         }
@@ -67,11 +68,11 @@ export default function LiveSessionDetailPage({ params }) {
             // Confirm payment on backend
             await paymentService.confirmLiveSessionPayment(paymentIntent.id);
             setCheckoutModalOpen(false);
-            alert('Successfully enrolled in live session!');
+            toast.success('Successfully enrolled in live session!');
             // Refresh session data
             await fetchSession();
         } catch (err) {
-            alert(err.response?.data?.error || 'Payment confirmation failed. Please contact support.');
+            toast.error(err.response?.data?.error || 'Payment confirmation failed. Please contact support.');
         } finally {
             setEnrolling(false);
         }
@@ -79,14 +80,14 @@ export default function LiveSessionDetailPage({ params }) {
 
     const handlePaymentError = (error) => {
         console.error('Payment error:', error);
-        alert(error.message || 'Payment failed. Please try again.');
+        toast.error(error.message || 'Payment failed. Please try again.');
     };
 
     const handleJoinSession = () => {
         if (session.meeting_url) {
             window.open(session.meeting_url, '_blank');
         } else {
-            alert('Meeting link not available yet. Please check back closer to the session time.');
+            toast.error('Meeting link not available yet. Please check back closer to the session time.');
         }
     };
 

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Eye, TrendingUp, Users, Target, Award, Filter, Download } from 'lucide-react';
+import toast from 'react-hot-toast';
 import DataTable from '@/components/admin/DataTable';
 import Modal from '@/components/admin/Modal';
 import { getChecklistSubmissions, getChecklistSubmissionById, exportChecklistSubmissionsToExcel } from '@/lib/api/adminApi';
@@ -119,7 +120,7 @@ export default function ChecklistSubmissionsPage() {
             setIsDetailModalOpen(true);
         } catch (error) {
             console.error('Failed to fetch submission details:', error);
-            alert('Failed to load submission details');
+            toast.error('Failed to load submission details');
         }
     };
 
@@ -130,9 +131,10 @@ export default function ChecklistSubmissionsPage() {
                 search: searchTerm,
                 stage: stageFilter,
             });
+            toast.success('Excel file downloaded successfully!');
         } catch (error) {
             console.error('Failed to export to Excel:', error);
-            alert('Failed to export data to Excel. Please try again.');
+            toast.error('Failed to export data to Excel. Please try again.');
         } finally {
             setLoading(false);
         }
@@ -363,7 +365,7 @@ export default function ChecklistSubmissionsPage() {
                         </div>
 
                         {/* Score and Stage */}
-                        <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4">
+                        <div className="bg-linear-to-br from-blue-50 to-purple-50 rounded-lg p-4">
                             <h3 className="text-lg font-semibold text-gray-900 mb-4">Assessment Results</h3>
                             <div className="flex items-center gap-6">
                                 <div>

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import toast from "react-hot-toast";
 import { Header } from "@/components/header";
 import { useAuthStore } from "@/store/authStore";
 import { courseService } from "@/lib/courseService";
@@ -54,13 +55,13 @@ export default function CourseDetailPage({ params }) {
 
   const handleLessonClick = (lesson) => {
     if (!isAuthenticated) {
-      alert("Please sign in to watch lessons");
+      toast.error("Please sign in to watch lessons");
       router.push("/login");
       return;
     }
     
     if (!lesson.is_preview && !course?.isPurchased) {
-      alert("Please purchase this course to watch this lesson");
+      toast.error("Please purchase this course to watch this lesson");
       return;
     }
     
@@ -69,7 +70,7 @@ export default function CourseDetailPage({ params }) {
 
   const handlePurchase = async () => {
     if (!isAuthenticated) {
-      alert("Please sign in to purchase this course");
+      toast.error("Please sign in to purchase this course");
       router.push("/login");
       return;
     }
@@ -82,7 +83,7 @@ export default function CourseDetailPage({ params }) {
       setPaymentIntentId(paymentIntentId);
       setCheckoutModalOpen(true);
     } catch (err) {
-      alert(err.response?.data?.error || "Failed to initialize payment. Please try again.");
+      toast.error(err.response?.data?.error || "Failed to initialize payment. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -94,12 +95,12 @@ export default function CourseDetailPage({ params }) {
       // Confirm payment on backend
       await paymentService.confirmCoursePayment(paymentIntent.id);
       setCheckoutModalOpen(false);
-      alert("Course purchased successfully!");
+      toast.success("Course purchased successfully!");
       // Refresh course data
       const data = await courseService.getCourseById(id);
       setCourse(data.course);
     } catch (err) {
-      alert(err.response?.data?.error || "Payment confirmation failed. Please contact support.");
+      toast.error(err.response?.data?.error || "Payment confirmation failed. Please contact support.");
     } finally {
       setLoading(false);
     }
@@ -107,7 +108,7 @@ export default function CourseDetailPage({ params }) {
 
   const handlePaymentError = (error) => {
     console.error("Payment error:", error);
-    alert(error.message || "Payment failed. Please try again.");
+    toast.error(error.message || "Payment failed. Please try again.");
   };
 
   if (loading) {

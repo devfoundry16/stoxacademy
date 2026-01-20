@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Edit, Trash2, Plus, Calendar, Clock, Users as UsersIcon } from 'lucide-react';
+import toast from 'react-hot-toast';
 import DataTable from '@/components/admin/DataTable';
 import Modal from '@/components/admin/Modal';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
@@ -103,14 +104,16 @@ export default function LiveSessionsPage() {
 
             if (selectedSession) {
                 await updateLiveSession(selectedSession.id, submitData);
+                toast.success('Live session updated successfully!');
             } else {
                 await createLiveSession(submitData);
+                toast.success('Live session created successfully!');
             }
             setIsModalOpen(false);
             fetchSessions();
         } catch (error) {
             console.error('Failed to save session:', error);
-            alert('Failed to save live session');
+            toast.error('Failed to save live session');
         }
     };
 
@@ -118,10 +121,11 @@ export default function LiveSessionsPage() {
         if (confirm(`Are you sure you want to delete "${session.title}"?`)) {
             try {
                 await deleteLiveSession(session.id);
+                toast.success('Live session deleted successfully!');
                 fetchSessions();
             } catch (error) {
                 console.error('Failed to delete session:', error);
-                alert('Failed to delete session');
+                toast.error('Failed to delete session');
             }
         }
     };
@@ -343,7 +347,7 @@ export default function LiveSessionsPage() {
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Meeting URL
+                                Meeting URL *
                             </label>
                             <input
                                 type="url"
@@ -351,6 +355,7 @@ export default function LiveSessionsPage() {
                                 onChange={(e) => setFormData({ ...formData, meeting_url: e.target.value })}
                                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 placeholder="https://zoom.us/..."
+                                required
                             />
                         </div>
 

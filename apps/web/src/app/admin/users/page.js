@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Edit, Trash2, Shield } from 'lucide-react';
+import toast from 'react-hot-toast';
 import DataTable from '@/components/admin/DataTable';
 import Modal from '@/components/admin/Modal';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
@@ -56,10 +57,11 @@ export default function UsersPage() {
         try {
             await updateUserRole(selectedUser.id, newRole);
             setIsRoleModalOpen(false);
+            toast.success('User role updated successfully!');
             fetchUsers();
         } catch (error) {
             console.error('Failed to update role:', error);
-            alert('Failed to update user role');
+            toast.error('Failed to update user role');
         }
     };
 
@@ -67,10 +69,11 @@ export default function UsersPage() {
         if (confirm(`Are you sure you want to delete ${user.first_name} ${user.last_name}?`)) {
             try {
                 await deleteUser(user.id);
+                toast.success('User deleted successfully!');
                 fetchUsers();
             } catch (error) {
                 console.error('Failed to delete user:', error);
-                alert('Failed to delete user');
+                toast.error('Failed to delete user');
             }
         }
     };
@@ -187,7 +190,7 @@ export default function UsersPage() {
                         </button>
                         <button
                             onClick={handleUpdateRole}
-                            className="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg hover:shadow-lg transition-shadow"
+                            className="px-4 py-2 bg-linear-to-br from-blue-500 to-purple-500 text-white rounded-lg hover:shadow-lg transition-shadow"
                         >
                             Update Role
                         </button>

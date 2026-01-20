@@ -1,10 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Users, BookOpen, DollarSign, Video, FileText } from 'lucide-react';
 import StatCard from '@/components/admin/StatCard';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { getDashboardStats, getRecentActivity } from '@/lib/api/adminApi';
-import { useRouter } from 'next/navigation';
 
 export default function AdminDashboard() {
     const [stats, setStats] = useState(null);
@@ -65,9 +66,7 @@ export default function AdminDashboard() {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center h-64">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            </div>
+            <LoadingSpinner fullScreen />
         );
     }
 

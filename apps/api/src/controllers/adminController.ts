@@ -479,6 +479,36 @@ export const deleteCourse = async (req: Request, res: Response) => {
 
 // ==================== Live Session Management ====================
 
+/**
+ * Calculate live session status based on scheduled time and duration
+ */
+const calculateSessionStatus = (scheduledAt: string, durationMinutes: number): string => {
+    const now = new Date();
+    const scheduledDate = new Date(scheduledAt);
+    const endDate = new Date(scheduledDate.getTime() + durationMinutes * 60 * 1000);
+
+    if (now < scheduledDate) {
+        return 'scheduled';
+    } else if (now >= scheduledDate && now < endDate) {
+        return 'live';
+    } else {
+        return 'completed';
+    }
+};
+
+/**
+ * Update session with calculated status
+ */
+const updateSessionStatus = (session: any) => {
+    if (!session) return session;
+    
+    const calculatedStatus = calculateSessionStatus(session.scheduled_at, session.duration);
+    return {
+        ...session,
+        status: calculatedStatus
+    };
+};
+
 export const getLiveSessions = async (req: Request, res: Response) => {
     try {
         const { status, course_id } = req.query;
@@ -487,10 +517,6 @@ export const getLiveSessions = async (req: Request, res: Response) => {
             .from("live_sessions")
             .select("*, courses(title), users!instructor_id(first_name, last_name, email)")
             .order("scheduled_at", { ascending: true });
-
-        if (status) {
-            query = query.eq("status", status);
-        }
 
         if (course_id) {
             query = query.eq("course_id", course_id);
@@ -502,7 +528,17 @@ export const getLiveSessions = async (req: Request, res: Response) => {
             return res.status(400).json({ error: error.message });
         }
 
-        return res.status(200).json({ sessions });
+        // Calculate status for each session
+        let sessionsWithStatus = sessions?.map((session) => updateSessionStatus(session)) || [];
+
+        // Apply status filter after calculating status
+        if (status) {
+            sessionsWithStatus = sessionsWithStatus.filter(
+                (session) => session.status === status
+            );
+        }
+
+        return res.status(200).json({ sessions: sessionsWithStatus });
     } catch (error: any) {
         return res.status(500).json({ error: error.message });
     }

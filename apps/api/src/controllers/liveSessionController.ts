@@ -1,6 +1,38 @@
 import { Request, Response } from "express";
 import { supabaseAdmin, getSupabaseClient } from "../config/supabase";
 
+// ==================== Helper Functions ====================
+
+/**
+ * Calculate live session status based on scheduled time and duration
+ */
+const calculateSessionStatus = (scheduledAt: string, durationMinutes: number): string => {
+    const now = new Date();
+    const scheduledDate = new Date(scheduledAt);
+    const endDate = new Date(scheduledDate.getTime() + durationMinutes * 60 * 1000);
+
+    if (now < scheduledDate) {
+        return 'scheduled';
+    } else if (now >= scheduledDate && now < endDate) {
+        return 'live';
+    } else {
+        return 'completed';
+    }
+};
+
+/**
+ * Update session with calculated status
+ */
+const updateSessionStatus = (session: any) => {
+    if (!session) return session;
+    
+    const calculatedStatus = calculateSessionStatus(session.scheduled_at, session.duration);
+    return {
+        ...session,
+        status: calculatedStatus
+    };
+};
+
 // ==================== Public Live Session Routes ====================
 
 export const getAllLiveSessions = async (req: Request, res: Response) => {
@@ -23,11 +55,6 @@ export const getAllLiveSessions = async (req: Request, res: Response) => {
             .from("live_sessions")
             .select("*, courses(title, id)")
             .order("scheduled_at", { ascending: true });
-
-        // Apply status filter
-        if (status) {
-            query = query.eq("status", status);
-        }
 
         // Apply course filter
         if (course_id) {
@@ -53,13 +80,23 @@ export const getAllLiveSessions = async (req: Request, res: Response) => {
             }
         }
 
-        // Add isEnrolled field to each session
-        const sessionsWithEnrollment = sessions?.map((session) => ({
-            ...session,
-            isEnrolled: enrolledSessionIds.includes(session.id),
-        }));
+        // Calculate status for each session and add isEnrolled field
+        let sessionsWithEnrollment = sessions?.map((session) => {
+            const updatedSession = updateSessionStatus(session);
+            return {
+                ...updatedSession,
+                isEnrolled: enrolledSessionIds.includes(session.id),
+            };
+        }) || [];
 
-        return res.status(200).json({ sessions: sessionsWithEnrollment || [] });
+        // Apply status filter after calculating status
+        if (status) {
+            sessionsWithEnrollment = sessionsWithEnrollment.filter(
+                (session) => session.status === status
+            );
+        }
+
+        return res.status(200).json({ sessions: sessionsWithEnrollment });
     } catch (error: any) {
         return res.status(500).json({ error: error.message });
     }
@@ -91,6 +128,9 @@ export const getLiveSessionById = async (req: Request, res: Response) => {
             return res.status(404).json({ error: "Live session not found" });
         }
 
+        // Calculate the current status based on scheduled time and duration
+        const updatedSession = updateSessionStatus(session);
+
         // Check if user has enrolled
         let isEnrolled = false;
         if (userId) {
@@ -106,7 +146,7 @@ export const getLiveSessionById = async (req: Request, res: Response) => {
 
         return res.status(200).json({
             session: {
-                ...session,
+                ...updatedSession,
                 isEnrolled,
             },
         });
@@ -234,7 +274,19 @@ export const getUserLiveSessions = async (req: Request, res: Response) => {
             return res.status(400).json({ error: error.message });
         }
 
-        return res.status(200).json({ enrollments: enrollments || [] });
+        // Calculate status for each enrolled session
+        const enrollmentsWithStatus = enrollments?.map((enrollment) => {
+            if (enrollment.live_sessions) {
+                const updatedSession = updateSessionStatus(enrollment.live_sessions);
+                return {
+                    ...enrollment,
+                    live_sessions: updatedSession,
+                };
+            }
+            return enrollment;
+        }) || [];
+
+        return res.status(200).json({ enrollments: enrollmentsWithStatus });
     } catch (error: any) {
         return res.status(500).json({ error: error.message });
     }

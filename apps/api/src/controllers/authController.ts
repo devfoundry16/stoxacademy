@@ -11,8 +11,9 @@ export const signUpWithEmail = async (req: Request, res: Response) => {
     }
 
     // Create user with Supabase Auth
+    const supabase = getSupabaseServerClient(req, res);
     const { data: authData, error: authError } =
-      await supabaseAdmin.auth.admin.createUser({
+      await supabase.auth.admin.createUser({
         email,
         password,
         email_confirm: true,
@@ -81,8 +82,8 @@ export const signInWithEmail = async (req: Request, res: Response) => {
     if (!email || !password) {
       return res.status(400).json({ error: "Email and password required" });
     }
-
-    const { data, error } = await supabaseAdmin.auth.signInWithPassword({
+    const supabase = getSupabaseServerClient(req, res);
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });

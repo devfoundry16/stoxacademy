@@ -32,5 +32,15 @@ export const courseService = {
     });
     return response.data;
   },
+
+  getCourseProgress: async (courseId) => {
+    const response = await apiClient.get(`/api/courses/${courseId}/progress`);
+    return response.data;
+  },
+
+  getCourseLessons: async (courseId) => {
+    const response = await apiClient.get(`/api/courses/${courseId}/lessons`);
+    return response.data;
+  },
 };
 

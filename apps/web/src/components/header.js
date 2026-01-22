@@ -36,12 +36,20 @@ export function Header() {
                 Courses
               </Link>
               {isAuthenticated && (
-                <Link
-                  href="/live-sessions"
-                  className="text-gray-700 hover:text-blue-600 transition-colors"
-                >
-                  Live Sessions
-                </Link>
+                <>
+                  <Link
+                    href="/my-courses"
+                    className="text-gray-700 hover:text-blue-600 transition-colors"
+                  >
+                    My Courses
+                  </Link>
+                  <Link
+                    href="/live-sessions"
+                    className="text-gray-700 hover:text-blue-600 transition-colors"
+                  >
+                    Live Sessions
+                  </Link>
+                </>
               )}
               {isAuthenticated ? (
                 <div className="relative">
@@ -127,9 +135,14 @@ export function Header() {
               Courses
             </Link>
             {isAuthenticated && (
-              <Link href="/live-sessions" className="text-gray-700 text-lg">
-                Live Sessions
-              </Link>
+              <>
+                <Link href="/my-courses" className="text-gray-700 text-lg">
+                  My Courses
+                </Link>
+                <Link href="/live-sessions" className="text-gray-700 text-lg">
+                  Live Sessions
+                </Link>
+              </>
             )}
             {isAuthenticated ? (
               <div className="space-y-2">

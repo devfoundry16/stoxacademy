@@ -234,13 +234,50 @@ export const getUserCourses = async (req: Request, res: Response) => {
         *,
         courses (*)
       `)
-      .eq("user_id", userData.user.id);
+      .eq("user_id", userData.user.id)
+      .order("purchased_at", { ascending: false });
 
     if (error) {
       return res.status(400).json({ error: error.message });
     }
 
-    return res.status(200).json({ courses: userCourses });
+    // Calculate progress for each course
+    const coursesWithProgress = await Promise.all(
+      (userCourses || []).map(async (userCourse) => {
+        const courseId = userCourse.course_id;
+
+        // Get total lessons for this course
+        const { data: lessons, error: lessonsError } = await supabaseAdmin
+          .from("lessons")
+          .select("id")
+          .eq("course_id", courseId);
+
+        const totalLessons = lessons?.length || 0;
+
+        // Get completed lessons count for this user
+        const { data: completedLessons, error: progressError } = await supabaseAdmin
+          .from("user_lesson_progress")
+          .select("lesson_id")
+          .eq("user_id", userData.user.id)
+          .eq("completed", true)
+          .in("lesson_id", lessons?.map(l => l.id) || []);
+
+        const completedCount = completedLessons?.length || 0;
+        const progressPercentage = totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0;
+
+        return {
+          ...userCourse,
+          progress: {
+            totalLessons,
+            completedLessons: completedCount,
+            remainingLessons: totalLessons - completedCount,
+            progressPercentage,
+          },
+        };
+      })
+    );
+
+    return res.status(200).json({ courses: coursesWithProgress });
   } catch (error: any) {
     return res.status(500).json({ error: error.message });
   }
@@ -313,7 +350,109 @@ export const getCourseLessons = async (req: Request, res: Response) => {
       return res.status(400).json({ error: lessonsError.message });
     }
 
-    return res.status(200).json({ lessons });
+    // Get user's progress for these lessons
+    const lessonIds = lessons?.map(l => l.id) || [];
+    const { data: progress } = await supabaseAdmin
+      .from("user_lesson_progress")
+      .select("*")
+      .eq("user_id", userData.user.id)
+      .in("lesson_id", lessonIds);
+
+    // Merge progress data with lessons
+    const lessonsWithProgress = lessons?.map(lesson => {
+      const lessonProgress = progress?.find(p => p.lesson_id === lesson.id);
+      return {
+        ...lesson,
+        completed: lessonProgress?.completed || false,
+        lastWatchedAt: lessonProgress?.last_watched_at || null,
+      };
+    });
+
+    return res.status(200).json({ lessons: lessonsWithProgress });
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message });
+  }
+};
+
+export const getCourseProgress = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const authHeader = req.headers.authorization;
+    const token = authHeader && authHeader.split(" ")[1];
+
+    if (!token) {
+      return res.status(401).json({ error: "No token provided" });
+    }
+
+    const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
+
+    if (userError || !userData.user) {
+      return res.status(401).json({ error: "Invalid token" });
+    }
+
+    // Check if user has purchased this course
+    const { data: purchase } = await supabaseAdmin
+      .from("user_courses")
+      .select("*")
+      .eq("user_id", userData.user.id)
+      .eq("course_id", id)
+      .single();
+
+    if (!purchase) {
+      return res.status(403).json({ error: "Course not purchased" });
+    }
+
+    // Get course with lessons
+    const { data: course, error: courseError } = await supabaseAdmin
+      .from("courses")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (courseError || !course) {
+      return res.status(404).json({ error: "Course not found" });
+    }
+
+    // Get all lessons for this course
+    const { data: lessons } = await supabaseAdmin
+      .from("lessons")
+      .select("*")
+      .eq("course_id", id)
+      .order("order_index", { ascending: true });
+
+    const totalLessons = lessons?.length || 0;
+
+    // Get user's progress
+    const lessonIds = lessons?.map(l => l.id) || [];
+    const { data: progress } = await supabaseAdmin
+      .from("user_lesson_progress")
+      .select("*")
+      .eq("user_id", userData.user.id)
+      .in("lesson_id", lessonIds);
+
+    const completedLessons = progress?.filter(p => p.completed).length || 0;
+    const progressPercentage = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
+
+    // Merge progress with lessons
+    const lessonsWithProgress = lessons?.map(lesson => {
+      const lessonProgress = progress?.find(p => p.lesson_id === lesson.id);
+      return {
+        ...lesson,
+        completed: lessonProgress?.completed || false,
+        lastWatchedAt: lessonProgress?.last_watched_at || null,
+      };
+    });
+
+    return res.status(200).json({
+      course,
+      progress: {
+        totalLessons,
+        completedLessons,
+        remainingLessons: totalLessons - completedLessons,
+        progressPercentage,
+      },
+      lessons: lessonsWithProgress,
+    });
   } catch (error: any) {
     return res.status(500).json({ error: error.message });
   }

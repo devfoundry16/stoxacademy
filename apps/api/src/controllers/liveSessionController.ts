@@ -21,12 +21,24 @@ const calculateSessionStatus = (scheduledAt: string, durationMinutes: number): s
 };
 
 /**
- * Update session with calculated status
+ * Update session with calculated status and persist to database if changed
  */
-const updateSessionStatus = (session: any) => {
+const updateSessionStatus = async (session: any) => {
     if (!session) return session;
     
     const calculatedStatus = calculateSessionStatus(session.scheduled_at, session.duration);
+    
+    // Update database if status has changed
+    if (session.status !== calculatedStatus) {
+        await supabaseAdmin
+            .from("live_sessions")
+            .update({ 
+                status: calculatedStatus,
+                updated_at: new Date().toISOString()
+            })
+            .eq("id", session.id);
+    }
+    
     return {
         ...session,
         status: calculatedStatus
@@ -81,13 +93,16 @@ export const getAllLiveSessions = async (req: Request, res: Response) => {
         }
 
         // Calculate status for each session and add isEnrolled field
-        let sessionsWithEnrollment = sessions?.map((session) => {
-            const updatedSession = updateSessionStatus(session);
+        const updatedSessions = await Promise.all(
+            (sessions || []).map(async (session) => await updateSessionStatus(session))
+        );
+        
+        let sessionsWithEnrollment = updatedSessions.map((updatedSession) => {
             return {
                 ...updatedSession,
-                isEnrolled: enrolledSessionIds.includes(session.id),
+                isEnrolled: enrolledSessionIds.includes(updatedSession.id),
             };
-        }) || [];
+        });
 
         // Apply status filter after calculating status
         if (status) {
@@ -129,7 +144,7 @@ export const getLiveSessionById = async (req: Request, res: Response) => {
         }
 
         // Calculate the current status based on scheduled time and duration
-        const updatedSession = updateSessionStatus(session);
+        const updatedSession = await updateSessionStatus(session);
 
         // Check if user has enrolled
         let isEnrolled = false;
@@ -275,16 +290,18 @@ export const getUserLiveSessions = async (req: Request, res: Response) => {
         }
 
         // Calculate status for each enrolled session
-        const enrollmentsWithStatus = enrollments?.map((enrollment) => {
-            if (enrollment.live_sessions) {
-                const updatedSession = updateSessionStatus(enrollment.live_sessions);
-                return {
-                    ...enrollment,
-                    live_sessions: updatedSession,
-                };
-            }
-            return enrollment;
-        }) || [];
+        const enrollmentsWithStatus = await Promise.all(
+            (enrollments || []).map(async (enrollment) => {
+                if (enrollment.live_sessions) {
+                    const updatedSession = await updateSessionStatus(enrollment.live_sessions);
+                    return {
+                        ...enrollment,
+                        live_sessions: updatedSession,
+                    };
+                }
+                return enrollment;
+            })
+        );
 
         return res.status(200).json({ enrollments: enrollmentsWithStatus });
     } catch (error: any) {

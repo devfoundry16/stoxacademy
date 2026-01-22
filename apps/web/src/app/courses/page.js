@@ -10,6 +10,8 @@ import { ErrorState } from "@/components/ErrorState";
 import { EmptyState } from "@/components/EmptyState";
 import { CourseCard } from "@/components/CourseCard";
 import { BookOpen, Star } from "lucide-react";
+import { motion } from "framer-motion";
+import { fadeInUp, staggerContainer, staggerItem, defaultTransition } from "@/lib/animations";
 
 export default function CoursesPage() {
   const router = useRouter();
@@ -72,35 +74,73 @@ export default function CoursesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <motion.div
+      initial="initial"
+      animate="animate"
+      variants={fadeInUp}
+      className="min-h-screen bg-gray-50"
+    >
       <Header />
       
       {/* Hero Section */}
-      <section className="pt-36 pb-24 px-4 sm:px-6 lg:px-8 bg-linear-to-br from-blue-600 to-purple-600 text-white">
+      <motion.section
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={defaultTransition}
+        className="pt-36 pb-24 px-4 sm:px-6 lg:px-8 bg-linear-to-br from-blue-600 to-purple-600 text-white"
+      >
         <div className="max-w-7xl mx-auto text-center">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ ...defaultTransition, delay: 0.1 }}
+            className="text-4xl md:text-5xl font-bold mb-4"
+          >
             Master Stock Trading
-          </h1>
-          <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ ...defaultTransition, delay: 0.2 }}
+            className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto"
+          >
             Learn from expert traders with our comprehensive video courses
-          </p>
-          <div className="flex flex-wrap justify-center gap-4 text-sm">
+          </motion.p>
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ ...defaultTransition, delay: 0.3 }}
+            className="flex flex-wrap justify-center gap-4 text-sm"
+          >
             <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">
               <BookOpen className="w-5 h-5" />
               <span>{courses.length} Courses</span>
             </div>
-          </div>
+          </motion.div>
         </div>
-      </section>
+      </motion.section>
 
       {/* Filters and Sort */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ ...defaultTransition, delay: 0.4 }}
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"
+      >
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           {/* Level Filter */}
-          <div className="flex flex-wrap gap-2">
+          <motion.div
+            variants={staggerContainer}
+            initial="initial"
+            animate="animate"
+            className="flex flex-wrap gap-2"
+          >
             {["All", "Beginner", "Intermediate", "Advanced"].map((level) => (
-              <button
+              <motion.button
                 key={level}
+                variants={staggerItem}
+                whileHover={{ y: -2 }}
+                whileTap={{ y: 0 }}
                 onClick={() => setSelectedLevel(level)}
                 className={`px-4 py-2 rounded-full transition-colors ${
                   selectedLevel === level
@@ -109,9 +149,9 @@ export default function CoursesPage() {
                 }`}
               >
                 {level}
-              </button>
+              </motion.button>
             ))}
-          </div>
+          </motion.div>
 
           {/* Sort */}
           <select
@@ -133,19 +173,29 @@ export default function CoursesPage() {
             description="Try adjusting your filters to see more courses"
           />
         ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {courses.map((course) => (
-              <CourseCard
+          <motion.div
+            variants={staggerContainer}
+            initial="initial"
+            animate="animate"
+            className="grid md:grid-cols-2 lg:grid-cols-3 gap-8"
+          >
+            {courses.map((course, index) => (
+              <motion.div
                 key={course.id}
-                course={course}
-                isAuthenticated={isAuthenticated}
-                onClick={() => handleCourseClick(course)}
-              />
+                variants={staggerItem}
+                transition={{ delay: index * 0.1 }}
+              >
+                <CourseCard
+                  course={course}
+                  isAuthenticated={isAuthenticated}
+                  onClick={() => handleCourseClick(course)}
+                />
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         )}
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
 

@@ -9,6 +9,8 @@ import { liveSessionService } from '@/lib/liveSessionService';
 import { authService } from '@/lib/auth';
 import { paymentService } from '@/lib/paymentService';
 import StripeCheckoutModal from '@/components/StripeCheckoutModal';
+import { motion } from 'framer-motion';
+import { fadeInUp, staggerContainer, staggerItem, defaultTransition } from '@/lib/animations';
 
 export default function LiveSessionDetailPage({ params }) {
     const router = useRouter();
@@ -149,22 +151,44 @@ export default function LiveSessionDetailPage({ params }) {
     const isFullyBooked = session.max_participants && session.participants_count >= session.max_participants;
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <motion.div
+            initial="initial"
+            animate="animate"
+            variants={fadeInUp}
+            className="min-h-screen bg-gray-50"
+        >
             <Header />
             
-            <div className="pt-36 pb-24 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={defaultTransition}
+                className="pt-36 pb-24 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8"
+            >
                 {/* Back button */}
-                <button
+                <motion.button
+                    whileHover={{ x: -4 }}
+                    whileTap={{ x: 0 }}
                     onClick={() => router.push('/live-sessions')}
                     className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6"
                 >
                     <ArrowLeft size={20} />
                     Back to Live Sessions
-                </button>
+                </motion.button>
 
-                <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ ...defaultTransition, delay: 0.1 }}
+                    className="bg-white rounded-xl shadow-lg overflow-hidden"
+                >
                     {/* Header */}
-                    <div className="bg-linear-to-r from-blue-600 to-purple-600 text-white p-8">
+                    <motion.div
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ ...defaultTransition, delay: 0.2 }}
+                        className="bg-linear-to-r from-blue-600 to-purple-600 text-white p-8"
+                    >
                         <div className="flex items-start justify-between mb-4">
                             <h1 className="text-3xl font-bold flex-1">{session.title}</h1>
                             <span className={`px-4 py-2 rounded-full text-sm font-semibold uppercase ${getStatusColor(session.status)}`}>
@@ -174,13 +198,23 @@ export default function LiveSessionDetailPage({ params }) {
                         {session.courses && (
                             <p className="text-blue-100 text-lg">Course: {session.courses.title}</p>
                         )}
-                    </div>
+                    </motion.div>
 
                     {/* Main content */}
-                    <div className="p-8">
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ ...defaultTransition, delay: 0.3 }}
+                        className="p-8"
+                    >
                         {/* Enrollment status */}
                         {session.isEnrolled && (
-                            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6 flex items-center gap-3">
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ ...defaultTransition, delay: 0.4 }}
+                                className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6 flex items-center gap-3"
+                            >
                                 <CheckCircle className="text-green-600" size={24} />
                                 <div>
                                     <p className="font-semibold text-green-900">You&apos;re enrolled in this session!</p>
@@ -190,28 +224,45 @@ export default function LiveSessionDetailPage({ params }) {
                                         </p>
                                     )}
                                 </div>
-                            </div>
+                            </motion.div>
                         )}
 
                         {/* Session details grid */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                            <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
+                        <motion.div
+                            variants={staggerContainer}
+                            initial="initial"
+                            animate="animate"
+                            className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8"
+                        >
+                            <motion.div
+                                variants={staggerItem}
+                                whileHover={{ y: -2 }}
+                                className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg"
+                            >
                                 <Calendar size={24} className="text-blue-600" />
                                 <div>
                                     <p className="text-sm text-gray-600">Date</p>
                                     <p className="font-semibold text-gray-900">{formatDate(session.scheduled_at)}</p>
                                 </div>
-                            </div>
+                            </motion.div>
 
-                            <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
+                            <motion.div
+                                variants={staggerItem}
+                                whileHover={{ y: -2 }}
+                                className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg"
+                            >
                                 <Clock size={24} className="text-blue-600" />
                                 <div>
                                     <p className="text-sm text-gray-600">Time & Duration</p>
                                     <p className="font-semibold text-gray-900">{formatTime(session.scheduled_at)} • {session.duration} minutes</p>
                                 </div>
-                            </div>
+                            </motion.div>
 
-                            <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
+                            <motion.div
+                                variants={staggerItem}
+                                whileHover={{ y: -2 }}
+                                className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg"
+                            >
                                 <Users size={24} className="text-blue-600" />
                                 <div>
                                     <p className="text-sm text-gray-600">Participants</p>
@@ -220,28 +271,42 @@ export default function LiveSessionDetailPage({ params }) {
                                         {session.max_participants ? ` / ${session.max_participants}` : ''} enrolled
                                     </p>
                                 </div>
-                            </div>
+                            </motion.div>
 
-                            <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
+                            <motion.div
+                                variants={staggerItem}
+                                whileHover={{ y: -2 }}
+                                className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg"
+                            >
                                 <DollarSign size={24} className="text-green-600" />
                                 <div>
                                     <p className="text-sm text-gray-600">Price</p>
                                     <p className="font-semibold text-gray-900 text-2xl">${parseFloat(session.price || 0).toFixed(2)}</p>
                                 </div>
-                            </div>
-                        </div>
+                            </motion.div>
+                        </motion.div>
 
                         {/* Description */}
                         {session.description && (
-                            <div className="mb-8">
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ ...defaultTransition, delay: 0.5 }}
+                                className="mb-8"
+                            >
                                 <h2 className="text-xl font-bold text-gray-900 mb-3">About this session</h2>
                                 <p className="text-gray-600 leading-relaxed">{session.description}</p>
-                            </div>
+                            </motion.div>
                         )}
 
                         {/* Course information */}
                         {session.courses && session.courses.description && (
-                            <div className="mb-8">
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ ...defaultTransition, delay: 0.6 }}
+                                className="mb-8"
+                            >
                                 <h2 className="text-xl font-bold text-gray-900 mb-3">Course Overview</h2>
                                 <p className="text-gray-600 leading-relaxed">{session.courses.description}</p>
                                 {session.courses.instructor && (
@@ -249,20 +314,27 @@ export default function LiveSessionDetailPage({ params }) {
                                         Instructor: <span className="font-medium text-gray-900">{session.courses.instructor}</span>
                                     </p>
                                 )}
-                            </div>
+                            </motion.div>
                         )}
 
                         {/* Action buttons */}
-                        <div className="flex gap-4">
+                        <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ ...defaultTransition, delay: 0.7 }}
+                            className="flex gap-4"
+                        >
                             {session.isEnrolled ? (
                                 canJoin && session.meeting_url ? (
-                                    <button
+                                    <motion.button
+                                        whileHover={{ y: -2 }}
+                                        whileTap={{ y: 0 }}
                                         onClick={handleJoinSession}
                                         className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold text-lg"
                                     >
                                         <ExternalLink size={24} />
                                         Join Live Session
-                                    </button>
+                                    </motion.button>
                                 ) : (
                                     <div className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-gray-100 text-gray-500 rounded-lg font-semibold text-lg cursor-not-allowed">
                                         <Lock size={24} />
@@ -270,7 +342,9 @@ export default function LiveSessionDetailPage({ params }) {
                                     </div>
                                 )
                             ) : (
-                                <button
+                                <motion.button
+                                    whileHover={{ y: -2 }}
+                                    whileTap={{ y: 0 }}
                                     onClick={handleEnroll}
                                     disabled={enrolling || isFullyBooked || session.status === 'completed' || session.status === 'cancelled'}
                                     className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-semibold text-lg"
@@ -288,18 +362,18 @@ export default function LiveSessionDetailPage({ params }) {
                                             Enroll Now - ${parseFloat(session.price || 0).toFixed(2)}
                                         </>
                                     )}
-                                </button>
+                                </motion.button>
                             )}
-                        </div>
+                        </motion.div>
 
                         {!isAuthenticated && !session.isEnrolled && (
                             <p className="text-center text-sm text-gray-600 mt-4">
                                 Please <button onClick={() => router.push('/login')} className="text-blue-600 hover:underline font-medium">sign in</button> to enroll in this live session
                             </p>
                         )}
-                    </div>
-                </div>
-            </div>
+                    </motion.div>
+                </motion.div>
+            </motion.div>
 
             {/* Stripe Checkout Modal */}
             {clientSecret && (
@@ -313,6 +387,6 @@ export default function LiveSessionDetailPage({ params }) {
                     onError={handlePaymentError}
                 />
             )}
-        </div>
+        </motion.div>
     );
 }

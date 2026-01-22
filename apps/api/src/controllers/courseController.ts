@@ -93,8 +93,10 @@ export const getCourseById = async (req: Request, res: Response) => {
       return res.status(400).json({ error: lessonsError.message });
     }
 
-    // Check if user has purchased this course
+    // Check if user has purchased this course and get lesson progress
     let isPurchased = false;
+    let lessonsWithProgress = lessons || [];
+    
     if (token) {
       const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
 
@@ -107,6 +109,26 @@ export const getCourseById = async (req: Request, res: Response) => {
           .single();
 
         isPurchased = !!purchase;
+
+        // Get user's progress for these lessons
+        const lessonIds = lessons?.map(l => l.id) || [];
+        if (lessonIds.length > 0) {
+          const { data: progress } = await supabaseAdmin
+            .from("user_lesson_progress")
+            .select("*")
+            .eq("user_id", userData.user.id)
+            .in("lesson_id", lessonIds);
+
+          // Merge progress data with lessons
+          lessonsWithProgress = lessons?.map(lesson => {
+            const lessonProgress = progress?.find(p => p.lesson_id === lesson.id);
+            return {
+              ...lesson,
+              completed: lessonProgress?.completed || false,
+              lastWatchedAt: lessonProgress?.last_watched_at || null,
+            };
+          }) || [];
+        }
       }
     }
 
@@ -114,7 +136,7 @@ export const getCourseById = async (req: Request, res: Response) => {
       course: {
         ...course,
         isPurchased,
-        lessons: lessons || [],
+        lessons: lessonsWithProgress,
       },
     });
   } catch (error: any) {

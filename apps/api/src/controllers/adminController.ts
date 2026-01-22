@@ -497,12 +497,24 @@ const calculateSessionStatus = (scheduledAt: string, durationMinutes: number): s
 };
 
 /**
- * Update session with calculated status
+ * Update session with calculated status and persist to database if changed
  */
-const updateSessionStatus = (session: any) => {
+const updateSessionStatus = async (session: any) => {
     if (!session) return session;
     
     const calculatedStatus = calculateSessionStatus(session.scheduled_at, session.duration);
+    
+    // Update database if status has changed
+    if (session.status !== calculatedStatus) {
+        await supabaseAdmin
+            .from("live_sessions")
+            .update({ 
+                status: calculatedStatus,
+                updated_at: new Date().toISOString()
+            })
+            .eq("id", session.id);
+    }
+    
     return {
         ...session,
         status: calculatedStatus
@@ -528,8 +540,11 @@ export const getLiveSessions = async (req: Request, res: Response) => {
             return res.status(400).json({ error: error.message });
         }
 
-        // Calculate status for each session
-        let sessionsWithStatus = sessions?.map((session) => updateSessionStatus(session)) || [];
+        // Calculate status for each session and update database if needed
+        const updatedSessions = await Promise.all(
+            (sessions || []).map(async (session) => await updateSessionStatus(session))
+        );
+        let sessionsWithStatus = updatedSessions;
 
         // Apply status filter after calculating status
         if (status) {

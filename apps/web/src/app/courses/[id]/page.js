@@ -23,6 +23,8 @@ import {
   BookOpen
 } from "lucide-react";
 import { VideoPlayer } from "@/components/video-player";
+import { motion } from "framer-motion";
+import { fadeInUp, staggerContainer, staggerItem, defaultTransition } from "@/lib/animations";
 
 export default function CourseDetailPage({ params }) {
   const router = useRouter();
@@ -66,6 +68,56 @@ export default function CourseDetailPage({ params }) {
     }
     
     setSelectedLesson(lesson);
+  };
+
+  const handleLessonProgressToggle = async (lesson, e) => {
+    e.stopPropagation(); // Prevent triggering the lesson click handler
+    
+    if (!isAuthenticated) {
+      toast.error("Please sign in to update lesson progress");
+      router.push("/login");
+      return;
+    }
+
+    if (!course?.isPurchased && !lesson.is_preview) {
+      toast.error("Please purchase this course to mark lessons as complete");
+      return;
+    }
+
+    const newCompletedStatus = !lesson.completed;
+
+    try {
+      // Optimistically update the UI
+      setCourse(prevCourse => ({
+        ...prevCourse,
+        lessons: prevCourse.lessons.map(l =>
+          l.id === lesson.id
+            ? { ...l, completed: newCompletedStatus }
+            : l
+        ),
+      }));
+
+      // Update progress on the server
+      await courseService.updateLessonProgress(lesson.id, newCompletedStatus);
+      
+      toast.success(
+        newCompletedStatus
+          ? "Lesson marked as completed!"
+          : "Lesson marked as incomplete"
+      );
+    } catch (err) {
+      // Revert on error
+      setCourse(prevCourse => ({
+        ...prevCourse,
+        lessons: prevCourse.lessons.map(l =>
+          l.id === lesson.id
+            ? { ...l, completed: !newCompletedStatus }
+            : l
+        ),
+      }));
+      
+      toast.error(err.response?.data?.error || "Failed to update lesson progress");
+    }
   };
 
   const handlePurchase = async () => {
@@ -140,12 +192,22 @@ export default function CourseDetailPage({ params }) {
   const whatYouLearn = Array.isArray(course.what_you_learn) ? course.what_you_learn : [];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <motion.div
+      initial="initial"
+      animate="animate"
+      variants={fadeInUp}
+      className="min-h-screen bg-gray-50"
+    >
       <Header />
       
       <div className="pt-15">
         {/* Course Header */}
-        <div className="bg-linear-to-br from-blue-600 to-purple-600 text-white">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={defaultTransition}
+          className="bg-linear-to-br from-blue-600 to-purple-600 text-white"
+        >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <div className="grid lg:grid-cols-3 gap-8">
               <div className="lg:col-span-2">
@@ -248,10 +310,15 @@ export default function CourseDetailPage({ params }) {
               </div>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Course Content */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ ...defaultTransition, delay: 0.2 }}
+          className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12"
+        >
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Main Content */}
             <div className="lg:col-span-2">
@@ -354,7 +421,12 @@ export default function CourseDetailPage({ params }) {
 
             {/* Lessons Sidebar */}
             <div className="lg:col-span-1">
-              <div className="bg-white rounded-xl shadow-md overflow-hidden sticky top-24">
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ ...defaultTransition, delay: 0.3 }}
+                className="bg-white rounded-xl shadow-md overflow-hidden sticky top-24"
+              >
                 <div className="p-4 bg-gray-50 border-b border-gray-200">
                   <h3 className="font-bold text-lg">Course Content</h3>
                   <p className="text-sm text-gray-600">
@@ -364,8 +436,13 @@ export default function CourseDetailPage({ params }) {
                 <div className="max-h-[600px] overflow-y-auto">
                   {course.lessons && course.lessons.length > 0 ? (
                     course.lessons.map((lesson, index) => (
-                      <button
+                      <motion.button
                         key={lesson.id}
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.4 + index * 0.05 }}
+                        whileHover={{ x: 4 }}
+                        whileTap={{ x: 0 }}
                         onClick={() => handleLessonClick(lesson)}
                         className={`w-full p-4 text-left border-b border-gray-100 hover:bg-blue-50 transition-colors ${
                           selectedLesson?.id === lesson.id ? "bg-blue-50" : ""
@@ -384,6 +461,16 @@ export default function CourseDetailPage({ params }) {
                               <h4 className="font-medium text-sm text-gray-900 line-clamp-2">
                                 {index + 1}. {lesson.title}
                               </h4>
+                              {isAuthenticated && (lesson.is_preview || canAccess) && (
+                                <input
+                                  type="checkbox"
+                                  checked={lesson.completed || false}
+                                  onChange={(e) => handleLessonProgressToggle(lesson, e)}
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer shrink-0"
+                                  aria-label={`Mark lesson "${lesson.title}" as ${lesson.completed ? "incomplete" : "complete"}`}
+                                />
+                              )}
                             </div>
                             <div className="flex items-center gap-2 mt-1">
                               <span className="text-xs text-gray-500">{lesson.duration}</span>
@@ -392,10 +479,16 @@ export default function CourseDetailPage({ params }) {
                                   Preview
                                 </span>
                               )}
+                              {lesson.completed && (
+                                <span className="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded font-semibold flex items-center gap-1">
+                                  <CheckCircle className="w-3 h-3" />
+                                  Completed
+                                </span>
+                              )}
                             </div>
                           </div>
                         </div>
-                      </button>
+                      </motion.button>
                     ))
                   ) : (
                     <div className="p-4">
@@ -407,10 +500,10 @@ export default function CourseDetailPage({ params }) {
                     </div>
                   )}
                 </div>
-              </div>
+              </motion.div>
             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
 
       {/* Stripe Checkout Modal */}
@@ -425,6 +518,6 @@ export default function CourseDetailPage({ params }) {
           onError={handlePaymentError}
         />
       )}
-    </div>
+    </motion.div>
   );
 }

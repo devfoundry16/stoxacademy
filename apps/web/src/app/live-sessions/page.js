@@ -6,6 +6,8 @@ import { Calendar, Clock, Users, DollarSign, Video, CheckCircle, Filter, Trendin
 import { Header, LoadingSpinner, ErrorState } from '@/components';
 import { liveSessionService } from '@/lib/liveSessionService';
 import { authService } from '@/lib/auth';
+import { motion } from 'framer-motion';
+import { fadeInUp, staggerContainer, staggerItem, defaultTransition } from '@/lib/animations';
 
 function LiveSessionCard({ session, isAuthenticated }) {
     const router = useRouter();
@@ -72,7 +74,13 @@ function LiveSessionCard({ session, isAuthenticated }) {
     const statusConfig = getStatusConfig(session.status);
 
     return (
-        <div className="group bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100">
+        <motion.div
+            initial="initial"
+            animate="animate"
+            variants={fadeInUp}
+            whileHover={{ y: -8 }}
+            className="group bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 border border-gray-100"
+        >
             {/* Gradient Header */}
             <div className="h-2 bg-linear-to-r from-blue-500 via-purple-500 to-indigo-500"></div>
             
@@ -156,16 +164,18 @@ function LiveSessionCard({ session, isAuthenticated }) {
                 </div>
 
                 {/* Action button with enhanced styling */}
-                <button
+                <motion.button
+                    whileHover={{ y: -2 }}
+                    whileTap={{ y: 0 }}
                     onClick={handleViewDetails}
                     className="w-full flex items-center justify-center gap-2 px-4 py-3.5 bg-linear-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200 font-semibold shadow-md hover:shadow-xl group"
                 >
                     {session.status === 'live' ? <Play size={20} className="animate-pulse" /> : <Video size={20} />}
                     <span>{session.status === 'live' ? 'Join Live Session' : 'View Details'}</span>
                     <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-                </button>
+                </motion.button>
             </div>
-        </div>
+        </motion.div>
     );
 }
 
@@ -226,11 +236,21 @@ export default function LiveSessionsPage() {
     };
 
     return (
-        <div className="min-h-screen bg-linear-to-br from-gray-50 via-blue-50 to-purple-50">
+        <motion.div
+            initial="initial"
+            animate="animate"
+            variants={fadeInUp}
+            className="min-h-screen bg-linear-to-br from-gray-50 via-blue-50 to-purple-50"
+        >
             <Header />
             
             {/* Enhanced Page Header */}
-            <div className="pt-36 pb-20 bg-linear-to-r from-blue-600 via-purple-600 to-indigo-600 text-white relative overflow-hidden">
+            <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={defaultTransition}
+                className="pt-36 pb-20 bg-linear-to-r from-blue-600 via-purple-600 to-indigo-600 text-white relative overflow-hidden"
+            >
                 {/* Decorative elements */}
                 <div className="absolute inset-0 opacity-10">
                     <div className="absolute top-0 left-0 w-96 h-96 bg-white rounded-full blur-3xl"></div>
@@ -251,12 +271,26 @@ export default function LiveSessionsPage() {
                         </p>
                     </div>
                 </div>
-            </div>
+            </motion.div>
 
             {/* Stats Cards */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-10 relative z-20 mb-8">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 transform hover:scale-105 transition-all duration-200">
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ ...defaultTransition, delay: 0.2 }}
+                className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-10 relative z-20 mb-8"
+            >
+                <motion.div
+                    variants={staggerContainer}
+                    initial="initial"
+                    animate="animate"
+                    className="grid grid-cols-2 md:grid-cols-4 gap-4"
+                >
+                    <motion.div
+                        variants={staggerItem}
+                        whileHover={{ y: -4 }}
+                        className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 transition-all duration-200"
+                    >
                         <div className="flex items-center justify-between mb-2">
                             <div className="p-3 bg-indigo-100 rounded-xl">
                                 <TrendingUp size={24} className="text-indigo-600" />
@@ -264,8 +298,12 @@ export default function LiveSessionsPage() {
                             <span className="text-3xl font-bold text-gray-900">{stats.total}</span>
                         </div>
                         <p className="text-sm font-medium text-gray-600">Total Sessions</p>
-                    </div>
-                    <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 transform hover:scale-105 transition-all duration-200">
+                    </motion.div>
+                    <motion.div
+                        variants={staggerItem}
+                        whileHover={{ y: -4 }}
+                        className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 transition-all duration-200"
+                    >
                         <div className="flex items-center justify-between mb-2">
                             <div className="p-3 bg-blue-100 rounded-xl">
                                 <Calendar size={24} className="text-blue-600" />
@@ -273,8 +311,12 @@ export default function LiveSessionsPage() {
                             <span className="text-3xl font-bold text-gray-900">{stats.scheduled}</span>
                         </div>
                         <p className="text-sm font-medium text-gray-600">Scheduled</p>
-                    </div>
-                    <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 transform hover:scale-105 transition-all duration-200">
+                    </motion.div>
+                    <motion.div
+                        variants={staggerItem}
+                        whileHover={{ y: -4 }}
+                        className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 transition-all duration-200"
+                    >
                         <div className="flex items-center justify-between mb-2">
                             <div className="p-3 bg-red-100 rounded-xl">
                                 <Play size={24} className="text-red-600 animate-pulse" />
@@ -282,8 +324,12 @@ export default function LiveSessionsPage() {
                             <span className="text-3xl font-bold text-gray-900">{stats.live}</span>
                         </div>
                         <p className="text-sm font-medium text-gray-600">Live Now</p>
-                    </div>
-                    <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 transform hover:scale-105 transition-all duration-200">
+                    </motion.div>
+                    <motion.div
+                        variants={staggerItem}
+                        whileHover={{ y: -4 }}
+                        className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 transition-all duration-200"
+                    >
                         <div className="flex items-center justify-between mb-2">
                             <div className="p-3 bg-gray-100 rounded-xl">
                                 <CheckCircle size={24} className="text-gray-600" />
@@ -291,12 +337,17 @@ export default function LiveSessionsPage() {
                             <span className="text-3xl font-bold text-gray-900">{stats.completed}</span>
                         </div>
                         <p className="text-sm font-medium text-gray-600">Completed</p>
-                    </div>
-                </div>
-            </div>
+                    </motion.div>
+                </motion.div>
+            </motion.div>
 
             {/* Enhanced Filters */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8">
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ ...defaultTransition, delay: 0.4 }}
+                className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8"
+            >
                 <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
                     <div className="flex items-center justify-between flex-wrap gap-4">
                         <div className="flex items-center gap-3">
@@ -305,8 +356,16 @@ export default function LiveSessionsPage() {
                             </div>
                             <label className="text-sm font-semibold text-gray-900">Filter by Status:</label>
                         </div>
-                        <div className="flex gap-2">
-                            <button
+                        <motion.div
+                            variants={staggerContainer}
+                            initial="initial"
+                            animate="animate"
+                            className="flex gap-2"
+                        >
+                            <motion.button
+                                variants={staggerItem}
+                                whileHover={{ y: -2 }}
+                                whileTap={{ y: 0 }}
                                 onClick={() => setStatusFilter('')}
                                 className={`px-4 py-2 rounded-xl font-medium text-sm transition-all ${
                                     statusFilter === '' 
@@ -315,8 +374,11 @@ export default function LiveSessionsPage() {
                                 }`}
                             >
                                 All Sessions
-                            </button>
-                            <button
+                            </motion.button>
+                            <motion.button
+                                variants={staggerItem}
+                                whileHover={{ y: -2 }}
+                                whileTap={{ y: 0 }}
                                 onClick={() => setStatusFilter('scheduled')}
                                 className={`px-4 py-2 rounded-xl font-medium text-sm transition-all ${
                                     statusFilter === 'scheduled' 
@@ -325,8 +387,11 @@ export default function LiveSessionsPage() {
                                 }`}
                             >
                                 Scheduled
-                            </button>
-                            <button
+                            </motion.button>
+                            <motion.button
+                                variants={staggerItem}
+                                whileHover={{ y: -2 }}
+                                whileTap={{ y: 0 }}
                                 onClick={() => setStatusFilter('live')}
                                 className={`px-4 py-2 rounded-xl font-medium text-sm transition-all ${
                                     statusFilter === 'live' 
@@ -335,8 +400,11 @@ export default function LiveSessionsPage() {
                                 }`}
                             >
                                 Live Now
-                            </button>
-                            <button
+                            </motion.button>
+                            <motion.button
+                                variants={staggerItem}
+                                whileHover={{ y: -2 }}
+                                whileTap={{ y: 0 }}
                                 onClick={() => setStatusFilter('completed')}
                                 className={`px-4 py-2 rounded-xl font-medium text-sm transition-all ${
                                     statusFilter === 'completed' 
@@ -345,34 +413,53 @@ export default function LiveSessionsPage() {
                                 }`}
                             >
                                 Completed
-                            </button>
-                        </div>
+                            </motion.button>
+                        </motion.div>
                     </div>
                 </div>
-            </div>
+            </motion.div>
 
             {/* Sessions Grid */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-16">
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ ...defaultTransition, delay: 0.6 }}
+                className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-16"
+            >
                 {sessions.length === 0 ? (
-                    <div className="text-center py-20 bg-white rounded-2xl shadow-lg border border-gray-100">
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-center py-20 bg-white rounded-2xl shadow-lg border border-gray-100"
+                    >
                         <div className="inline-flex items-center justify-center w-20 h-20 bg-gray-100 rounded-full mb-6">
                             <Video size={40} className="text-gray-400" />
                         </div>
                         <h3 className="text-2xl font-bold text-gray-900 mb-3">No live sessions found</h3>
                         <p className="text-gray-600 text-lg">Check back later for upcoming live sessions</p>
-                    </div>
+                    </motion.div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {sessions.map((session) => (
-                            <LiveSessionCard
+                    <motion.div
+                        variants={staggerContainer}
+                        initial="initial"
+                        animate="animate"
+                        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                    >
+                        {sessions.map((session, index) => (
+                            <motion.div
                                 key={session.id}
-                                session={session}
-                                isAuthenticated={isAuthenticated}
-                            />
+                                variants={staggerItem}
+                                transition={{ delay: index * 0.1 }}
+                            >
+                                <LiveSessionCard
+                                    session={session}
+                                    isAuthenticated={isAuthenticated}
+                                />
+                            </motion.div>
                         ))}
-                    </div>
+                    </motion.div>
                 )}
-            </div>
-        </div>
+            </motion.div>
+        </motion.div>
     );
 }

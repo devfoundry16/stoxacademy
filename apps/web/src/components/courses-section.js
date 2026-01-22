@@ -1,5 +1,7 @@
 "use client"
 import { useRouter } from "next/navigation"
+import { motion } from "framer-motion"
+import { fadeInUp, staggerContainer, staggerItem, defaultTransition } from "@/lib/animations"
 const courses = [
   {
     badge: "In-Person",
@@ -56,16 +58,28 @@ export function CoursesSection() {
   return (
     <section className="py-16 px-4 sm:px-6 lg:px-8 bg-white">
       <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-12">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={defaultTransition}
+          className="text-center mb-12"
+        >
           <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
             Choose the Right Course and Start Your Journey to Become an Independent Trader
           </h2>
           <p className="text-xl text-gray-600">In our course, you don&apos;t just learn – you trade</p>
-        </div>
-        <div className="grid lg:grid-cols-3 gap-8">
+        </motion.div>
+        <motion.div
+          variants={staggerContainer}
+          initial="initial"
+          animate="animate"
+          className="grid lg:grid-cols-3 gap-8"
+        >
           {courses.map((course, idx) => (
-            <div
+            <motion.div
               key={idx}
+              variants={staggerItem}
+              whileHover={{ y: -8 }}
               className={`bg-linear-to-br ${course.bgGradient} rounded-3xl p-8 shadow-lg hover:shadow-xl transition-shadow`}
             >
               <div className="mb-6">
@@ -83,15 +97,17 @@ export function CoursesSection() {
                   </li>
                 ))}
               </ul>
-              <button
+              <motion.button
+                whileHover={{ y: -2 }}
+                whileTap={{ y: 0 }}
                 className={`w-full px-6 py-4 ${course.buttonColor} text-white font-semibold rounded-xl transition-colors`}
                 onClick={() => router.push('/signup')}
               >
                 Register Now
-              </button>
-            </div>
+              </motion.button>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   )

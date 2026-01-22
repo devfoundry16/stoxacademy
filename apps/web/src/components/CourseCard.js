@@ -5,12 +5,21 @@ import Image from "next/image";
 import { Play, Lock } from "lucide-react";
 import { LevelBadge } from "./LevelBadge";
 import { CourseStats } from "./CourseStats";
+import { motion } from "framer-motion";
+import { fadeInUp, defaultTransition } from "@/lib/animations";
 
 export function CourseCard({ course, isAuthenticated, onClick }) {
   const canAccess = isAuthenticated && course.isPurchased;
 
   return (
-    <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow cursor-pointer group">
+    <motion.div
+      initial="initial"
+      animate="animate"
+      variants={fadeInUp}
+      transition={defaultTransition}
+      whileHover={{ y: -8 }}
+      className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow cursor-pointer group"
+    >
       <Link href={`/courses/${course.id}`}>
         <div className="relative h-48 overflow-hidden">
           <Image
@@ -77,7 +86,9 @@ export function CourseCard({ course, isAuthenticated, onClick }) {
                 </span>
               </div>
             )}
-            <button
+            <motion.button
+              whileHover={{ y: -2 }}
+              whileTap={{ y: 0 }}
               onClick={(e) => {
                 e.preventDefault();
                 onClick();
@@ -91,11 +102,11 @@ export function CourseCard({ course, isAuthenticated, onClick }) {
               }`}
             >
               {canAccess ? "Continue Learning" : isAuthenticated ? "Buy Now" : "Sign In"}
-            </button>
+            </motion.button>
           </div>
         </div>
       </Link>
-    </div>
+    </motion.div>
   );
 }
 

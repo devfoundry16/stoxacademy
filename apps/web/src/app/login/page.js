@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import { authService } from "@/lib/auth";
+import { motion } from "framer-motion";
+import { fadeInUp, defaultTransition } from "@/lib/animations";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -54,12 +56,27 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-50 to-indigo-100 px-4">
-      <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8">
-        <div className="text-center mb-8">
+    <motion.div
+      initial="initial"
+      animate="animate"
+      variants={fadeInUp}
+      className="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-50 to-indigo-100 px-4"
+    >
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={defaultTransition}
+        className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8"
+      >
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ ...defaultTransition, delay: 0.1 }}
+          className="text-center mb-8"
+        >
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h1>
           <p className="text-gray-600">Sign in to continue to Stox Academy</p>
-        </div>
+        </motion.div>
 
         {error && (
           <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
@@ -106,16 +123,23 @@ export default function LoginPage() {
             />
           </div>
 
-          <button
+          <motion.button
+            whileHover={{ y: -2 }}
+            whileTap={{ y: 0 }}
             type="submit"
             disabled={loading}
             className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? "Signing in..." : "Sign In"}
-          </button>
+          </motion.button>
         </form>
 
-        <div className="mt-6">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ ...defaultTransition, delay: 0.2 }}
+          className="mt-6"
+        >
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-gray-300"></div>
@@ -125,7 +149,9 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <button
+          <motion.button
+            whileHover={{ y: -2 }}
+            whileTap={{ y: 0 }}
             onClick={handleGoogleSignIn}
             disabled={loading}
             className="mt-4 w-full flex items-center justify-center gap-3 px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -149,10 +175,15 @@ export default function LoginPage() {
               />
             </svg>
             <span className="text-gray-700 font-medium">Sign in with Google</span>
-          </button>
-        </div>
+          </motion.button>
+        </motion.div>
 
-        <p className="mt-8 text-center text-sm text-gray-600">
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ ...defaultTransition, delay: 0.3 }}
+          className="mt-8 text-center text-sm text-gray-600"
+        >
           Don&apos;t have an account?{" "}
           <Link
             href="/signup"
@@ -160,9 +191,9 @@ export default function LoginPage() {
           >
             Sign up
           </Link>
-        </p>
-      </div>
-    </div>
+        </motion.p>
+      </motion.div>
+    </motion.div>
   );
 }
 

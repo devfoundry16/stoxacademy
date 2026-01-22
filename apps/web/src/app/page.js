@@ -1,3 +1,5 @@
+"use client";
+
 import { Header } from "@/components/header"
 import { HeroSection } from "@/components/hero-section"
 import { ChecklistFlow } from "@/components/ChecklistFlow"
@@ -9,10 +11,17 @@ import { SkillsSection } from "@/components/skills-section"
 import { TeamSection } from "@/components/team-section"
 import { FinalCTASection } from "@/components/final-cta-section"
 import { Footer } from "@/components/footer"
+import { motion } from "framer-motion"
+import { fadeIn } from "@/lib/animations"
 
 export default function StoxAcademy() {
   return (
-    <div className="min-h-screen bg-white font-sans">
+    <motion.div
+      initial="initial"
+      animate="animate"
+      variants={fadeIn}
+      className="min-h-screen bg-white font-sans"
+    >
       <Header />
       <HeroSection />
       <WhyUsSection />
@@ -24,6 +33,6 @@ export default function StoxAcademy() {
       <TeamSection />
       <FinalCTASection />
       <Footer />
-    </div>
+    </motion.div>
   )
 }

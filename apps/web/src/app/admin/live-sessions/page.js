@@ -65,6 +65,17 @@ export default function LiveSessionsPage() {
         }
     };
 
+    // Convert UTC date string to local datetime-local format (YYYY-MM-DDTHH:mm)
+    const toLocalDateTimeString = (dateString) => {
+        const date = new Date(dateString);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        return `${year}-${month}-${day}T${hours}:${minutes}`;
+    };
+
     const handleCreateNew = () => {
         setSelectedSession(null);
         setFormData({
@@ -86,7 +97,7 @@ export default function LiveSessionsPage() {
             course_id: session.course_id,
             title: session.title,
             description: session.description || '',
-            scheduled_at: new Date(session.scheduled_at).toISOString().slice(0, 16),
+            scheduled_at: toLocalDateTimeString(session.scheduled_at),
             duration: session.duration,
             meeting_url: session.meeting_url || '',
             max_participants: session.max_participants || '',
@@ -145,7 +156,9 @@ export default function LiveSessionsPage() {
         {
             header: 'Scheduled',
             accessor: 'scheduled_at',
-            render: (row) => new Date(row.scheduled_at).toLocaleString(),
+            render: (row) => new Date(row.scheduled_at).toLocaleString('en-US', {
+                timeZoneName: 'short',
+            }),
         },
         {
             header: 'Duration',
@@ -318,7 +331,7 @@ export default function LiveSessionsPage() {
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Scheduled Date & Time *
+                                Scheduled Date & Time * <span className="text-xs text-gray-500 font-normal">({Intl.DateTimeFormat().resolvedOptions().timeZone})</span>
                             </label>
                             <input
                                 type="datetime-local"
@@ -327,6 +340,7 @@ export default function LiveSessionsPage() {
                                 onChange={(e) => setFormData({ ...formData, scheduled_at: e.target.value })}
                                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
+                            <p className="mt-1 text-xs text-gray-500">Times are in your local timezone ({Intl.DateTimeFormat().resolvedOptions().timeZone})</p>
                         </div>
 
                         <div>

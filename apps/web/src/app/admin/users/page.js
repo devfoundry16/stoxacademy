@@ -103,7 +103,9 @@ export default function UsersPage() {
         {
             header: 'Joined',
             accessor: 'created_at',
-            render: (row) => new Date(row.created_at).toLocaleDateString(),
+            render: (row) => new Date(row.created_at).toLocaleDateString('en-US', {
+                timeZoneName: 'short',
+            }),
         },
     ];
 

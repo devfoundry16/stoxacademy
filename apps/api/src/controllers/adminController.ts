@@ -577,6 +577,9 @@ export const createLiveSession = async (req: Request, res: Response) => {
             return res.status(400).json({ error: "Missing required fields" });
         }
 
+        // Calculate initial status based on scheduled time
+        const initialStatus = calculateSessionStatus(scheduled_at, duration || 60);
+
         const { data: session, error } = await supabaseAdmin
             .from("live_sessions")
             .insert({
@@ -589,7 +592,7 @@ export const createLiveSession = async (req: Request, res: Response) => {
                 instructor_id: instructor_id || null,
                 max_participants: max_participants || null,
                 price: price || 0,
-                status: "scheduled",
+                status: initialStatus,
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString(),
             })
@@ -612,6 +615,10 @@ export const updateLiveSession = async (req: Request, res: Response) => {
         const { id } = req.params;
         const updateData = { ...req.body, updated_at: new Date().toISOString() };
 
+        // Check if scheduled_at or duration are being updated (these affect status)
+        const statusAffectingFields = ['scheduled_at', 'duration'];
+        const shouldRecalculateStatus = statusAffectingFields.some(field => field in req.body);
+
         const { data: session, error } = await supabaseAdmin
             .from("live_sessions")
             .update(updateData)
@@ -621,6 +628,12 @@ export const updateLiveSession = async (req: Request, res: Response) => {
 
         if (error) {
             return res.status(400).json({ error: error.message });
+        }
+
+        // Recalculate and update status if scheduled_at or duration were changed
+        if (shouldRecalculateStatus && session) {
+            const updatedSession = await updateSessionStatus(session);
+            return res.status(200).json({ session: updatedSession });
         }
 
         return res.status(200).json({ session });

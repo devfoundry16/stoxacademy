@@ -99,6 +99,7 @@ export default function LiveSessionDetailPage({ params }) {
             year: 'numeric',
             month: 'long',
             day: 'numeric',
+            timeZoneName: 'short',
         });
     };
 
@@ -106,6 +107,7 @@ export default function LiveSessionDetailPage({ params }) {
         return new Date(dateString).toLocaleTimeString('en-US', {
             hour: '2-digit',
             minute: '2-digit',
+            timeZoneName: 'short',
         });
     };
 

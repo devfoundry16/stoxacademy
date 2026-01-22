@@ -55,7 +55,7 @@ export function Header() {
                 <div className="relative">
                   <button
                     onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                    className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors relative z-60"
+                    className="flex items-center gap-2 px-4 py-2 relative z-60"
                   >
                     {user?.user_metadata?.avatar_url ? (
                       <Image
@@ -66,12 +66,12 @@ export function Header() {
                         className="rounded-full"
                       />
                     ) : (
-                      <User className="w-4 h-4 text-gray-600" />
+                      <User className="w-5 h-5 text-gray-600" />
                     )}
-                    <span className="text-sm font-medium text-gray-700">
+                    {/* <span className="text-sm font-medium text-gray-700">
                       {user?.user_metadata?.full_name ||
                         user?.email?.split("@")[0]}
-                    </span>
+                    </span> */}
                     <ChevronDown
                       className={`w-4 h-4 text-gray-600 transition-transform ${
                         userDropdownOpen ? "rotate-180" : ""
@@ -88,7 +88,7 @@ export function Header() {
                       <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-60">
                         <button
                           onClick={handleSignOut}
-                          className="w-full flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-50 transition-colors"
+                          className="w-full flex items-center gap-2 px-4 py-2 hover:bg-red-50 transition-colors"
                         >
                           <LogOut className="w-4 h-4" />
                           Logout

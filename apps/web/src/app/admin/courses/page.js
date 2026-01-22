@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Edit, Trash2, Plus, Eye, X } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 import toast from 'react-hot-toast';
 import DataTable from '@/components/admin/DataTable';
 import Modal from '@/components/admin/Modal';
@@ -34,7 +35,8 @@ export default function CoursesPage() {
     const fetchCourses = async () => {
         try {
             setLoading(true);
-            const token = localStorage.getItem('access_token');
+            const { data: { session } } = await supabase.auth.getSession();
+            const token = session?.access_token;
 
             const response = await axios.get(`${API_URL}/api/courses`, {
                 headers: { Authorization: `Bearer ${token}` },
@@ -73,7 +75,8 @@ export default function CoursesPage() {
         // Fetch lessons for this course
         let courseLessons = [];
         try {
-            const token = localStorage.getItem('access_token');
+            const { data: { session } } = await supabase.auth.getSession();
+            const token = session?.access_token;
             const response = await axios.get(`${API_URL}/api/courses/${course.id}/lessons`, {
                 headers: { Authorization: `Bearer ${token}` },
             });

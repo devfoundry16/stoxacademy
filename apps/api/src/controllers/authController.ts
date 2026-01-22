@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { supabaseAdmin, getSupabaseClient, getSupabaseServerClient } from "../config/supabase";
+import { supabaseAdmin, supabaseClient } from "../config/supabase";
 
 export const signUpWithEmail = async (req: Request, res: Response) => {
   try {
@@ -11,9 +11,8 @@ export const signUpWithEmail = async (req: Request, res: Response) => {
     }
 
     // Create user with Supabase Auth
-    const supabase = getSupabaseServerClient(req, res);
     const { data: authData, error: authError } =
-      await supabase.auth.admin.createUser({
+      await supabaseAdmin.auth.admin.createUser({
         email,
         password,
         email_confirm: true,
@@ -82,8 +81,8 @@ export const signInWithEmail = async (req: Request, res: Response) => {
     if (!email || !password) {
       return res.status(400).json({ error: "Email and password required" });
     }
-    const supabase = getSupabaseServerClient(req, res);
-    const { data, error } = await supabase.auth.signInWithPassword({
+    // Use admin client to sign in and get session
+    const { data, error } = await supabaseAdmin.auth.signInWithPassword({
       email,
       password,
     });
@@ -102,10 +101,7 @@ export const signInWithEmail = async (req: Request, res: Response) => {
 
 export const signInWithGoogle = async (req: Request, res: Response) => {
   try {
-    // Use regular client with anon key for OAuth flows, not service role
-    const supabase = getSupabaseServerClient(req, res);
-
-    const { data, error } = await supabase.auth.signInWithOAuth({
+    const { data, error } = await supabaseClient.auth.signInWithOAuth({
       provider: "google",
       options: {
         redirectTo: `${process.env.FRONTEND_URL}/auth/callback`,
@@ -135,10 +131,8 @@ export const handleOAuthCallback = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "No code provided" });
     }
 
-    // Use regular client with anon key for OAuth callback, not service role
-    const supabase = getSupabaseServerClient(req, res);
-
-    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+    // For OAuth callback, we need to create a client with anon key
+    const { data, error } = await supabaseClient.auth.exchangeCodeForSession(code);
 
     if (error) {
       return res.status(400).json({ error: error.message });

@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { getSupabaseClient } from "../config/supabase";
+import { supabaseAdmin } from "../config/supabase";
 import { calculateChecklistScore } from "../utils/checklistScoring";
 import { sendEmailImmediately, scheduleAllEmails } from "../services/emailQueueService";
 import fs from "fs";
@@ -14,10 +14,8 @@ export const submitChecklistResponse = async (req: Request, res: Response) => {
             return res.status(400).json({ error: "Missing required fields" });
         }
 
-        const supabase = getSupabaseClient();
-
         // Check if email already exists
-        const { data: existingResponse, error: checkError } = await supabase
+        const { data: existingResponse, error: checkError } = await supabaseAdmin
             .from("checklist_responses")
             .select("email")
             .eq("email", email)
@@ -39,7 +37,7 @@ export const submitChecklistResponse = async (req: Request, res: Response) => {
         const { score, stage } = scoreResult;
 
         // Insert new response with score and stage
-        const { data, error } = await supabase
+        const { data, error } = await supabaseAdmin
             .from("checklist_responses")
             .insert([
                 {

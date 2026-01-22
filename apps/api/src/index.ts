@@ -1,5 +1,4 @@
 import express from "express";
-import cookieParser from "cookie-parser";
 import cors from "cors";
 import dotenv from "dotenv";
 import authRoutes from "./routes/authRoutes";
@@ -13,10 +12,9 @@ import { startEmailWorker } from "./jobs/emailWorker";
 dotenv.config();
 
 const app = express();
-app.use(cookieParser());
 app.use(cors({
   origin: process.env.FRONTEND_URL, // e.g., 'http://localhost:5173'
-  credentials: true
+  credentials: false // Not needed for token-based auth
 }));
 app.use(express.json());
 

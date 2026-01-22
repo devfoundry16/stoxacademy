@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
+import { supabase } from '@/lib/supabase';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
@@ -15,13 +16,14 @@ export const useAdmin = () => {
     useEffect(() => {
         const checkAdminStatus = async () => {
             try {
-                const session = localStorage.getItem('access_token');
-                if (!session) {
+                // Get session from Supabase (automatically refreshed)
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session?.access_token) {
                     router.push('/login');
                     return;
                 }
 
-                const token = session;
+                const token = session.access_token;
 
                 // Get current user
                 const response = await axios.get(`${API_URL}/api/auth/me`, {

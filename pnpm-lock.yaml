@@ -78,6 +78,9 @@ importers:
       '@stripe/stripe-js':
         specifier: ^8.6.1
         version: 8.6.1
+      '@supabase/supabase-js':
+        specifier: ^2.89.0
+        version: 2.89.0
       axios:
         specifier: ^1.13.2
         version: 1.13.2

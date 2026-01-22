@@ -25,8 +25,20 @@ export const requireAdmin = async (
             return res.status(401).json({ error: "Invalid token" });
         }
 
+        // Check role from database (source of truth) instead of user_metadata
+        // This ensures role changes in the database are immediately effective
+        const { data: dbUser, error: dbError } = await supabaseAdmin
+            .from("users")
+            .select("role")
+            .eq("id", userData.user.id)
+            .single();
+
+        if (dbError || !dbUser) {
+            return res.status(401).json({ error: "User not found in database" });
+        }
+
         // Check if user has admin role
-        if (userData.user.user_metadata.role !== "admin") {
+        if (dbUser.role !== "admin") {
             return res.status(403).json({
                 error: "Access denied. Admin privileges required."
             });
@@ -36,7 +48,7 @@ export const requireAdmin = async (
         (req as any).user = {
             id: userData.user.id,
             email: userData.user.email,
-            role: userData.user.user_metadata.role,
+            role: dbUser.role,
         };
 
         next();
@@ -67,7 +79,18 @@ export const requireAdminOrInstructor = async (
             return res.status(401).json({ error: "Invalid token" });
         }
 
-        const userRole = userData.user.user_metadata?.role;
+        // Check role from database (source of truth) instead of user_metadata
+        const { data: dbUser, error: dbError } = await supabaseAdmin
+            .from("users")
+            .select("role")
+            .eq("id", userData.user.id)
+            .single();
+
+        if (dbError || !dbUser) {
+            return res.status(401).json({ error: "User not found in database" });
+        }
+
+        const userRole = dbUser.role;
 
         if (userRole !== "admin" && userRole !== "instructor") {
             return res.status(403).json({

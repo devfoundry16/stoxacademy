@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { supabaseAdmin, getSupabaseClient } from "../config/supabase";
+import { supabaseAdmin } from "../config/supabase";
 
 // ==================== Helper Functions ====================
 

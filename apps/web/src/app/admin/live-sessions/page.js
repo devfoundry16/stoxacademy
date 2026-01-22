@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 import DataTable from '@/components/admin/DataTable';
 import Modal from '@/components/admin/Modal';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { supabase } from '@/lib/supabase';
 import axios from 'axios';
 import {
     getLiveSessions,
@@ -52,7 +53,8 @@ export default function LiveSessionsPage() {
 
     const fetchCourses = async () => {
         try {
-            const token = localStorage.getItem('access_token');
+            const { data: { session } } = await supabase.auth.getSession();
+            const token = session?.access_token;
 
             const response = await axios.get(`${API_URL}/api/courses`, {
                 headers: { Authorization: `Bearer ${token}` },

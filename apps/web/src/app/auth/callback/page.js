@@ -3,6 +3,7 @@
 import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { authService } from "@/lib/auth";
+import { supabase } from "@/lib/supabase";
 
 function AuthCallbackContent() {
   const router = useRouter();
@@ -34,19 +35,25 @@ function AuthCallbackContent() {
       const refreshToken = hashParams.get("refresh_token");
 
       if (accessToken && refreshToken) {
-        // Store tokens directly from hash
-        localStorage.setItem("access_token", accessToken);
-        localStorage.setItem("refresh_token", refreshToken);
-        
-        // Optionally fetch user data
+        // Set session in Supabase client for automatic token refresh
         try {
+          const { error: sessionError } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+          
+          if (sessionError) {
+            throw sessionError;
+          }
+          
+          // Fetch user data
           const user = await authService.getCurrentUser();
           localStorage.setItem("user", JSON.stringify(user));
           // Dispatch event to update auth store
           window.dispatchEvent(new Event("auth-storage-change"));
           router.push("/");
         } catch (err) {
-          setError("Failed to fetch user data");
+          setError("Failed to set session or fetch user data");
           setTimeout(() => router.push("/login"), 3000);
         }
         return;

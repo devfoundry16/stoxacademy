@@ -1,21 +1,26 @@
 import axios from 'axios';
+import { supabase } from '../supabase';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
-// Helper to get auth token from localStorage
-const getAuthToken = () => {
+// Helper to get auth token from Supabase (automatically refreshed)
+const getAuthToken = async () => {
     if (typeof window !== 'undefined') {
-        const token = localStorage.getItem('access_token');
-        if (token) {
-            return token;
+        try {
+            const { data, error } = await supabase.auth.getSession();
+            if (!error && data?.session?.access_token) {
+                return data.session.access_token;
+            }
+        } catch (error) {
+            console.error("Error getting session:", error);
         }
     }
     return null;
 };
 
 // Helper to create headers with auth token
-const getAuthHeaders = () => {
-    const token = getAuthToken();
+const getAuthHeaders = async () => {
+    const token = await getAuthToken();
     return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
@@ -23,14 +28,14 @@ const getAuthHeaders = () => {
 
 export const getDashboardStats = async () => {
     const response = await axios.get(`${API_URL}/api/admin/stats`, {
-        headers: getAuthHeaders(),
+        headers: await getAuthHeaders(),
     });
     return response.data;
 };
 
 export const getRecentActivity = async (limit = 10) => {
     const response = await axios.get(`${API_URL}/api/admin/recent-activity`, {
-        headers: getAuthHeaders(),
+        headers: await getAuthHeaders(),
         params: { limit },
     });
     return response.data;
@@ -40,7 +45,7 @@ export const getRecentActivity = async (limit = 10) => {
 
 export const getAllUsers = async (params = {}) => {
     const response = await axios.get(`${API_URL}/api/admin/users`, {
-        headers: getAuthHeaders(),
+        headers: await getAuthHeaders(),
         params,
     });
     return response.data;
@@ -48,7 +53,7 @@ export const getAllUsers = async (params = {}) => {
 
 export const getUserById = async (id) => {
     const response = await axios.get(`${API_URL}/api/admin/users/${id}`, {
-        headers: getAuthHeaders(),
+        headers: await getAuthHeaders(),
     });
     return response.data;
 };
@@ -57,14 +62,14 @@ export const updateUserRole = async (id, role) => {
     const response = await axios.put(
         `${API_URL}/api/admin/users/${id}/role`,
         { role },
-        { headers: getAuthHeaders() }
+        { headers: await getAuthHeaders() }
     );
     return response.data;
 };
 
 export const deleteUser = async (id) => {
     const response = await axios.delete(`${API_URL}/api/admin/users/${id}`, {
-        headers: getAuthHeaders(),
+        headers: await getAuthHeaders(),
     });
     return response.data;
 };
@@ -73,21 +78,21 @@ export const deleteUser = async (id) => {
 
 export const createCourse = async (courseData) => {
     const response = await axios.post(`${API_URL}/api/admin/courses`, courseData, {
-        headers: getAuthHeaders(),
+        headers: await getAuthHeaders(),
     });
     return response.data;
 };
 
 export const updateCourse = async (id, courseData) => {
     const response = await axios.put(`${API_URL}/api/admin/courses/${id}`, courseData, {
-        headers: getAuthHeaders(),
+        headers: await getAuthHeaders(),
     });
     return response.data;
 };
 
 export const deleteCourse = async (id) => {
     const response = await axios.delete(`${API_URL}/api/admin/courses/${id}`, {
-        headers: getAuthHeaders(),
+        headers: await getAuthHeaders(),
     });
     return response.data;
 };
@@ -96,7 +101,7 @@ export const deleteCourse = async (id) => {
 
 export const getLiveSessions = async (params = {}) => {
     const response = await axios.get(`${API_URL}/api/admin/live-sessions`, {
-        headers: getAuthHeaders(),
+        headers: await getAuthHeaders(),
         params,
     });
     return response.data;
@@ -104,21 +109,21 @@ export const getLiveSessions = async (params = {}) => {
 
 export const createLiveSession = async (sessionData) => {
     const response = await axios.post(`${API_URL}/api/admin/live-sessions`, sessionData, {
-        headers: getAuthHeaders(),
+        headers: await getAuthHeaders(),
     });
     return response.data;
 };
 
 export const updateLiveSession = async (id, sessionData) => {
     const response = await axios.put(`${API_URL}/api/admin/live-sessions/${id}`, sessionData, {
-        headers: getAuthHeaders(),
+        headers: await getAuthHeaders(),
     });
     return response.data;
 };
 
 export const deleteLiveSession = async (id) => {
     const response = await axios.delete(`${API_URL}/api/admin/live-sessions/${id}`, {
-        headers: getAuthHeaders(),
+        headers: await getAuthHeaders(),
     });
     return response.data;
 };
@@ -127,7 +132,7 @@ export const deleteLiveSession = async (id) => {
 
 export const getChecklistSubmissions = async (params = {}) => {
     const response = await axios.get(`${API_URL}/api/admin/checklist-submissions`, {
-        headers: getAuthHeaders(),
+        headers: await getAuthHeaders(),
         params,
     });
     return response.data;
@@ -135,7 +140,7 @@ export const getChecklistSubmissions = async (params = {}) => {
 
 export const getChecklistSubmissionById = async (id) => {
     const response = await axios.get(`${API_URL}/api/admin/checklist-submissions/${id}`, {
-        headers: getAuthHeaders(),
+        headers: await getAuthHeaders(),
     });
     return response.data;
 };
@@ -146,7 +151,7 @@ export const exportChecklistSubmissionsToExcel = async (filters = {}) => {
     if (filters.stage) params.append('stage', filters.stage);
 
     const response = await axios.get(`${API_URL}/api/admin/checklist-submissions/export/excel?${params.toString()}`, {
-        headers: getAuthHeaders(),
+        headers: await getAuthHeaders(),
         responseType: 'blob', // Important for file download
     });
     

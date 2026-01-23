@@ -10,14 +10,62 @@ const apiClient = axios.create({
   },
 });
 
+// Track if we're currently refreshing to avoid multiple refresh attempts
+let isRefreshing = false;
+let failedQueue = [];
+
+const processQueue = (error, token = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  failedQueue = [];
+};
+
 // Add token to requests from Supabase client (automatically refreshed)
 apiClient.interceptors.request.use(
   async (config) => {
     if (typeof window !== "undefined") {
       try {
-        // Get the current session from Supabase (token is automatically refreshed)
+        // Get the current session from Supabase
         const { data, error } = await supabase.auth.getSession();
-        if (!error && data?.session?.access_token) {
+        
+        if (error) {
+          console.error("Error getting session:", error);
+          return config;
+        }
+
+        if (data?.session?.access_token) {
+          // Check if token is close to expiration (within 60 seconds)
+          // Supabase tokens typically expire after 1 hour
+          const tokenExpiry = data.session.expires_at;
+          
+          // Only do proactive refresh if expires_at is available
+          if (tokenExpiry && data.session.refresh_token) {
+            const now = Math.floor(Date.now() / 1000);
+            const timeUntilExpiry = tokenExpiry - now;
+
+            // If token expires within 60 seconds, proactively refresh it
+            if (timeUntilExpiry < 60) {
+              try {
+                const { data: refreshedData, error: refreshError } = 
+                  await supabase.auth.refreshSession();
+                
+                if (!refreshError && refreshedData?.session?.access_token) {
+                  config.headers.Authorization = `Bearer ${refreshedData.session.access_token}`;
+                  return config;
+                }
+              } catch (refreshErr) {
+                // If proactive refresh fails, use current token anyway
+                // The response interceptor will handle 401 errors
+                console.warn("Proactive token refresh failed:", refreshErr);
+              }
+            }
+          }
+
           config.headers.Authorization = `Bearer ${data.session.access_token}`;
         }
       } catch (error) {
@@ -31,6 +79,74 @@ apiClient.interceptors.request.use(
     return Promise.reject(error);
   }
 );
+
+// // Handle 401 errors by refreshing token and retrying request
+// apiClient.interceptors.response.use(
+//   (response) => response,
+//   async (error) => {
+//     const originalRequest = error.config;
+
+//     // If error is 401 and we haven't already retried this request
+//     if (error.response?.status === 401 && !originalRequest._retry) {
+//       if (isRefreshing) {
+//         // If already refreshing, queue this request
+//         return new Promise((resolve, reject) => {
+//           failedQueue.push({ resolve, reject });
+//         })
+//           .then((token) => {
+//             originalRequest.headers.Authorization = `Bearer ${token}`;
+//             return apiClient(originalRequest);
+//           })
+//           .catch((err) => {
+//             return Promise.reject(err);
+//           });
+//       }
+
+//       originalRequest._retry = true;
+//       isRefreshing = true;
+
+//       try {
+//         // Force refresh the session
+//         const { data, error: refreshError } = await supabase.auth.refreshSession();
+        
+//         if (refreshError || !data?.session?.access_token) {
+//           // Refresh failed - session is invalid, clear it and redirect to login
+//           await supabase.auth.signOut();
+//           if (typeof window !== "undefined") {
+//             localStorage.removeItem("user");
+//             // window.location.href = "/login";
+//           }
+//           processQueue(refreshError || new Error("Session refresh failed"), null);
+//           return Promise.reject(refreshError || new Error("Session expired"));
+//         }
+
+//         // Update the authorization header with the new token
+//         const newToken = data.session.access_token;
+//         originalRequest.headers.Authorization = `Bearer ${newToken}`;
+        
+//         // Process queued requests
+//         processQueue(null, newToken);
+        
+//         // Retry the original request
+//         return apiClient(originalRequest);
+//       } catch (refreshError) {
+//         // Refresh failed - clear session and redirect
+//         await supabase.auth.signOut();
+//         if (typeof window !== "undefined") {
+//           localStorage.removeItem("user");
+//           // window.location.href = "/login";
+//         }
+//         processQueue(refreshError, null);
+//         return Promise.reject(refreshError);
+//       } finally {
+//         isRefreshing = false;
+//       }
+//     }
+
+//     // For non-401 errors or if retry already attempted, just reject
+//     return Promise.reject(error);
+//   }
+// );
 
 export default apiClient;
 

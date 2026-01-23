@@ -161,7 +161,7 @@ export default function ProfileSettingsPage() {
       initial="initial"
       animate="animate"
       variants={fadeInUp}
-      className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50"
+      className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50/30 to-indigo-50"
     >
       <Header />
 

@@ -6,6 +6,7 @@ import { authService } from "@/lib/auth";
 import { countries } from "@/lib/countries";
 import { useAuthStore } from "@/store/authStore";
 import { User, Lock, Save } from "lucide-react";
+import { LoadingSpinner } from "@/components";
 import toast from "react-hot-toast";
 
 export default function AdminProfilePage() {
@@ -141,9 +142,7 @@ export default function AdminProfilePage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[40vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
-      </div>
+      <LoadingSpinner fullScreen />
     );
   }
 

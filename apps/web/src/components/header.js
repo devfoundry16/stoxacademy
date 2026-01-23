@@ -9,7 +9,7 @@ import Image from "next/image";
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
-  const { user, signOut, isAuthenticated } = useAuthStore();
+  const { user, signOut, isAuthenticated, loading } = useAuthStore();
   const router = useRouter();
 
   const handleSignOut = async () => {
@@ -51,7 +51,11 @@ export function Header() {
                   </Link>
                 </>
               )}
-              {isAuthenticated ? (
+              {loading ? (
+                <div className="flex items-center justify-center px-4 py-2">
+                  <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-600 border-t-transparent"></div>
+                </div>
+              ) : isAuthenticated ? (
                 <div className="relative">
                   <button
                     onClick={() => setUserDropdownOpen(!userDropdownOpen)}
@@ -152,7 +156,11 @@ export function Header() {
                 </Link>
               </>
             )}
-            {isAuthenticated ? (
+            {loading ? (
+              <div className="flex items-center justify-center px-4 py-3">
+                <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-600 border-t-transparent"></div>
+              </div>
+            ) : isAuthenticated ? (
               <div className="space-y-2">
                 <button
                   onClick={() => setUserDropdownOpen(!userDropdownOpen)}

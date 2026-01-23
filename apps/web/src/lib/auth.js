@@ -45,22 +45,7 @@ export const authService = {
 
   signInWithGoogle: async () => {
     // Get current session from Supabase client
-    const { data: { session } } = await supabase.auth.getSession();
-    const token = session?.access_token;
-    
-    const config = {
-      headers: {
-        "Content-Type": "application/json",
-      },
-    };
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    const response = await axios.post(
-      `${API_URL}/api/auth/google`,
-      {},
-      config
-    );
+    const response = await apiClient.post("/api/auth/google");
     return response.data;
   },
 
@@ -124,6 +109,24 @@ export const authService = {
       localStorage.removeItem("user");
       throw error;
     }
+  },
+
+  getProfile: async () => {
+    const response = await apiClient.get("/api/auth/profile");
+    return response.data.profile;
+  },
+
+  updateProfile: async (data) => {
+    const response = await apiClient.patch("/api/auth/profile", data);
+    return response.data.profile;
+  },
+
+  updatePassword: async (currentPassword, newPassword) => {
+    const response = await apiClient.patch("/api/auth/password", {
+      currentPassword: currentPassword || undefined, // Only send if provided (for Google users setting password)
+      newPassword,
+    });
+    return response.data;
   },
 
   getStoredUser: () => {

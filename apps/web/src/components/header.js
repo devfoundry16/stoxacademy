@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Menu, X, LogOut, User, ChevronDown } from "lucide-react";
+import { Menu, X, LogOut, User, ChevronDown, Settings } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -86,6 +86,14 @@ export function Header() {
                         onClick={() => setUserDropdownOpen(false)}
                       />
                       <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-60">
+                        <Link
+                          href="/profile"
+                          onClick={() => setUserDropdownOpen(false)}
+                          className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 transition-colors"
+                        >
+                          <Settings className="w-4 h-4" />
+                          Profile Settings
+                        </Link>
                         <button
                           onClick={handleSignOut}
                           className="w-full flex items-center gap-2 px-4 py-2 hover:bg-red-50 transition-colors"
@@ -173,13 +181,23 @@ export function Header() {
                 </button>
                 
                 {userDropdownOpen && (
-                  <button
-                    onClick={handleSignOut}
-                    className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-red-600 text-white rounded-full text-center hover:bg-red-700 transition-colors"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    Logout
-                  </button>
+                  <div className="space-y-2">
+                    <Link
+                      href="/profile"
+                      onClick={() => setUserDropdownOpen(false)}
+                      className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gray-100 rounded-full text-center hover:bg-gray-200 transition-colors"
+                    >
+                      <Settings className="w-4 h-4" />
+                      Profile Settings
+                    </Link>
+                    <button
+                      onClick={handleSignOut}
+                      className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-red-600 text-white rounded-full text-center hover:bg-red-700 transition-colors"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Logout
+                    </button>
+                  </div>
                 )}
               </div>
             ) : (

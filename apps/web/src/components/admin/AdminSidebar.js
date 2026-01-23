@@ -11,7 +11,8 @@ import {
     LogOut,
     Menu,
     X,
-    User
+    User,
+    Settings
 } from 'lucide-react';
 import { useState } from 'react';
 import { useAuthStore } from '@/store/authStore';
@@ -22,6 +23,7 @@ const menuItems = [
     { name: 'Courses', href: '/admin/courses', icon: BookOpen },
     { name: 'Live Sessions', href: '/admin/live-sessions', icon: Video },
     { name: 'Checklist', href: '/admin/checklist', icon: FileText },
+    { name: 'Profile', href: '/admin/profile', icon: Settings },
 ];
 
 export default function AdminSidebar() {
@@ -140,6 +142,18 @@ export default function AdminSidebar() {
                                                     </p>
                                                     <p className="text-xs text-slate-400 truncate">{user.email}</p>
                                                 </div>
+
+                                                {/* Profile Settings link */}
+                                                <Link
+                                                    href="/admin/profile"
+                                                    onClick={() => setIsUserMenuOpen(false)}
+                                                    className="flex items-center gap-3 px-3 py-2.5 w-full rounded-md hover:bg-slate-700 transition-all duration-200 group"
+                                                >
+                                                    <div className="w-8 h-8 bg-blue-500/10 rounded-lg flex items-center justify-center group-hover:bg-blue-500/20 transition-colors">
+                                                        <Settings size={16} className="text-blue-400" />
+                                                    </div>
+                                                    <span className="text-sm font-medium text-slate-200 group-hover:text-white">Profile Settings</span>
+                                                </Link>
                                                 
                                                 {/* Logout button blended with user section */}
                                                 <button

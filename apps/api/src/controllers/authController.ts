@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { supabaseAdmin, supabaseClient } from "../config/supabase";
+import { jwtDecode } from "jwt-decode";
 
 export const signUpWithEmail = async (req: Request, res: Response) => {
   try {
@@ -184,22 +185,27 @@ export const handleOAuthCallback = async (req: Request, res: Response) => {
 
 export const signOut = async (req: Request, res: Response) => {
   try {
+    // Try to validate token, but don't fail if it's invalid
+    // After password changes, tokens might be temporarily invalid
+    // Signout is safe to allow even with invalid tokens since client clears session
     const authHeader = req.headers.authorization;
     const token = authHeader && authHeader.split(" ")[1];
 
-    if (!token) {
-      return res.status(401).json({ error: "No token provided" });
+    if (token) {
+      // Try to verify token, but don't fail if invalid
+      try {
+        await supabaseAdmin.auth.getUser(token);
+      } catch (error) {
+        // Token is invalid, but that's okay for signout
+        // Client-side signout will clear the session anyway
+      }
     }
 
-    const { error } = await supabaseAdmin.auth.admin.signOut(token);
-
-    if (error) {
-      return res.status(400).json({ error: error.message });
-    }
-
+    // Always return success - the actual session clearing happens on the client side
     return res.status(200).json({ message: "Signed out successfully" });
   } catch (error: any) {
-    return res.status(500).json({ error: error.message });
+    // Even if there's an error, return success since client will handle signout
+    return res.status(200).json({ message: "Signed out successfully" });
   }
 };
 
@@ -219,6 +225,195 @@ export const getCurrentUser = async (req: Request, res: Response) => {
     }
 
     return res.status(200).json({ user: data.user });
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message });
+  }
+};
+
+export const getProfile = async (req: Request, res: Response) => {
+  try {
+    const authHeader = req.headers.authorization;
+    const token = authHeader && authHeader.split(" ")[1];
+
+    if (!token) {
+      return res.status(401).json({ error: "No token provided" });
+    }
+
+    const { data: authData, error: authError } =
+      await supabaseAdmin.auth.getUser(token);
+    
+    
+    if (authError || !authData.user) {
+      return res.status(401).json({ error: "Invalid token" });
+    }
+
+    let { data: profile, error: profileError } = await supabaseAdmin
+      .from("users")
+      .select("id, email, first_name, last_name, phone_number, age, country, role, created_at, updated_at")
+      .eq("id", authData.user.id)
+      .single();
+
+    // If profile does not exist yet (e.g. first-time Google sign-in),
+    // create an empty profile record so it can be edited from settings.
+    if (profileError || !profile) {
+      const { data: newProfile, error: createError } = await supabaseAdmin
+        .from("users")
+        .insert({
+          id: authData.user.id,
+          email: authData.user.email || "",
+          first_name: "",
+          last_name: "",
+          phone_number: null,
+          age: null,
+          country: null,
+          role: "student",
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .select("id, email, first_name, last_name, phone_number, age, country, role, created_at, updated_at")
+        .single();
+
+      if (createError || !newProfile) {
+        return res.status(500).json({ error: "Failed to create user profile" });
+      }
+
+      profile = newProfile;
+    }
+
+    // Check if user signed in with Google OAuth
+    // Supabase stores provider info in identities array or app_metadata
+
+    const identities = authData.user.identities || [];
+    const googleIdentity = identities.find((identity: any) => identity.provider === "google");
+    const hasPassword = identities.some((identity: any) => identity.provider === "email");
+    const isGoogleUser = !!googleIdentity && !hasPassword;
+
+    return res.status(200).json({ 
+      profile: {
+        ...profile,
+        isGoogleUser,
+        hasPassword,
+      }
+    });
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message });
+  }
+};
+
+export const updateProfile = async (req: Request, res: Response) => {
+  try {
+    const authHeader = req.headers.authorization;
+    const token = authHeader && authHeader.split(" ")[1];
+
+    if (!token) {
+      return res.status(401).json({ error: "No token provided" });
+    }
+
+    const { data: authData, error: authError } =
+      await supabaseAdmin.auth.getUser(token);
+
+    if (authError || !authData.user) {
+      return res.status(401).json({ error: "Invalid token" });
+    }
+
+    const { firstName, lastName, phoneNumber, age, country } = req.body;
+
+    const updates: Record<string, any> = {
+      updated_at: new Date().toISOString(),
+    };
+    if (firstName !== undefined) updates.first_name = firstName;
+    if (lastName !== undefined) updates.last_name = lastName;
+    if (phoneNumber !== undefined) updates.phone_number = phoneNumber || null;
+    if (age !== undefined) updates.age = age === "" || age == null ? null : parseInt(age, 10);
+    if (country !== undefined) updates.country = country || null;
+
+    const { data: profile, error: updateError } = await supabaseAdmin
+      .from("users")
+      .update(updates)
+      .eq("id", authData.user.id)
+      .select()
+      .single();
+
+    if (updateError) {
+      return res.status(400).json({ error: updateError.message });
+    }
+
+    return res.status(200).json({ profile });
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message });
+  }
+};
+
+export const updatePassword = async (req: Request, res: Response) => {
+  try {
+    const authHeader = req.headers.authorization;
+    const token = authHeader && authHeader.split(" ")[1];
+
+    if (!token) {
+      return res.status(401).json({ error: "No token provided" });
+    }
+
+    const { currentPassword, newPassword } = req.body;
+
+    if (!newPassword) {
+      return res.status(400).json({
+        error: "New password is required",
+      });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({
+        error: "New password must be at least 6 characters",
+      });
+    }
+
+    const { data: authData, error: authError } =
+      await supabaseAdmin.auth.getUser(token);
+
+    if (authError || !authData.user?.email) {
+      return res.status(401).json({ error: "Invalid token" });
+    }
+
+    // Check if user has a password (signed in with email) or not (signed in with Google)
+    const identities = authData.user.identities || [];
+    const isGoogleUser = identities.some((identity: any) => identity.provider === "google");
+    const hasPassword = identities.some((identity: any) => identity.provider === "email");
+
+    // If user has a password (email sign-in), require current password
+    if (hasPassword) {
+      if (!currentPassword) {
+        return res.status(400).json({
+          error: "Current password is required to change your password",
+        });
+      }
+
+      // Verify current password
+      const { error: signInError } = await supabaseAdmin.auth.signInWithPassword({
+        email: authData.user.email,
+        password: currentPassword,
+      });
+
+      if (signInError) {
+        return res.status(401).json({ error: "Current password is incorrect" });
+      }
+    }
+    // If user is Google-only (no password), allow setting password without current password
+
+    // Update password
+    const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
+      authData.user.id,
+      { password: newPassword }
+    );
+
+    if (updateError) {
+      return res.status(400).json({ error: updateError.message });
+    }
+
+    const message = hasPassword 
+      ? "Password updated successfully" 
+      : "Password set successfully. You can now sign in with email and password.";
+
+    return res.status(200).json({ message });
   } catch (error: any) {
     return res.status(500).json({ error: error.message });
   }

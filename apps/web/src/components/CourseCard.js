@@ -17,7 +17,6 @@ export function CourseCard({ course, isAuthenticated, onClick }) {
       animate="animate"
       variants={fadeInUp}
       transition={defaultTransition}
-      whileHover={{ y: -8 }}
       className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow cursor-pointer group"
     >
       <Link href={`/courses/${course.id}`}>

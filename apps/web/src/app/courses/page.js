@@ -139,8 +139,6 @@ export default function CoursesPage() {
               <motion.button
                 key={level}
                 variants={staggerItem}
-                whileHover={{ y: -2 }}
-                whileTap={{ y: 0 }}
                 onClick={() => setSelectedLevel(level)}
                 className={`px-4 py-2 rounded-full transition-colors ${
                   selectedLevel === level

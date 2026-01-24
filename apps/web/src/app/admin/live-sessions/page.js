@@ -23,6 +23,8 @@ export default function LiveSessionsPage() {
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedSession, setSelectedSession] = useState(null);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [sessionToDelete, setSessionToDelete] = useState(null);
     const [formData, setFormData] = useState({
         course_id: '',
         title: '',
@@ -130,16 +132,26 @@ export default function LiveSessionsPage() {
         }
     };
 
-    const handleDelete = async (session) => {
-        if (confirm(`Are you sure you want to delete "${session.title}"?`)) {
-            try {
-                await deleteLiveSession(session.id);
-                toast.success('Live session deleted successfully!');
-                fetchSessions();
-            } catch (error) {
-                console.error('Failed to delete session:', error);
-                toast.error('Failed to delete session');
-            }
+    const handleDelete = (session) => {
+        setSessionToDelete(session);
+        setIsDeleteModalOpen(true);
+    };
+
+    const handleCloseDeleteModal = () => {
+        setIsDeleteModalOpen(false);
+        setSessionToDelete(null);
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!sessionToDelete) return;
+        try {
+            await deleteLiveSession(sessionToDelete.id);
+            toast.success('Live session deleted successfully!');
+            fetchSessions();
+            handleCloseDeleteModal();
+        } catch (error) {
+            console.error('Failed to delete session:', error);
+            toast.error('Failed to delete session');
         }
     };
 
@@ -422,6 +434,38 @@ export default function LiveSessionsPage() {
                         </button>
                     </div>
                 </form>
+            </Modal>
+
+            {/* Delete Confirmation Modal */}
+            <Modal
+                isOpen={isDeleteModalOpen}
+                onClose={handleCloseDeleteModal}
+                title="Delete Live Session"
+                size="sm"
+            >
+                <div className="space-y-4">
+                    <p className="text-gray-700">
+                        Are you sure you want to delete{' '}
+                        <span className="font-semibold">
+                            &quot;{sessionToDelete?.title}&quot;
+                        </span>
+                        ? This action cannot be undone.
+                    </p>
+                    <div className="flex gap-3 justify-end pt-4">
+                        <button
+                            onClick={handleCloseDeleteModal}
+                            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={handleConfirmDelete}
+                            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                        >
+                            Delete Session
+                        </button>
+                    </div>
+                </div>
             </Modal>
         </div>
     );

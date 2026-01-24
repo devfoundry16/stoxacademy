@@ -16,6 +16,8 @@ export default function UsersPage() {
     const [selectedUser, setSelectedUser] = useState(null);
     const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
     const [newRole, setNewRole] = useState('');
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [userToDelete, setUserToDelete] = useState(null);
 
     useEffect(() => {
         fetchUsers();
@@ -65,16 +67,26 @@ export default function UsersPage() {
         }
     };
 
-    const handleDeleteUser = async (user) => {
-        if (confirm(`Are you sure you want to delete ${user.first_name} ${user.last_name}?`)) {
-            try {
-                await deleteUser(user.id);
-                toast.success('User deleted successfully!');
-                fetchUsers();
-            } catch (error) {
-                console.error('Failed to delete user:', error);
-                toast.error('Failed to delete user');
-            }
+    const handleDeleteUser = (user) => {
+        setUserToDelete(user);
+        setIsDeleteModalOpen(true);
+    };
+
+    const handleCloseDeleteModal = () => {
+        setIsDeleteModalOpen(false);
+        setUserToDelete(null);
+    };
+
+    const handleConfirmDeleteUser = async () => {
+        if (!userToDelete) return;
+        try {
+            await deleteUser(userToDelete.id);
+            toast.success('User deleted successfully!');
+            fetchUsers();
+            handleCloseDeleteModal();
+        } catch (error) {
+            console.error('Failed to delete user:', error);
+            toast.error('Failed to delete user');
         }
     };
 
@@ -195,6 +207,38 @@ export default function UsersPage() {
                             className="px-4 py-2 bg-linear-to-br from-blue-500 to-purple-500 text-white rounded-lg hover:shadow-lg transition-shadow"
                         >
                             Update Role
+                        </button>
+                    </div>
+                </div>
+            </Modal>
+
+            {/* Delete Confirmation Modal */}
+            <Modal
+                isOpen={isDeleteModalOpen}
+                onClose={handleCloseDeleteModal}
+                title="Delete User"
+                size="sm"
+            >
+                <div className="space-y-4">
+                    <p className="text-gray-700">
+                        Are you sure you want to delete{' '}
+                        <span className="font-semibold">
+                            {userToDelete?.first_name} {userToDelete?.last_name}
+                        </span>
+                        ? This action cannot be undone.
+                    </p>
+                    <div className="flex gap-3 justify-end pt-4">
+                        <button
+                            onClick={handleCloseDeleteModal}
+                            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={handleConfirmDeleteUser}
+                            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                        >
+                            Delete User
                         </button>
                     </div>
                 </div>

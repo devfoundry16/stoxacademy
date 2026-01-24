@@ -10,21 +10,6 @@ const apiClient = axios.create({
   },
 });
 
-// Track if we're currently refreshing to avoid multiple refresh attempts
-let isRefreshing = false;
-let failedQueue = [];
-
-const processQueue = (error, token = null) => {
-  failedQueue.forEach((prom) => {
-    if (error) {
-      prom.reject(error);
-    } else {
-      prom.resolve(token);
-    }
-  });
-  failedQueue = [];
-};
-
 // Add token to requests from Supabase client (automatically refreshed)
 apiClient.interceptors.request.use(
   async (config) => {
@@ -39,33 +24,6 @@ apiClient.interceptors.request.use(
         }
 
         if (data?.session?.access_token) {
-          // Check if token is close to expiration (within 60 seconds)
-          // Supabase tokens typically expire after 1 hour
-          const tokenExpiry = data.session.expires_at;
-          
-          // Only do proactive refresh if expires_at is available
-          if (tokenExpiry && data.session.refresh_token) {
-            const now = Math.floor(Date.now() / 1000);
-            const timeUntilExpiry = tokenExpiry - now;
-
-            // If token expires within 60 seconds, proactively refresh it
-            if (timeUntilExpiry < 60) {
-              try {
-                const { data: refreshedData, error: refreshError } = 
-                  await supabase.auth.refreshSession();
-                
-                if (!refreshError && refreshedData?.session?.access_token) {
-                  config.headers.Authorization = `Bearer ${refreshedData.session.access_token}`;
-                  return config;
-                }
-              } catch (refreshErr) {
-                // If proactive refresh fails, use current token anyway
-                // The response interceptor will handle 401 errors
-                console.warn("Proactive token refresh failed:", refreshErr);
-              }
-            }
-          }
-
           config.headers.Authorization = `Bearer ${data.session.access_token}`;
         }
       } catch (error) {

@@ -17,6 +17,8 @@ export default function CoursesPage() {
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedCourse, setSelectedCourse] = useState(null);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [courseToDelete, setCourseToDelete] = useState(null);
     const [formData, setFormData] = useState({
         title: '',
         description: '',
@@ -140,16 +142,26 @@ export default function CoursesPage() {
         }
     };
 
-    const handleDelete = async (course) => {
-        if (confirm(`Are you sure you want to delete "${course.title}"?`)) {
-            try {
-                await deleteCourse(course.id);
-                toast.success('Course deleted successfully!');
-                fetchCourses();
-            } catch (error) {
-                console.error('Failed to delete course:', error);
-                toast.error('Failed to delete course');
-            }
+    const handleDelete = (course) => {
+        setCourseToDelete(course);
+        setIsDeleteModalOpen(true);
+    };
+
+    const handleCloseDeleteModal = () => {
+        setIsDeleteModalOpen(false);
+        setCourseToDelete(null);
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!courseToDelete) return;
+        try {
+            await deleteCourse(courseToDelete.id);
+            toast.success('Course deleted successfully!');
+            fetchCourses();
+            handleCloseDeleteModal();
+        } catch (error) {
+            console.error('Failed to delete course:', error);
+            toast.error('Failed to delete course');
         }
     };
 
@@ -572,6 +584,38 @@ export default function CoursesPage() {
                         </button>
                     </div>
                 </form>
+            </Modal>
+
+            {/* Delete Confirmation Modal */}
+            <Modal
+                isOpen={isDeleteModalOpen}
+                onClose={handleCloseDeleteModal}
+                title="Delete Course"
+                size="sm"
+            >
+                <div className="space-y-4">
+                    <p className="text-gray-700">
+                        Are you sure you want to delete{' '}
+                        <span className="font-semibold">
+                            &quot;{courseToDelete?.title}&quot;
+                        </span>
+                        ? This action cannot be undone.
+                    </p>
+                    <div className="flex gap-3 justify-end pt-4">
+                        <button
+                            onClick={handleCloseDeleteModal}
+                            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={handleConfirmDelete}
+                            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                        >
+                            Delete Course
+                        </button>
+                    </div>
+                </div>
             </Modal>
         </div >
     );

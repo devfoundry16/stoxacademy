@@ -1,16 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Edit, Trash2, Plus, Eye, X } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { Edit, Trash2, Plus, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 import DataTable from '@/components/admin/DataTable';
 import Modal from '@/components/admin/Modal';
-import axios from 'axios';
 import { createCourse, updateCourse, deleteCourse } from '@/lib/api/adminApi';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+import { courseService } from '@/lib/courseService';
 
 export default function CoursesPage() {
     const [courses, setcourses] = useState([]);
@@ -37,13 +34,8 @@ export default function CoursesPage() {
     const fetchCourses = async () => {
         try {
             setLoading(true);
-            const { data: { session } } = await supabase.auth.getSession();
-            const token = session?.access_token;
-
-            const response = await axios.get(`${API_URL}/api/courses`, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            setcourses(response.data.courses);
+            const response = await courseService.getAllCourses();
+            setcourses(response.courses);
         } catch (error) {
             console.error('Failed to fetch courses:', error);
         } finally {
@@ -77,12 +69,8 @@ export default function CoursesPage() {
         // Fetch lessons for this course
         let courseLessons = [];
         try {
-            const { data: { session } } = await supabase.auth.getSession();
-            const token = session?.access_token;
-            const response = await axios.get(`${API_URL}/api/courses/${course.id}/lessons`, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            courseLessons = response.data.lessons || [];
+            const response = await courseService.getCourseLessons(course.id);
+            courseLessons = response.lessons || [];
         } catch (error) {
             console.error('Failed to fetch lessons:', error);
         }

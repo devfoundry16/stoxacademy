@@ -6,16 +6,13 @@ import toast from 'react-hot-toast';
 import DataTable from '@/components/admin/DataTable';
 import Modal from '@/components/admin/Modal';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
-import { supabase } from '@/lib/supabase';
-import axios from 'axios';
+import {courseService} from '@/lib/courseService';
 import {
     getLiveSessions,
     createLiveSession,
     updateLiveSession,
     deleteLiveSession,
 } from '@/lib/api/adminApi';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
 export default function LiveSessionsPage() {
     const [sessions, setSessions] = useState([]);
@@ -55,13 +52,8 @@ export default function LiveSessionsPage() {
 
     const fetchCourses = async () => {
         try {
-            const { data: { session } } = await supabase.auth.getSession();
-            const token = session?.access_token;
-
-            const response = await axios.get(`${API_URL}/api/courses`, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            setCourses(response.data.courses);
+            const response = await courseService.getAllCourses();
+            setCourses(response.courses);
         } catch (error) {
             console.error('Failed to fetch courses:', error);
         }

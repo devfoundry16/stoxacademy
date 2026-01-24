@@ -1,8 +1,5 @@
 import apiClient from "./api";
-import axios from "axios";
 import { supabase } from "./supabase";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
 // Helper function to set session in Supabase client for automatic refresh
 const setSupabaseSession = async (session) => {
@@ -51,24 +48,13 @@ export const authService = {
 
   handleOAuthCallback: async (code) => {
     // Get current session from Supabase client
-    const { data: { session } } = await supabase.auth.getSession();
-    const token = session?.access_token;
-    
-    const config = {
-      headers: {
-        "Content-Type": "application/json",
-      },
-    };
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    const response = await axios.get(
-      `${API_URL}/api/auth/callback?code=${code}`,
-      config
+    const response = await apiClient.get(
+      `/api/auth/callback?code=${code}`
     );
     if (response.data.session) {
       // Set session in Supabase client for automatic token refresh
       await setSupabaseSession(response.data.session);
+      console.log(response.data.user);
       // Also store user data in localStorage for backward compatibility
       localStorage.setItem("user", JSON.stringify(response.data.user));
     }
@@ -78,8 +64,7 @@ export const authService = {
   signOut: async () => {
     try {
       // Get token before clearing session
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token;
+      const token = await authService.getAccessToken();
 
       // Call backend signout first (while we still have a valid token)
       if (token) {

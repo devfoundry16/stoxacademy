@@ -133,7 +133,6 @@ export const handleOAuthCallback = async (req: Request, res: Response) => {
 
     // For OAuth callback, we need to create a client with anon key
     const { data, error } = await supabaseClient.auth.exchangeCodeForSession(code);
-
     if (error) {
       return res.status(400).json({ error: error.message });
     }

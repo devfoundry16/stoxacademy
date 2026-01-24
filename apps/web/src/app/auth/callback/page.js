@@ -12,6 +12,11 @@ function AuthCallbackContent() {
 
   useEffect(() => {
     const handleCallback = async () => {
+      let nextPath = searchParams.get("next") ?? "/";
+      if (!nextPath.startsWith("/")) {
+        nextPath = "/";
+      }
+
       // Check for code parameter (PKCE flow)
       const code = searchParams.get("code");
       
@@ -21,7 +26,7 @@ function AuthCallbackContent() {
           await authService.handleOAuthCallback(code);
           // Dispatch event to update auth store
           window.dispatchEvent(new Event("auth-storage-change"));
-          router.push("/");
+          router.push(nextPath);
         } catch (err) {
           setError(err.response?.data?.error || "Authentication failed");
           setTimeout(() => router.push("/login"), 3000);
@@ -51,7 +56,7 @@ function AuthCallbackContent() {
           localStorage.setItem("user", JSON.stringify(user));
           // Dispatch event to update auth store
           window.dispatchEvent(new Event("auth-storage-change"));
-          router.push("/");
+          router.push(nextPath);
         } catch (err) {
           setError("Failed to set session or fetch user data");
           setTimeout(() => router.push("/login"), 3000);

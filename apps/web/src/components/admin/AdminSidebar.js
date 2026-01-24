@@ -39,6 +39,15 @@ export default function AdminSidebar() {
         localStorage.removeItem('user');
         router.push('/login');
     };
+    
+    const getFullName = (userData) => {
+        if (userData.user_metadata?.full_name) {
+            return userData.user_metadata?.full_name.split(' ')[0] + ' ' + userData.user_metadata?.full_name.split(' ')[1].charAt(0) + '.';
+        } else if (userData.user_metadata?.first_name && userData.user_metadata?.last_name) {
+            return userData.user_metadata?.first_name + ' ' + userData.user_metadata?.last_name?.charAt(0) + '.';
+        }
+        return 'User';
+    };
 
     return (
         <>
@@ -107,9 +116,8 @@ export default function AdminSidebar() {
                                     </div>
                                     <div className="flex-1 min-w-0 text-left">
                                         <p className="text-sm font-semibold text-white truncate">
-                                            {user.user_metadata?.full_name || user.user_metadata?.first_name + ' ' + user.user_metadata?.last_name || 'User'}
+                                            {getFullName(user)}
                                         </p>
-                                        <p className="text-xs text-slate-400 truncate">{user.user_metadata?.role || 'User'}</p>
                                     </div>
                                     <svg
                                         className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${
@@ -138,7 +146,7 @@ export default function AdminSidebar() {
                                                 {/* User info in menu */}
                                                 <div className="px-3 py-2 border-b border-slate-700/50 mb-2">
                                                     <p className="text-xs font-semibold text-white truncate">
-                                                        {user.user_metadata?.first_name || user.first_name || 'User'} {user.user_metadata?.last_name || user.last_name || ''}
+                                                        {user.user_metadata?.full_name || user.user_metadata?.first_name + ' ' + user.user_metadata?.last_name}
                                                     </p>
                                                     <p className="text-xs text-slate-400 truncate">{user.email}</p>
                                                 </div>

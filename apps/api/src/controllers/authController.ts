@@ -106,11 +106,10 @@ export const signInWithGoogle = async (req: Request, res: Response) => {
       provider: "google",
       options: {
         redirectTo: `${process.env.FRONTEND_URL}/auth/callback`,
-        skipBrowserRedirect: true,
-        queryParams: {
-          access_type: 'offline',
-          prompt: 'consent',
-        },
+        // queryParams: {
+        //   access_type: 'offline',
+        //   prompt: 'consent',
+        // },
       },
     });
 
@@ -253,35 +252,9 @@ export const getProfile = async (req: Request, res: Response) => {
       .eq("id", authData.user.id)
       .single();
 
-    // If profile does not exist yet (e.g. first-time Google sign-in),
-    // create an empty profile record so it can be edited from settings.
     if (profileError || !profile) {
-      const { data: newProfile, error: createError } = await supabaseAdmin
-        .from("users")
-        .insert({
-          id: authData.user.id,
-          email: authData.user.email || "",
-          first_name: "",
-          last_name: "",
-          phone_number: null,
-          age: null,
-          country: null,
-          role: "student",
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        })
-        .select("id, email, first_name, last_name, phone_number, age, country, role, created_at, updated_at")
-        .single();
-
-      if (createError || !newProfile) {
-        return res.status(500).json({ error: "Failed to create user profile" });
-      }
-
-      profile = newProfile;
+      return res.status(404).json({ error: "User profile not found" });
     }
-
-    // Check if user signed in with Google OAuth
-    // Supabase stores provider info in identities array or app_metadata
 
     const identities = authData.user.identities || [];
     const googleIdentity = identities.find((identity: any) => identity.provider === "google");

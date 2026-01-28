@@ -1,26 +1,27 @@
+"use client";
+
 import Image from "next/image";
-const features = [
-  "Tours in Real Trading Rooms",
-  "Practical Training from Day One",
-  "Free Monthly Trading Sessions",
-  "Meetings with Industry Experts",
-  "Market News via Our Platforms",
-  "Exclusive Discord Community",
-];
+import { useTranslations } from 'next-intl';
 
 export function WhyUsSection() {
+  const t = useTranslations();
+  const features = [
+    t('whyUs.features.tours'),
+    t('whyUs.features.practicalTraining'),
+    t('whyUs.features.freeSessions'),
+    t('whyUs.features.expertMeetings'),
+    t('whyUs.features.marketNews'),
+    t('whyUs.features.discordCommunity'),
+  ];
   return (
     <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-12">
           <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-            At Stox, We Believe Success Starts with Combining Theory and
-            Practice
+            {t('whyUs.title')}
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            That&apos;s why we designed a comprehensive and balanced training
-            program that provides you with the necessary theoretical foundation
-            and gives you real practical experience during the learning period.
+            {t('whyUs.description')}
           </p>
         </div>
         <div className="grid lg:grid-cols-2 gap-12 items-center">

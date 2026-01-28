@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useTranslations } from 'next-intl';
+import { useRouter } from "@/i18n/routing";
 import Image from "next/image";
 import toast from "react-hot-toast";
 import { Header } from "@/components/header";

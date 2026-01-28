@@ -1,20 +1,28 @@
 "use client";
 
 import { useEffect, useState, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter as useNextRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "@/i18n/routing";
+import { useLocale } from 'next-intl';
 import { authService } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
 
 function AuthCallbackContent() {
   const router = useRouter();
+  const locale = useLocale();
   const searchParams = useSearchParams();
   const [error, setError] = useState("");
 
   useEffect(() => {
     const handleCallback = async () => {
-      let nextPath = searchParams.get("next") ?? "/";
-      if (!nextPath.startsWith("/")) {
-        nextPath = "/";
+      let nextPath = searchParams.get("next") ?? `/${locale}`;
+      // Ensure path starts with locale if it doesn't already
+      if (!nextPath.startsWith(`/${locale}`)) {
+        if (nextPath.startsWith("/")) {
+          nextPath = `/${locale}${nextPath}`;
+        } else {
+          nextPath = `/${locale}/`;
+        }
       }
 
       // Check for code parameter (PKCE flow)
@@ -29,7 +37,7 @@ function AuthCallbackContent() {
           router.push(nextPath);
         } catch (err) {
           setError(err.response?.data?.error || "Authentication failed");
-          setTimeout(() => router.push("/login"), 3000);
+          setTimeout(() => router.push(`/${locale}/login`), 3000);
         }
         return;
       }
@@ -59,14 +67,14 @@ function AuthCallbackContent() {
           router.push(nextPath);
         } catch (err) {
           setError("Failed to set session or fetch user data");
-          setTimeout(() => router.push("/login"), 3000);
+          setTimeout(() => router.push(`/${locale}/login`), 3000);
         }
         return;
       }
 
       // No code or tokens found
       setError("No authorization code or tokens found");
-      setTimeout(() => router.push("/login"), 3000);
+      setTimeout(() => router.push(`/${locale}/login`), 3000);
     };
 
     handleCallback();

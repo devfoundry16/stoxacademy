@@ -1,60 +1,41 @@
 "use client"
-import { useRouter } from "next/navigation"
+import { useRouter } from "@/i18n/routing"
+import { useTranslations } from 'next-intl'
 import { motion } from "framer-motion"
 import { fadeInUp, staggerContainer, staggerItem, defaultTransition } from "@/lib/animations"
-const courses = [
-  {
-    badge: "In-Person",
-    badgeColor: "bg-yellow-400",
-    title: "Comprehensive Course in Stock and Crypto Investment and Trading",
-    description: "Haifa | 7 Sessions | 19 Hours | 17:00-20:00",
-    bgGradient: "from-blue-50 to-purple-50",
-    buttonColor: "bg-blue-600 hover:bg-blue-700",
-    features: [
-      "Comprehensive understanding of stock and crypto market basics",
-      "Trading strategies based on real experiences",
-      "Company data analysis and chart reading",
-      "Using technical indicators to identify opportunities",
-      "Smart and wise risk management",
-      "Opening a real trading account and practicing real trades",
-    ],
-  },
-  {
-    badge: "Online",
-    badgeColor: "bg-purple-400 text-white",
-    title: "Crypto Investment and Trading Course - Online",
-    description: "Fully online - Complete flexibility, tangible results",
-    bgGradient: "from-purple-50 to-pink-50",
-    buttonColor: "bg-purple-600 hover:bg-purple-700",
-    features: [
-      "Comprehensive understanding of crypto market basics",
-      "Proven trading strategies",
-      "Professional data and chart analysis",
-      "Using technical indicators to discover opportunities",
-      "Risk management and financial balance",
-      "Opening a real trading account and live trading experience",
-    ],
-  },
-  {
-    badge: "Online",
-    badgeColor: "bg-green-400 text-white",
-    title: "Stock Market and Technical Analysis Course - Online",
-    description: "Get a free mini crypto course upon registration!",
-    bgGradient: "from-green-50 to-blue-50",
-    buttonColor: "bg-green-600 hover:bg-green-700",
-    features: [
-      "Stock market basics",
-      "Successful trading strategies",
-      "Company and chart analysis",
-      "Using technical indicators",
-      "Smart risk management",
-      "Additional lesson on financial skills",
-    ],
-  },
-]
 
 export function CoursesSection() {
   const router = useRouter()
+  const t = useTranslations()
+  const courses = [
+    {
+      badge: t('courses.inPerson'),
+      badgeColor: "bg-yellow-400",
+      title: t('courses.course1.title'),
+      description: t('courses.course1.description'),
+      bgGradient: "from-blue-50 to-purple-50",
+      buttonColor: "bg-blue-600 hover:bg-blue-700",
+      features: t.raw('courses.course1.features'),
+    },
+    {
+      badge: t('courses.online'),
+      badgeColor: "bg-purple-400 text-white",
+      title: t('courses.course2.title'),
+      description: t('courses.course2.description'),
+      bgGradient: "from-purple-50 to-pink-50",
+      buttonColor: "bg-purple-600 hover:bg-purple-700",
+      features: t.raw('courses.course2.features'),
+    },
+    {
+      badge: t('courses.online'),
+      badgeColor: "bg-green-400 text-white",
+      title: t('courses.course3.title'),
+      description: t('courses.course3.description'),
+      bgGradient: "from-green-50 to-blue-50",
+      buttonColor: "bg-green-600 hover:bg-green-700",
+      features: t.raw('courses.course3.features'),
+    },
+  ]
   return (
     <section className="py-16 px-4 sm:px-6 lg:px-8 bg-white">
       <div className="max-w-7xl mx-auto">
@@ -65,9 +46,9 @@ export function CoursesSection() {
           className="text-center mb-12"
         >
           <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-            Choose the Right Course and Start Your Journey to Become an Independent Trader
+            {t('courses.title')}
           </h2>
-          <p className="text-xl text-gray-600">In our course, you don&apos;t just learn – you trade</p>
+          <p className="text-xl text-gray-600">{t('courses.subtitle')}</p>
         </motion.div>
         <motion.div
           variants={staggerContainer}
@@ -103,7 +84,7 @@ export function CoursesSection() {
                 className={`w-full px-6 py-4 ${course.buttonColor} text-white font-semibold rounded-xl transition-colors`}
                 onClick={() => router.push('/signup')}
               >
-                Register Now
+                {t('common.registerNow')}
               </motion.button>
             </motion.div>
           ))}

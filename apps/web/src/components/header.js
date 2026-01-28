@@ -1,12 +1,14 @@
 "use client";
 
 import React, { useState } from "react";
-import Link from "next/link";
+import { useTranslations } from 'next-intl';
 import { Menu, X, LogOut, User, ChevronDown, Settings } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
-import { useRouter } from "next/navigation";
+import { useRouter, Link } from "@/i18n/routing";
 import Image from "next/image";
+import { LanguageSwitcher } from "./LanguageSwitcher";
 export function Header() {
+  const t = useTranslations();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const { user, signOut, isAuthenticated, loading } = useAuthStore();
@@ -25,7 +27,7 @@ export function Header() {
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center">
               <Link href="/" className="text-2xl font-bold text-blue-600">
-                Stox
+                {t('header.brand')}
               </Link>
             </div>
             <nav className="hidden md:flex items-center gap-4">
@@ -33,7 +35,7 @@ export function Header() {
                 href="/courses"
                 className="text-gray-700 hover:text-blue-600 transition-colors"
               >
-                Courses
+                {t('common.courses')}
               </Link>
               {isAuthenticated && (
                 <>
@@ -41,16 +43,17 @@ export function Header() {
                     href="/my-courses"
                     className="text-gray-700 hover:text-blue-600 transition-colors"
                   >
-                    My Courses
+                    {t('common.myCourses')}
                   </Link>
                   <Link
                     href="/live-sessions"
                     className="text-gray-700 hover:text-blue-600 transition-colors"
                   >
-                    Live Sessions
+                    {t('common.liveSessions')}
                   </Link>
                 </>
               )}
+              <LanguageSwitcher />
               {loading ? (
                 <div className="flex items-center justify-center px-4 py-2">
                   <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-600 border-t-transparent"></div>
@@ -96,14 +99,14 @@ export function Header() {
                           className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 transition-colors"
                         >
                           <Settings className="w-4 h-4" />
-                          Profile Settings
+                          {t('common.profileSettings')}
                         </Link>
                         <button
                           onClick={handleSignOut}
                           className="w-full flex items-center gap-2 px-4 py-2 hover:bg-red-50 transition-colors"
                         >
                           <LogOut className="w-4 h-4" />
-                          Logout
+                          {t('common.logout')}
                         </button>
                       </div>
                     </>
@@ -115,13 +118,13 @@ export function Header() {
                     href="/login"
                     className="px-6 py-2 border-blue-600 border-2 text-black rounded-full hover:text-white hover:bg-blue-700 transition-colors"
                   >
-                    Login
+                    {t('common.login')}
                   </Link>
                   <Link
                     href="/signup"
                     className="px-6 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors"
                   >
-                    Sign Up
+                    {t('common.signUp')}
                   </Link>
                 </div>
               )}
@@ -144,18 +147,21 @@ export function Header() {
         <div className="fixed inset-0 top-16 bg-white z-40 md:hidden">
           <nav className="flex flex-col p-6 gap-4">
             <Link href="/courses" className="text-gray-700 text-lg">
-              Courses
+              {t('common.courses')}
             </Link>
             {isAuthenticated && (
               <>
                 <Link href="/my-courses" className="text-gray-700 text-lg">
-                  My Courses
+                  {t('common.myCourses')}
                 </Link>
                 <Link href="/live-sessions" className="text-gray-700 text-lg">
-                  Live Sessions
+                  {t('common.liveSessions')}
                 </Link>
               </>
             )}
+            <div className="pt-4 border-t border-gray-200">
+              <LanguageSwitcher />
+            </div>
             {loading ? (
               <div className="flex items-center justify-center px-4 py-3">
                 <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-600 border-t-transparent"></div>
@@ -196,14 +202,14 @@ export function Header() {
                       className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gray-100 rounded-full text-center hover:bg-gray-200 transition-colors"
                     >
                       <Settings className="w-4 h-4" />
-                      Profile Settings
+                      {t('common.profileSettings')}
                     </Link>
                     <button
                       onClick={handleSignOut}
                       className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-red-600 text-white rounded-full text-center hover:bg-red-700 transition-colors"
                     >
                       <LogOut className="w-4 h-4" />
-                      Logout
+                      {t('common.logout')}
                     </button>
                   </div>
                 )}
@@ -214,13 +220,13 @@ export function Header() {
                   href="/login"
                   className="px-6 py-3 bg-blue-600 text-white rounded-full text-center"
                 >
-                  Login
+                  {t('common.login')}
                 </Link>
                 <Link
                   href="/signup"
                   className="px-6 py-3 bg-blue-600 text-white rounded-full text-center"
                 >
-                  Sign Up
+                  {t('common.signUp')}
                 </Link>
               </>
             )}

@@ -7,8 +7,10 @@ import { LevelBadge } from "./LevelBadge";
 import { CourseStats } from "./CourseStats";
 import { motion } from "framer-motion";
 import { fadeInUp, defaultTransition } from "@/lib/animations";
+import { useTranslations } from 'next-intl';
 
 export function CourseCard({ course, isAuthenticated, onClick }) {
+  const t = useTranslations();
   const canAccess = isAuthenticated && course.isPurchased;
 
   return (
@@ -66,7 +68,7 @@ export function CourseCard({ course, isAuthenticated, onClick }) {
 
           {/* Students Count */}
           <div className="text-sm text-gray-500 mb-4">
-            {course.students.toLocaleString()} students enrolled
+            {course.students.toLocaleString()} {t('courseCard.studentsEnrolled')}
           </div>
 
           {/* Price and CTA */}
@@ -76,7 +78,7 @@ export function CourseCard({ course, isAuthenticated, onClick }) {
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
-                <span className="font-semibold">Enrolled</span>
+                <span className="font-semibold">{t('courseCard.enrolled')}</span>
               </div>
             ) : (
               <div>
@@ -100,7 +102,7 @@ export function CourseCard({ course, isAuthenticated, onClick }) {
                   : "bg-gray-600 text-white hover:bg-gray-700"
               }`}
             >
-              {canAccess ? "Continue Learning" : isAuthenticated ? "Buy Now" : "Sign In"}
+              {canAccess ? t('courseCard.continueLearning') : isAuthenticated ? t('courseCard.buyNow') : t('courseCard.signIn')}
             </motion.button>
           </div>
         </div>

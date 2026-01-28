@@ -1,28 +1,32 @@
-const reasons = [
+"use client";
+
+import { useTranslations } from 'next-intl';
+
+export function WhyChooseUsSection() {
+  const t = useTranslations();
+  const reasons = [
     {
-      title: "Professional Team",
-      desc: "Expert instructors who live the market daily and transfer knowledge from reality",
+      title: t('whyChooseUs.reasons.professionalTeam.title'),
+      desc: t('whyChooseUs.reasons.professionalTeam.description'),
     },
     {
-      title: "Highest Professionalism",
-      desc: "Complete training content combining modern digital materials and fully equipped classroom lessons",
+      title: t('whyChooseUs.reasons.highestProfessionalism.title'),
+      desc: t('whyChooseUs.reasons.highestProfessionalism.description'),
     },
     {
-      title: "Practical Experience",
-      desc: "Start practical application from day one and experience real market situations",
+      title: t('whyChooseUs.reasons.practicalExperience.title'),
+      desc: t('whyChooseUs.reasons.practicalExperience.description'),
     },
     {
-      title: "Real Value",
-      desc: "We provide comprehensive professional content that prepares you to trade independently and confidently",
+      title: t('whyChooseUs.reasons.realValue.title'),
+      desc: t('whyChooseUs.reasons.realValue.description'),
     },
-  ]
-  
-  export function WhyChooseUsSection() {
+  ];
     return (
       <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-3xl sm:text-4xl font-bold text-center mb-12 text-gray-900">
-            We Learn the Right Way with Full Support Until You Succeed!
+            {t('whyChooseUs.title')}
           </h2>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {reasons.map((item, idx) => (

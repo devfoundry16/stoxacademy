@@ -5,6 +5,7 @@ import { Elements } from '@stripe/react-stripe-js';
 import stripePromise from '@/lib/stripe';
 import CheckoutForm from './CheckoutForm';
 import Modal from './admin/Modal';
+import { useTranslations } from 'next-intl';
 
 export default function StripeCheckoutModal({
   isOpen,
@@ -15,6 +16,7 @@ export default function StripeCheckoutModal({
   onSuccess,
   onError,
 }) {
+  const t = useTranslations();
   const appearance = {
     theme: 'stripe',
     variables: {
@@ -33,7 +35,7 @@ export default function StripeCheckoutModal({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Complete Your Purchase">
+    <Modal isOpen={isOpen} onClose={onClose} title={t('checkout.completePurchase')}>
       <div className="p-2">
         {clientSecret && (
           <Elements options={options} stripe={stripePromise}>

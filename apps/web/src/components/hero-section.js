@@ -1,10 +1,12 @@
 "use client"
 import { VideoPlayer } from "./video-player"
-import { useRouter } from "next/navigation"
+import { useRouter } from "@/i18n/routing"
+import { useTranslations } from 'next-intl'
 import { motion } from "framer-motion"
 import { fadeInUp, staggerContainer, staggerItem, defaultTransition } from "@/lib/animations"
 export function HeroSection() {
   const router = useRouter()
+  const t = useTranslations()
   return (
     <section className="pt-24 pb-16 px-4 sm:px-6 lg:px-8 bg-linear-to-br from-blue-50 via-white to-purple-50">
       <div className="max-w-7xl mx-auto">
@@ -19,20 +21,19 @@ export function HeroSection() {
               variants={fadeInUp}
               className="inline-block px-4 py-2 bg-yellow-400 text-sm font-semibold rounded-full"
             >
-              Register for the Stock Course and Get the Crypto Course for Free!
+              {t('hero.badge')}
             </motion.div>
             <motion.h1
               variants={fadeInUp}
               className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight"
             >
-              Take Control of Your Financial Future in Just Two Months!
+              {t('hero.title')}
             </motion.h1>
             <motion.p
               variants={fadeInUp}
               className="text-xl text-gray-600 leading-relaxed"
             >
-              Learn how to become an independent trader and investor in the stock market, with all the tools and skills
-              you need to succeed.
+              {t('hero.description')}
             </motion.p>
             <motion.button
               whileHover={{ y: -2 }}
@@ -40,7 +41,7 @@ export function HeroSection() {
               className="px-8 py-4 bg-blue-600 text-white text-lg font-semibold rounded-full hover:bg-blue-700 transition-all"
               onClick={() => router.push("/signup")}
             >
-              Register Now and Learn to Trade Independently
+              {t('hero.cta')}
             </motion.button>
           </motion.div>
           <motion.div

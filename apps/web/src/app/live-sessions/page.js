@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+import { useRouter } from '@/i18n/routing';
 import { Calendar, Clock, Users, DollarSign, Video, CheckCircle, Filter, TrendingUp, Play, ArrowRight } from 'lucide-react';
 import { Header, LoadingSpinner, ErrorState } from '@/components';
 import { liveSessionService } from '@/lib/liveSessionService';

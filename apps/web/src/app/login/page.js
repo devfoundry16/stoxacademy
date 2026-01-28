@@ -1,14 +1,15 @@
 "use client";
 
 import React, { useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useTranslations } from 'next-intl';
+import { Link, useRouter } from "@/i18n/routing";
 import { useAuthStore } from "@/store/authStore";
 import { authService } from "@/lib/auth";
 import { motion } from "framer-motion";
 import { fadeInUp, defaultTransition } from "@/lib/animations";
 
 export default function LoginPage() {
+  const t = useTranslations();
   const router = useRouter();
   const signIn = useAuthStore((state) => state.signIn);
   const [formData, setFormData] = useState({
@@ -74,8 +75,8 @@ export default function LoginPage() {
           transition={{ ...defaultTransition, delay: 0.1 }}
           className="text-center mb-8"
         >
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h1>
-          <p className="text-gray-600">Sign in to continue to Stox Academy</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">{t('common.welcomeBack')}</h1>
+          <p className="text-gray-600">{t('common.signInToContinue')}</p>
         </motion.div>
 
         {error && (
@@ -90,7 +91,7 @@ export default function LoginPage() {
               htmlFor="email"
               className="block text-sm font-medium text-gray-700 mb-2"
             >
-              Email
+              {t('common.email')}
             </label>
             <input
               type="email"
@@ -109,7 +110,7 @@ export default function LoginPage() {
               htmlFor="password"
               className="block text-sm font-medium text-gray-700 mb-2"
             >
-              Password
+              {t('common.password')}
             </label>
             <input
               type="password"
@@ -119,7 +120,7 @@ export default function LoginPage() {
               onChange={handleChange}
               required
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
-              placeholder="Enter your password"
+              placeholder={t('common.enterYourPassword')}
             />
           </div>
 
@@ -130,7 +131,7 @@ export default function LoginPage() {
             disabled={loading}
             className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? "Signing in..." : "Sign In"}
+            {loading ? t('common.signingIn') : t('common.signIn')}
           </motion.button>
         </form>
 
@@ -145,7 +146,7 @@ export default function LoginPage() {
               <div className="w-full border-t border-gray-300"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">Or continue with</span>
+              <span className="px-2 bg-white text-gray-500">{t('common.orContinueWith')}</span>
             </div>
           </div>
 
@@ -174,7 +175,7 @@ export default function LoginPage() {
                 d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
               />
             </svg>
-            <span className="text-gray-700 font-medium">Sign in with Google</span>
+            <span className="text-gray-700 font-medium">{t('common.signInWithGoogle')}</span>
           </motion.button>
         </motion.div>
 
@@ -184,12 +185,12 @@ export default function LoginPage() {
           transition={{ ...defaultTransition, delay: 0.3 }}
           className="mt-8 text-center text-sm text-gray-600"
         >
-          Don&apos;t have an account?{" "}
+          {t('common.dontHaveAccount')}{" "}
           <Link
             href="/signup"
             className="text-blue-600 font-medium hover:text-blue-700"
           >
-            Sign up
+            {t('common.signUp')}
           </Link>
         </motion.p>
       </motion.div>

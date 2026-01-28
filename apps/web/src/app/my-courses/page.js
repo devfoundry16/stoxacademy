@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+import { useRouter } from '@/i18n/routing';
 import Image from "next/image";
 import { BookOpen, Clock, CheckCircle, PlayCircle, TrendingUp, Award } from 'lucide-react';
 import { Header, LoadingSpinner, ErrorState } from '@/components';

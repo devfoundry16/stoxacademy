@@ -105,9 +105,24 @@ export const submitChecklistResponse = async (req: Request, res: Response) => {
     }
 };
 
-export const getChecklistQuestions = async (_req: Request, res: Response) => {
+export const getChecklistQuestions = async (req: Request, res: Response) => {
     try {
-        const filePath = path.join(__dirname, "../../checklist/checklist.json");
+        // Get locale from query parameter, default to 'en'
+        const locale = (req.query.locale as string) || 'en';
+        
+        // Determine which file to load based on locale
+        const fileName = locale === 'ar' ? 'checklist.ar.json' : 'checklist.json';
+        const filePath = path.join(__dirname, "../../checklist", fileName);
+        
+        // Check if file exists, fallback to English if not
+        if (!fs.existsSync(filePath)) {
+            console.warn(`Checklist file for locale '${locale}' not found, falling back to English`);
+            const fallbackPath = path.join(__dirname, "../../checklist/checklist.json");
+            const fileData = fs.readFileSync(fallbackPath, "utf-8");
+            const questions = JSON.parse(fileData);
+            return res.json({ success: true, data: questions });
+        }
+        
         const fileData = fs.readFileSync(filePath, "utf-8");
         const questions = JSON.parse(fileData);
 

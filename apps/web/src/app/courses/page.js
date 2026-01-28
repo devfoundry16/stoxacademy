@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useTranslations } from 'next-intl';
+import { useRouter } from "@/i18n/routing";
 import { Header } from "@/components/header";
 import { useAuthStore } from "@/store/authStore";
 import { courseService } from "@/lib/courseService";
@@ -14,6 +15,7 @@ import { motion } from "framer-motion";
 import { fadeInUp, staggerContainer, staggerItem, defaultTransition } from "@/lib/animations";
 
 export default function CoursesPage() {
+  const t = useTranslations();
   const router = useRouter();
   const { isAuthenticated } = useAuthStore();
   const [selectedLevel, setSelectedLevel] = useState("All");
@@ -54,7 +56,7 @@ export default function CoursesPage() {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header />
-        <LoadingSpinner message="Loading courses..." fullScreen />
+        <LoadingSpinner message={t('courses.page.loadingCourses')} fullScreen />
       </div>
     );
   }
@@ -65,7 +67,7 @@ export default function CoursesPage() {
         <Header />
         <ErrorState
           message={error}
-          actionLabel="Retry"
+          actionLabel={t('common.retry')}
           onAction={() => window.location.reload()}
           fullScreen
         />
@@ -96,7 +98,7 @@ export default function CoursesPage() {
             transition={{ ...defaultTransition, delay: 0.1 }}
             className="text-4xl md:text-5xl font-bold mb-4"
           >
-            Master Stock Trading
+            {t('courses.page.title')}
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -104,7 +106,7 @@ export default function CoursesPage() {
             transition={{ ...defaultTransition, delay: 0.2 }}
             className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto"
           >
-            Learn from expert traders with our comprehensive video courses
+            {t('courses.page.subtitle')}
           </motion.p>
           <motion.div
             initial={{ opacity: 0, y: 10 }}
@@ -114,7 +116,7 @@ export default function CoursesPage() {
           >
             <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">
               <BookOpen className="w-5 h-5" />
-              <span>{courses.length} Courses</span>
+              <span>{courses.length} {t('courses.page.coursesCount')}</span>
             </div>
           </motion.div>
         </div>
@@ -135,18 +137,23 @@ export default function CoursesPage() {
             animate="animate"
             className="flex flex-wrap gap-2"
           >
-            {["All", "Beginner", "Intermediate", "Advanced"].map((level) => (
+            {[
+              { key: "All", label: t('courses.page.all') },
+              { key: "Beginner", label: t('courses.page.beginner') },
+              { key: "Intermediate", label: t('courses.page.intermediate') },
+              { key: "Advanced", label: t('courses.page.advanced') }
+            ].map((level) => (
               <motion.button
-                key={level}
+                key={level.key}
                 variants={staggerItem}
-                onClick={() => setSelectedLevel(level)}
+                onClick={() => setSelectedLevel(level.key)}
                 className={`px-4 py-2 rounded-full transition-colors ${
-                  selectedLevel === level
+                  selectedLevel === level.key
                     ? "bg-blue-600 text-white"
                     : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-200"
                 }`}
               >
-                {level}
+                {level.label}
               </motion.button>
             ))}
           </motion.div>
@@ -157,9 +164,9 @@ export default function CoursesPage() {
             onChange={(e) => setSortBy(e.target.value)}
             className="px-4 py-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
           >
-            <option value="popular">Most Popular</option>
-            <option value="price-low">Price: Low to High</option>
-            <option value="price-high">Price: High to Low</option>
+            <option value="popular">{t('courses.page.mostPopular')}</option>
+            <option value="price-low">{t('courses.page.priceLowToHigh')}</option>
+            <option value="price-high">{t('courses.page.priceHighToLow')}</option>
           </select>
         </div>
 
@@ -167,8 +174,8 @@ export default function CoursesPage() {
         {courses.length === 0 ? (
           <EmptyState
             icon={BookOpen}
-            title="No courses found"
-            description="Try adjusting your filters to see more courses"
+            title={t('courses.page.noCoursesFound')}
+            description={t('courses.page.tryAdjustingFilters')}
           />
         ) : (
           <motion.div

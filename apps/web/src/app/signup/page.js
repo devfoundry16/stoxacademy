@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useTranslations } from 'next-intl';
+import { Link, useRouter } from "@/i18n/routing";
 import { useAuthStore } from "@/store/authStore";
 import { authService } from "@/lib/auth";
 import { countries } from "@/lib/countries";
@@ -10,6 +10,7 @@ import { motion } from "framer-motion";
 import { fadeInUp, defaultTransition } from "@/lib/animations";
 
 export default function SignUpPage() {
+  const t = useTranslations();
   const router = useRouter();
   const signUp = useAuthStore((state) => state.signUp);
   const [formData, setFormData] = useState({

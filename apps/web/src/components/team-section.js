@@ -4,83 +4,33 @@ import React from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { FaLinkedin, FaTwitter, FaEnvelope } from "react-icons/fa";
+import { useTranslations } from 'next-intl';
 
-const teamMembers = [
-  {
-    name: "Ameer Irshed",
-    position: "Lead Trading Instructor",
-    description:
-      "Expert trader with 10+ years of market experience, specializing in technical analysis and risk management.",
-    avatar: "/images/team/Ameer Irshed.jpeg",
-    social: {
-      linkedin: "#",
-      twitter: "#",
-      email: "ameer@stoxacademy.com",
-    },
-  },
-  {
-    name: "Firas Elkader",
-    position: "Stox Academy Founder & CEO",
-    description:
-      "Certified financial analyst with deep expertise in fundamental analysis and market trends.",
-    avatar: "/images/team/firas elkader.jpeg",
-    social: {
-      linkedin: "#",
-      twitter: "#",
-      email: "firas@stoxacademy.com",
-    },
-  },
-  {
-    name: "Majd Hawash",
-    position: "Trading Strategy Expert",
-    description:
-      "Specialized in developing trading strategies and portfolio management for optimal returns.",
-    avatar: "/images/team/majd hawash.jpeg",
-    social: {
-      linkedin: "#",
-      twitter: "#",
-      email: "majd@stoxacademy.com",
-    },
-  },
-  {
-    name: "Moataz Habiballa",
-    position: "Cryptocurrency Specialist",
-    description:
-      "Leading expert in cryptocurrency markets and blockchain technology applications.",
-    avatar: "/images/team/Moataz habiballa.jpg",
-    social: {
-      linkedin: "#",
-      twitter: "#",
-      email: "moataz@stoxacademy.com",
-    },
-  },
-  {
-    name: "Mohamed Nadaf",
-    position: "Options Trading Instructor",
-    description:
-      "Professional options trader with extensive experience in derivatives and hedging strategies.",
-    avatar: "/images/team/mohamed Nadaf.jpg",
-    social: {
-      linkedin: "#",
-      twitter: "#",
-      email: "mohamed@stoxacademy.com",
-    },
-  },
-  {
-    name: "Ola Shalabni",
-    position: "Technical Analysis Coach",
-    description:
-      "Specialized in chart patterns, indicators, and technical trading systems for consistent profitability.",
-    avatar: "/images/team/ola Shalabni.jpeg",
-    social: {
-      linkedin: "#",
-      twitter: "#",
-      email: "ola@stoxacademy.com",
-    },
-  },
+const avatarPaths = [
+  "/images/team/Ameer Irshed.jpeg",
+  "/images/team/firas elkader.jpeg",
+  "/images/team/majd hawash.jpeg",
+  "/images/team/Moataz habiballa.jpg",
+  "/images/team/mohamed Nadaf.jpg",
+  "/images/team/ola Shalabni.jpeg",
+];
+
+const socialLinks = [
+  { linkedin: "#", twitter: "#", email: "ameer@stoxacademy.com" },
+  { linkedin: "#", twitter: "#", email: "firas@stoxacademy.com" },
+  { linkedin: "#", twitter: "#", email: "majd@stoxacademy.com" },
+  { linkedin: "#", twitter: "#", email: "moataz@stoxacademy.com" },
+  { linkedin: "#", twitter: "#", email: "mohamed@stoxacademy.com" },
+  { linkedin: "#", twitter: "#", email: "ola@stoxacademy.com" },
 ];
 
 export function TeamSection() {
+  const t = useTranslations();
+  const teamMembers = t.raw('team.members').map((member, index) => ({
+    ...member,
+    avatar: avatarPaths[index],
+    social: socialLinks[index],
+  }));
   const [currentIndex, setCurrentIndex] = React.useState(0);
   const [cardsToShow, setCardsToShow] = React.useState(3);
 
@@ -123,12 +73,10 @@ export function TeamSection() {
         {/* Section Header */}
         <div className="text-center mb-16">
           <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
-            Meet Our Expert Team
+            {t('team.title')}
           </h2>
           <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-            Our team of professional traders and educators are dedicated to
-            helping you succeed in the financial markets. Each member brings
-            real-world experience and a passion for teaching.
+            {t('team.description')}
           </p>
         </div>
 

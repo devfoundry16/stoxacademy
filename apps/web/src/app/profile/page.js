@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useTranslations } from 'next-intl';
+import { Link, useRouter } from "@/i18n/routing";
 import { Header, LoadingSpinner } from "@/components";
 import { authService } from "@/lib/auth";
 import { countries } from "@/lib/countries";

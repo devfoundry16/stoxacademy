@@ -3,8 +3,10 @@ import { useState } from "react"
 import { countries } from "@/lib/countries"
 import { checklistService } from "@/lib/checklistService"
 import { Loader2 } from "lucide-react"
+import { useTranslations } from 'next-intl'
 
 export function RegistrationFormSection({ checklistAnswers = [] }) {
+  const t = useTranslations();
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -40,9 +42,9 @@ export function RegistrationFormSection({ checklistAnswers = [] }) {
 
       // Check if it's a duplicate email error
       if (error.response?.status === 409) {
-        setErrorMessage("This email has already been submitted. Each user can only submit once.")
+        setErrorMessage(t('checklist.registration.duplicateEmail'))
       } else {
-        setErrorMessage("Something went wrong. Please try again.")
+        setErrorMessage(t('checklist.registration.errorMessage'))
       }
     }
   }
@@ -67,10 +69,10 @@ export function RegistrationFormSection({ checklistAnswers = [] }) {
             </svg>
           </div>
           <h2 className="text-3xl font-bold text-gray-900 mb-4">
-            Thank You!
+            {t('checklist.registration.thankYou')}
           </h2>
           <p className="text-xl text-gray-600">
-            Your application has been received successfully. We will be in touch shortly.
+            {t('checklist.registration.successMessage')}
           </p>
         </div>
       </section>
@@ -81,7 +83,7 @@ export function RegistrationFormSection({ checklistAnswers = [] }) {
     <section className="py-16 px-4 sm:px-6 lg:px-8 bg-white rounded-2xl shadow-xl">
       <div className="max-w-4xl mx-auto">
         <h2 className="text-3xl sm:text-4xl font-bold text-center mb-12 text-gray-900">
-          Seize the Opportunity Now and Join Us - Register Your Details
+          {t('checklist.registration.title')}
         </h2>
         <form onSubmit={handleSubmit} className="grid sm:grid-cols-2 gap-6">
           <input
@@ -90,7 +92,7 @@ export function RegistrationFormSection({ checklistAnswers = [] }) {
             onChange={handleChange}
             required
             type="text"
-            placeholder="Full Name"
+            placeholder={t('checklist.registration.fullName')}
             className="px-6 py-4 border-2 border-gray-200 rounded-xl focus:border-blue-600 focus:outline-none transition-colors"
           />
           <input
@@ -99,7 +101,7 @@ export function RegistrationFormSection({ checklistAnswers = [] }) {
             onChange={handleChange}
             required
             type="email"
-            placeholder="Email"
+            placeholder={t('checklist.registration.email')}
             className="px-6 py-4 border-2 border-gray-200 rounded-xl focus:border-blue-600 focus:outline-none transition-colors"
           />
           <input
@@ -108,7 +110,7 @@ export function RegistrationFormSection({ checklistAnswers = [] }) {
             onChange={handleChange}
             required
             type="tel"
-            placeholder="Phone Number"
+            placeholder={t('checklist.registration.phoneNumber')}
             className="px-6 py-4 border-2 border-gray-200 rounded-xl focus:border-blue-600 focus:outline-none transition-colors"
           />
           <input
@@ -117,7 +119,7 @@ export function RegistrationFormSection({ checklistAnswers = [] }) {
             onChange={handleChange}
             required
             type="text"
-            placeholder="Age"
+            placeholder={t('checklist.registration.age')}
             className="px-6 py-4 border-2 border-gray-200 rounded-xl focus:border-blue-600 focus:outline-none transition-colors"
           />
           <select
@@ -127,7 +129,7 @@ export function RegistrationFormSection({ checklistAnswers = [] }) {
             required
             className="px-6 py-4 border-2 border-gray-200 rounded-xl focus:border-blue-600 focus:outline-none transition-colors sm:col-span-2"
           >
-            <option value="">Select Country</option>
+            <option value="">{t('checklist.registration.selectCountry')}</option>
             {countries.map((country) => (
               <option key={country} value={country}>
                 {country}
@@ -147,7 +149,7 @@ export function RegistrationFormSection({ checklistAnswers = [] }) {
             className="sm:col-span-2 px-8 py-4 bg-blue-600 text-white text-lg font-semibold rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center gap-2"
           >
             {status === "loading" && <Loader2 className="w-5 h-5 animate-spin" />}
-            {status === "loading" ? "Submitting..." : "Submit"}
+            {status === "loading" ? t('checklist.registration.submitting') : t('checklist.registration.submit')}
           </button>
         </form>
       </div>

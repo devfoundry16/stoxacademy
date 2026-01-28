@@ -1,5 +1,6 @@
 "use client";
 import { motion } from "framer-motion";
+import { useTranslations } from 'next-intl';
 
 export function ChecklistQuestion({
     question,
@@ -8,11 +9,12 @@ export function ChecklistQuestion({
     totalSteps,
     onAnswer,
 }) {
+    const t = useTranslations();
     return (
         <div className="w-full max-w-2xl mx-auto">
             <div className="mb-8">
                 <div className="flex justify-between text-sm font-medium text-gray-500 mb-2">
-                    <span>Question {currentStep + 1} of {totalSteps}</span>
+                    <span>{t('checklist.question', { current: currentStep + 1, total: totalSteps })}</span>
                     <span>{Math.round(((currentStep + 1) / totalSteps) * 100)}%</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2.5">

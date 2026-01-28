@@ -1,7 +1,7 @@
 'use client';
 
-import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+import { Link, usePathname, useRouter } from '@/i18n/routing';
 import {
     LayoutDashboard,
     Users,
@@ -17,21 +17,23 @@ import {
 import { useState } from 'react';
 import { useAuthStore } from '@/store/authStore';
 
-const menuItems = [
-    { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
-    { name: 'Users', href: '/admin/users', icon: Users },
-    { name: 'Courses', href: '/admin/courses', icon: BookOpen },
-    { name: 'Live Sessions', href: '/admin/live-sessions', icon: Video },
-    { name: 'Checklist', href: '/admin/checklist', icon: FileText },
-    { name: 'Profile', href: '/admin/profile', icon: Settings },
-];
-
 export default function AdminSidebar() {
+    const t = useTranslations('admin.sidebar');
+    const tCommon = useTranslations('common');
     const pathname = usePathname();
     const router = useRouter();
     const { user } = useAuthStore();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+
+    const menuItems = [
+        { name: t('dashboard'), href: '/admin', icon: LayoutDashboard },
+        { name: t('users'), href: '/admin/users', icon: Users },
+        { name: t('courses'), href: '/admin/courses', icon: BookOpen },
+        { name: t('liveSessions'), href: '/admin/live-sessions', icon: Video },
+        { name: t('checklist'), href: '/admin/checklist', icon: FileText },
+        { name: t('profile'), href: '/admin/profile', icon: Settings },
+    ];
 
     const handleLogout = () => {
         localStorage.removeItem('access_token');
@@ -46,7 +48,7 @@ export default function AdminSidebar() {
         } else if (userData.user_metadata?.first_name && userData.user_metadata?.last_name) {
             return userData.user_metadata?.first_name + ' ' + userData.user_metadata?.last_name?.charAt(0) + '.';
         }
-        return 'User';
+        return t('user');
     };
 
     return (
@@ -73,7 +75,7 @@ export default function AdminSidebar() {
                         <h1 className="text-2xl font-bold bg-linear-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
                             Stox Academy
                         </h1>
-                        <p className="text-sm text-slate-400 mt-1">Admin Panel</p>
+                        <p className="text-sm text-slate-400 mt-1">{t('adminPanel')}</p>
                     </div>
 
                     {/* Navigation */}
@@ -160,7 +162,7 @@ export default function AdminSidebar() {
                                                     <div className="w-8 h-8 bg-blue-500/10 rounded-lg flex items-center justify-center group-hover:bg-blue-500/20 transition-colors">
                                                         <Settings size={16} className="text-blue-400" />
                                                     </div>
-                                                    <span className="text-sm font-medium text-slate-200 group-hover:text-white">Profile Settings</span>
+                                                    <span className="text-sm font-medium text-slate-200 group-hover:text-white">{tCommon('profileSettings')}</span>
                                                 </Link>
                                                 
                                                 {/* Logout button blended with user section */}
@@ -174,7 +176,7 @@ export default function AdminSidebar() {
                                                     <div className="w-8 h-8 bg-red-500/10 rounded-lg flex items-center justify-center group-hover:bg-red-500/20 transition-colors">
                                                         <LogOut size={16} className="text-red-400" />
                                                     </div>
-                                                    <span className="text-sm font-medium text-slate-200 group-hover:text-white">Logout</span>
+                                                    <span className="text-sm font-medium text-slate-200 group-hover:text-white">{tCommon('logout')}</span>
                                                 </button>
                                             </div>
                                         </div>

@@ -1,11 +1,16 @@
 "use client";
 
+import { useTranslations } from 'next-intl';
+
 export function ErrorState({ 
-  message = "Something went wrong", 
-  actionLabel = "Retry",
+  message, 
+  actionLabel,
   onAction,
   fullScreen = false
 }) {
+  const t = useTranslations();
+  const displayMessage = message || t('errorState.somethingWentWrong');
+  const displayActionLabel = actionLabel || t('common.retry');
   const containerClasses = fullScreen
     ? "flex items-center justify-center min-h-[calc(100vh-5rem)]"
     : "flex items-center justify-center min-h-[400px]";
@@ -28,13 +33,13 @@ export function ErrorState({
             />
           </svg>
         </div>
-        <p className="text-red-600 mb-4 text-lg font-medium">{message}</p>
+        <p className="text-red-600 mb-4 text-lg font-medium">{displayMessage}</p>
         {onAction && (
           <button
             onClick={onAction}
             className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
-            {actionLabel}
+            {displayActionLabel}
           </button>
         )}
       </div>

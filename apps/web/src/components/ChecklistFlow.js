@@ -5,8 +5,11 @@ import { Loader2 } from "lucide-react";
 import { ChecklistQuestion } from "./ChecklistQuestion";
 import { RegistrationFormSection } from "./registration-form-section";
 import { checklistService } from "@/lib/checklistService";
+import { useLocale, useTranslations } from 'next-intl';
 
 export function ChecklistFlow() {
+  const locale = useLocale();
+  const t = useTranslations();
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState([]);
   const [isCompleted, setIsCompleted] = useState(false);
@@ -17,22 +20,22 @@ export function ChecklistFlow() {
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
-        const response = await checklistService.getQuestions();
+        const response = await checklistService.getQuestions(locale);
         if (response.success) {
           setQuestions(response.data);
         } else {
-          setError("Failed to load questions");
+          setError(t('checklist.failedToLoadQuestions'));
         }
       } catch (err) {
         console.error("Error fetching questions:", err);
-        setError("Failed to load questions. Please refresh the page.");
+        setError(t('checklist.failedToLoadQuestionsRefresh'));
       } finally {
         setLoading(false);
       }
     };
 
     fetchQuestions();
-  }, []);
+  }, [locale]);
 
   const handleAnswer = (answer) => {
     const newAnswers = [
@@ -53,7 +56,7 @@ export function ChecklistFlow() {
       <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50 min-h-[600px] flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="w-10 h-10 text-blue-600 animate-spin" />
-          <p className="text-gray-600 font-medium">Loading questions...</p>
+          <p className="text-gray-600 font-medium">{t('checklist.loadingQuestions')}</p>
         </div>
       </section>
     );
@@ -68,7 +71,7 @@ export function ChecklistFlow() {
             onClick={() => window.location.reload()}
             className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
-            Retry
+            {t('common.retry')}
           </button>
         </div>
       </section>
@@ -78,12 +81,10 @@ export function ChecklistFlow() {
   return (
     <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50 min-h-[600px] flex flex-col items-center justify-center">
       <h2 className="text-3xl sm:text-4xl font-bold text-center mb-4 text-gray-900">
-        STOX Smart Financial Assessment - Step {currentStep + 1} of{" "}
-        {questions.length}
+        {t('checklist.title')} - {t('checklist.step', { current: currentStep + 1, total: questions.length })}
       </h2>
       <p className="text-xl text-gray-600 mb-8">
-        Discover where you stand today and the best financial path for you this
-        title should be on the top of the checklist
+        {t('checklist.subtitle')}
       </p>
       <div className="w-full max-w-4xl mx-auto">
         <AnimatePresence mode="wait">

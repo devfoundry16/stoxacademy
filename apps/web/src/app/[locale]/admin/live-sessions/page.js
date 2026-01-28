@@ -1,5 +1,7 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Edit, Trash2, Plus, Calendar, Clock, Users as UsersIcon } from 'lucide-react';

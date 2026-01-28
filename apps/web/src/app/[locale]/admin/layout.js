@@ -1,4 +1,7 @@
 'use client';
+
+export const dynamic = 'force-dynamic';
+
 import { useEffect } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { useRouter } from '@/i18n/routing';

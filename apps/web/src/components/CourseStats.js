@@ -1,8 +1,12 @@
 "use client";
 
 import { Clock, BookOpen, Star } from "lucide-react";
+import { useTranslations } from 'next-intl';
 import { cn } from "@/lib/utils";
+
 export function CourseStats({ duration, lessonsCount, rating, className = "" }) {
+  const t = useTranslations('courseCard');
+  
   return (
     <div className={cn("flex items-center gap-4 text-sm text-gray-500", className)}>
       {duration && (
@@ -14,7 +18,7 @@ export function CourseStats({ duration, lessonsCount, rating, className = "" }) 
       {lessonsCount !== undefined && (
         <div className="flex items-center gap-1">
           <BookOpen className="w-4 h-4" />
-          <span>{lessonsCount} lessons</span>
+          <span>{lessonsCount} {t('lessons')}</span>
         </div>
       )}
       {/* {rating !== undefined && (

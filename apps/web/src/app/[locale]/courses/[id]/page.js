@@ -27,8 +27,10 @@ import { VideoPlayer } from "@/components/video-player";
 import { motion } from "framer-motion";
 import { fadeInUp, staggerContainer, staggerItem, defaultTransition } from "@/lib/animations";
 
+
 export default function CourseDetailPage({ params }) {
   const router = useRouter();
+  const t = useTranslations();
   const { isAuthenticated, user } = useAuthStore();
   const [selectedLesson, setSelectedLesson] = useState(null);
   const [activeTab, setActiveTab] = useState("overview");

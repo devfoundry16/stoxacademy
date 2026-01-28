@@ -114,7 +114,6 @@ export function VideoPlayer({ videoUrl, thumbnailUrl, className }) {
           <iframe
             src={getVimeoEmbedUrl()}
             className="absolute top-0 left-0 w-full h-full rounded-2xl"
-            frameBorder="0"
             allow="autoplay; fullscreen; picture-in-picture"
             allowFullScreen
             title="Vimeo video player"

@@ -3,10 +3,12 @@ import { useRouter } from "@/i18n/routing"
 import { useTranslations } from 'next-intl'
 import { motion } from "framer-motion"
 import { fadeInUp, staggerContainer, staggerItem, defaultTransition } from "@/lib/animations"
+import { useAuthStore } from "@/store/authStore"
 
 export function CoursesSection() {
   const router = useRouter()
   const t = useTranslations()
+  const { isAuthenticated } = useAuthStore()
   const courses = [
     {
       badge: t('courses.inPerson'),
@@ -78,14 +80,16 @@ export function CoursesSection() {
                   </li>
                 ))}
               </ul>
-              <motion.button
-                whileHover={{ y: -2 }}
-                whileTap={{ y: 0 }}
-                className={`w-full px-6 py-4 ${course.buttonColor} text-white font-semibold rounded-xl transition-colors`}
-                onClick={() => router.push('/signup')}
-              >
-                {t('common.registerNow')}
-              </motion.button>
+              {!isAuthenticated && (
+                <motion.button
+                  whileHover={{ y: -2 }}
+                  whileTap={{ y: 0 }}
+                  className={`w-full px-6 py-4 ${course.buttonColor} text-white font-semibold rounded-xl transition-colors`}
+                  onClick={() => router.push('/signup')}
+                >
+                  {t('common.registerNow')}
+                </motion.button>
+              )}
             </motion.div>
           ))}
         </motion.div>

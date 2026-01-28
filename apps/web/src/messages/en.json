@@ -366,7 +366,10 @@
       "sessionFull": "Session Full",
       "enrollNow": "Enroll Now - {price}",
       "signIn": "sign in",
-      "backToLiveSessions": "Back to Live Sessions"
+      "backToLiveSessions": "Back to Live Sessions",
+      "date": "Date",
+      "participants": "Participants",
+      "price": "Price"
     }
   },
   "profile": {
@@ -417,7 +420,8 @@
     "enrolled": "Enrolled",
     "continueLearning": "Continue Learning",
     "buyNow": "Buy Now",
-    "signIn": "Sign In"
+    "signIn": "Sign In",
+    "lessons": "lessons"
   },
   "errorState": {
     "somethingWentWrong": "Something went wrong"

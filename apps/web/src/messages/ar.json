@@ -365,7 +365,11 @@
       "enrolling": "جاري التسجيل...",
       "sessionFull": "الجلسة ممتلئة",
       "enrollNow": "سجل الآن - {price}",
-      "signIn": "تسجيل الدخول"
+      "signIn": "تسجيل الدخول",
+      "backToLiveSessions": "العودة إلى الجلسات المباشرة",
+      "date": "التاريخ",
+      "participants": "المشاركون",
+      "price": "السعر"
     }
   },
   "profile": {
@@ -416,7 +420,8 @@
     "enrolled": "مسجل",
     "continueLearning": "متابعة التعلم",
     "buyNow": "اشتري الآن",
-    "signIn": "تسجيل الدخول"
+    "signIn": "تسجيل الدخول",
+    "lessons": "دروس"
   },
   "errorState": {
     "somethingWentWrong": "حدث خطأ ما"

@@ -14,6 +14,7 @@ import { courseService } from '@/lib/courseService';
 
 export default function CoursesPage() {
     const t = useTranslations('admin.courses');
+    const tCourses = useTranslations('courses.page');
     const [courses, setcourses] = useState([]);
     const [filteredCourses, setFilteredCourses] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -208,6 +209,22 @@ export default function CoursesPage() {
         setFormData({ ...formData, lessons: updatedLessons });
     };
 
+    // Helper function to translate level values for display
+    const translateLevel = (level) => {
+        if (!level) return '';
+        const levelLower = level.toLowerCase();
+        switch (levelLower) {
+            case 'beginner':
+                return tCourses('beginner');
+            case 'intermediate':
+                return tCourses('intermediate');
+            case 'advanced':
+                return tCourses('advanced');
+            default:
+                return level;
+        }
+    };
+
     const columns = [
         {
             header: t('titleColumn'),
@@ -219,15 +236,21 @@ export default function CoursesPage() {
         },
         {
             header: t('levelColumn'),
-            accessor: 'level', // using level from DB schema
-            render: (row) => (
-                <span className={`px-3 py-1 rounded-full text-xs font-medium ${(row.level || row.level) === 'Beginner' || (row.level || row.level) === 'Beginner' ? 'bg-green-100 text-green-800' :
-                    (row.level || row.level) === 'Intermediate' || (row.level || row.level) === 'Intermediate' ? 'bg-yellow-100 text-yellow-800' :
+            accessor: 'level', // using level from DB schema (English values)
+            render: (row) => {
+                const level = row.level || '';
+                const levelLower = level.toLowerCase();
+                const translatedLevel = translateLevel(level);
+                return (
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                        levelLower === 'beginner' ? 'bg-green-100 text-green-800' :
+                        levelLower === 'intermediate' ? 'bg-yellow-100 text-yellow-800' :
                         'bg-red-100 text-red-800'
                     }`}>
-                    {row.level || row.level}
-                </span>
-            ),
+                        {translatedLevel}
+                    </span>
+                );
+            },
         },
         {
             header: t('priceColumn'),
@@ -363,9 +386,9 @@ export default function CoursesPage() {
                                 onChange={(e) => setFormData({ ...formData, level: e.target.value })}
                                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                             >
-                                <option value="Beginner">Beginner</option>
-                                <option value="Intermediate">Intermediate</option>
-                                <option value="Advanced">Advanced</option>
+                                <option value="Beginner">{tCourses('beginner')}</option>
+                                <option value="Intermediate">{tCourses('intermediate')}</option>
+                                <option value="Advanced">{tCourses('advanced')}</option>
                             </select>
                         </div>
                     </div>

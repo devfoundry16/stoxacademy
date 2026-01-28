@@ -4,9 +4,11 @@ import { useRouter } from "@/i18n/routing"
 import { useTranslations } from 'next-intl'
 import { motion } from "framer-motion"
 import { fadeInUp, staggerContainer, staggerItem, defaultTransition } from "@/lib/animations"
+import { useAuthStore } from "@/store/authStore"
 export function HeroSection() {
   const router = useRouter()
   const t = useTranslations()
+  const { isAuthenticated } = useAuthStore()
   return (
     <section className="pt-24 pb-16 px-4 sm:px-6 lg:px-8 bg-linear-to-br from-blue-50 via-white to-purple-50">
       <div className="max-w-7xl mx-auto">
@@ -35,14 +37,16 @@ export function HeroSection() {
             >
               {t('hero.description')}
             </motion.p>
-            <motion.button
-              whileHover={{ y: -2 }}
-              whileTap={{ y: 0 }}
-              className="px-8 py-4 bg-blue-600 text-white text-lg font-semibold rounded-full hover:bg-blue-700 transition-all"
-              onClick={() => router.push("/signup")}
-            >
-              {t('hero.cta')}
-            </motion.button>
+            {!isAuthenticated && (
+              <motion.button
+                whileHover={{ y: -2 }}
+                whileTap={{ y: 0 }}
+                className="px-8 py-4 bg-blue-600 text-white text-lg font-semibold rounded-full hover:bg-blue-700 transition-all"
+                onClick={() => router.push("/signup")}
+              >
+                {t('hero.cta')}
+              </motion.button>
+            )}
           </motion.div>
           <motion.div
             variants={fadeInUp}

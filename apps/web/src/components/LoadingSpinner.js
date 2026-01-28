@@ -1,10 +1,14 @@
 "use client";
 
+import { useTranslations } from 'next-intl';
+
 export function LoadingSpinner({ 
-  message = "Loading...", 
+  message,
   size = "md",
   fullScreen = false 
 }) {
+  const t = useTranslations();
+  const displayMessage = message ?? t('common.loading');
   const sizeClasses = {
     sm: "h-8 w-8 border-2",
     md: "h-12 w-12 border-b-2",
@@ -21,9 +25,8 @@ export function LoadingSpinner({
         <div
           className={`animate-spin rounded-full border-blue-600 mx-auto mb-4 ${sizeClasses[size]}`}
         ></div>
-        {message && <p className="text-gray-600">{message}</p>}
+        {displayMessage && <p className="text-gray-600">{displayMessage}</p>}
       </div>
     </div>
   );
 }
-

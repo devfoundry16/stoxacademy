@@ -301,7 +301,7 @@
     "completed": "مكتمل",
     "lessonsDone": "الدروس المكتملة",
     "noCoursesYet": "لا توجد دورات بعد",
-    "startLearning": "ابدأ التعلم بشراء دورتك الأولى",
+    "startLearningDescription": "ابدأ التعلم بشراء دورتك الأولى",
     "browseCourses": "تصفح الدورات",
     "courseProgress": "تقدم الدورة",
     "total": "الإجمالي",
@@ -309,7 +309,7 @@
     "left": "متبقي",
     "completedReviewCourse": "مكتمل - مراجعة الدورة",
     "continueLearning": "متابعة التعلم",
-    "startLearning": "ابدأ التعلم",
+    "startLearningButton": "ابدأ التعلم",
     "by": "بواسطة"
   },
   "liveSessions": {
@@ -466,6 +466,12 @@
       "daysAgo": "منذ {count} يوم",
       "daysAgo_plural": "منذ {count} يوم"
     },
+    "table": {
+      "searchPlaceholder": "ابحث...",
+      "actions": "إجراءات",
+      "noData": "لا توجد بيانات",
+      "showingRange": "عرض {from} إلى {to} من {total} نتيجة"
+    },
     "users": {
       "title": "إدارة المستخدمين",
       "description": "إدارة جميع المستخدمين وأدوارهم",
@@ -493,12 +499,13 @@
     },
     "courses": {
       "title": "إدارة الدورات",
+      "pageDescription": "إنشاء وإدارة جميع الدورات",
       "description": "إنشاء وإدارة جميع الدورات",
       "createCourse": "إنشاء دورة",
       "editCourse": "تعديل الدورة",
       "createNewCourse": "إنشاء دورة جديدة",
       "courseTitle": "عنوان الدورة",
-      "description": "الوصف",
+      "descriptionLabel": "الوصف",
       "price": "السعر ($)",
       "level": "المستوى",
       "duration": "المدة",
@@ -534,11 +541,20 @@
       "statusColumn": "الحالة",
       "published": "منشور",
       "draft": "مسودة",
-      "removeLesson": "إزالة الدرس"
+      "removeLesson": "إزالة الدرس",
+      "cancel": "إلغاء"
     },
     "liveSessions": {
       "title": "الجلسات المباشرة",
+      "pageDescription": "جدولة وإدارة جلسات الدورات المباشرة",
       "description": "جدولة وإدارة جلسات الدورات المباشرة",
+      "titleColumn": "العنوان",
+      "courseColumn": "الدورة",
+      "scheduledColumn": "مجدولة",
+      "durationColumn": "المدة",
+      "statusColumn": "الحالة",
+      "notAvailable": "غير متاح",
+      "durationUnitMinutes": "{minutes} دقيقة",
       "scheduleSession": "جدولة جلسة",
       "editLiveSession": "تعديل الجلسة المباشرة",
       "scheduleNewLiveSession": "جدولة جلسة مباشرة جديدة",
@@ -565,7 +581,7 @@
       "liveNow": "مباشرة الآن",
       "completedCount": "مكتملة",
       "cancel": "إلغاء",
-      "description": "الوصف"
+      "descriptionLabel": "الوصف"
     },
     "checklist": {
       "title": "تقديمات قائمة المراجعة",

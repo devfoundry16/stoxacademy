@@ -301,7 +301,7 @@
     "completed": "Completed",
     "lessonsDone": "Lessons Done",
     "noCoursesYet": "No courses yet",
-    "startLearning": "Start learning by purchasing your first course",
+    "startLearningDescription": "Start learning by purchasing your first course",
     "browseCourses": "Browse Courses",
     "courseProgress": "Course Progress",
     "total": "Total",
@@ -309,7 +309,7 @@
     "left": "Left",
     "completedReviewCourse": "Completed - Review Course",
     "continueLearning": "Continue Learning",
-    "startLearning": "Start Learning",
+    "startLearningButton": "Start Learning",
     "by": "By"
   },
   "liveSessions": {
@@ -362,7 +362,6 @@
       "enrolled": "enrolled",
       "course": "Course",
       "sessionCompleted": "Session Completed",
-      "meetingLinkNotAvailable": "Meeting Link Not Available",
       "enrolling": "Enrolling...",
       "sessionFull": "Session Full",
       "enrollNow": "Enroll Now - {price}",
@@ -495,12 +494,13 @@
     },
     "courses": {
       "title": "Course Management",
+      "pageDescription": "Create and manage all courses",
       "description": "Create and manage all courses",
       "createCourse": "Create Course",
       "editCourse": "Edit Course",
       "createNewCourse": "Create New Course",
       "courseTitle": "Course Title",
-      "description": "Description",
+      "descriptionLabel": "Description",
       "price": "Price ($)",
       "level": "Level",
       "duration": "Duration",
@@ -536,11 +536,26 @@
       "statusColumn": "Status",
       "published": "Published",
       "draft": "Draft",
-      "removeLesson": "Remove lesson"
+      "removeLesson": "Remove lesson",
+      "cancel": "Cancel"
+    },
+    "table": {
+      "searchPlaceholder": "Search...",
+      "actions": "Actions",
+      "noData": "No data available",
+      "showingRange": "Showing {from} to {to} of {total} results"
     },
     "liveSessions": {
       "title": "Live Sessions",
+      "pageDescription": "Schedule and manage live course sessions",
       "description": "Schedule and manage live course sessions",
+      "titleColumn": "Title",
+      "courseColumn": "Course",
+      "scheduledColumn": "Scheduled",
+      "durationColumn": "Duration",
+      "statusColumn": "Status",
+      "notAvailable": "N/A",
+      "durationUnitMinutes": "{minutes} min",
       "scheduleSession": "Schedule Session",
       "editLiveSession": "Edit Live Session",
       "scheduleNewLiveSession": "Schedule New Live Session",
@@ -567,7 +582,7 @@
       "liveNow": "Live Now",
       "completedCount": "Completed",
       "cancel": "Cancel",
-      "description": "Description"
+      "descriptionLabel": "Description"
     },
     "checklist": {
       "title": "Checklist Submissions",

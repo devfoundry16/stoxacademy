@@ -18,8 +18,10 @@ import {
 export default function LiveSessionsPage() {
     const t = useTranslations('admin.liveSessions');
     const [sessions, setSessions] = useState([]);
+    const [filteredSessions, setFilteredSessions] = useState([]);
     const [courses, setCourses] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedSession, setSelectedSession] = useState(null);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -40,16 +42,51 @@ export default function LiveSessionsPage() {
         fetchCourses();
     }, []);
 
+    // Update filtered sessions when sessions change
+    useEffect(() => {
+        if (!searchTerm.trim()) {
+            setFilteredSessions(sessions);
+        } else {
+            const searchLower = searchTerm.toLowerCase();
+            const filtered = sessions.filter(session => {
+                const titleMatch = session.title?.toLowerCase().includes(searchLower);
+                const courseMatch = session.courses?.title?.toLowerCase().includes(searchLower);
+                const statusMatch = session.status?.toLowerCase().includes(searchLower);
+                return titleMatch || courseMatch || statusMatch;
+            });
+            setFilteredSessions(filtered);
+        }
+    }, [sessions, searchTerm]);
+
     const fetchSessions = async () => {
         try {
             setLoading(true);
             const data = await getLiveSessions();
             setSessions(data.sessions);
+            setFilteredSessions(data.sessions);
         } catch (error) {
             console.error('Failed to fetch sessions:', error);
         } finally {
             setLoading(false);
         }
+    };
+
+    // Filter sessions based on search term
+    const handleSearch = (value) => {
+        setSearchTerm(value);
+        if (!value.trim()) {
+            setFilteredSessions(sessions);
+            return;
+        }
+        
+        const searchLower = value.toLowerCase();
+        const filtered = sessions.filter(session => {
+            const titleMatch = session.title?.toLowerCase().includes(searchLower);
+            const courseMatch = session.courses?.title?.toLowerCase().includes(searchLower);
+            const statusMatch = session.status?.toLowerCase().includes(searchLower);
+            return titleMatch || courseMatch || statusMatch;
+        });
+        setFilteredSessions(filtered);
     };
 
     const fetchCourses = async () => {
@@ -119,7 +156,7 @@ export default function LiveSessionsPage() {
                 toast.success(t('sessionCreated'));
             }
             setIsModalOpen(false);
-            fetchSessions();
+            await fetchSessions();
         } catch (error) {
             console.error('Failed to save session:', error);
             toast.error(t('failedToSaveSession'));
@@ -151,28 +188,28 @@ export default function LiveSessionsPage() {
 
     const columns = [
         {
-            header: 'Title',
+            header: t('titleColumn'),
             accessor: 'title',
         },
         {
-            header: 'Course',
+            header: t('courseColumn'),
             accessor: 'course',
-            render: (row) => row.courses?.title || 'N/A',
+            render: (row) => row.courses?.title || t('notAvailable'),
         },
         {
-            header: 'Scheduled',
+            header: t('scheduledColumn'),
             accessor: 'scheduled_at',
             render: (row) => new Date(row.scheduled_at).toLocaleString('en-US', {
                 timeZoneName: 'short',
             }),
         },
         {
-            header: 'Duration',
+            header: t('durationColumn'),
             accessor: 'duration',
-            render: (row) => `${row.duration} min`,
+            render: (row) => t('durationUnitMinutes', { minutes: row.duration }),
         },
         {
-            header: 'Status',
+            header: t('statusColumn'),
             accessor: 'status',
             render: (row) => (
                 <span className={`px-3 py-1 rounded-full text-xs font-medium ${row.status === 'scheduled' ? 'bg-blue-100 text-blue-800' :
@@ -217,7 +254,7 @@ export default function LiveSessionsPage() {
             <div className="mb-8 flex items-center justify-between">
                 <div>
                     <h1 className="text-4xl font-bold text-gray-900 mb-2">{t('title')}</h1>
-                    <p className="text-gray-600">{t('description')}</p>
+                    <p className="text-gray-600">{t('pageDescription')}</p>
                 </div>
                 <button
                     onClick={handleCreateNew}
@@ -238,7 +275,7 @@ export default function LiveSessionsPage() {
                         <div>
                             <p className="text-sm text-gray-600">{t('scheduledCount')}</p>
                             <p className="text-2xl font-bold text-gray-900">
-                                {sessions.filter(s => s.status === 'scheduled').length}
+                                {filteredSessions.filter(s => s.status === 'scheduled').length}
                             </p>
                         </div>
                     </div>
@@ -252,7 +289,7 @@ export default function LiveSessionsPage() {
                         <div>
                             <p className="text-sm text-gray-600">{t('liveNow')}</p>
                             <p className="text-2xl font-bold text-gray-900">
-                                {sessions.filter(s => s.status === 'live').length}
+                                {filteredSessions.filter(s => s.status === 'live').length}
                             </p>
                         </div>
                     </div>
@@ -266,7 +303,7 @@ export default function LiveSessionsPage() {
                         <div>
                             <p className="text-sm text-gray-600">{t('completedCount')}</p>
                             <p className="text-2xl font-bold text-gray-900">
-                                {sessions.filter(s => s.status === 'completed').length}
+                                {filteredSessions.filter(s => s.status === 'completed').length}
                             </p>
                         </div>
                     </div>
@@ -276,7 +313,8 @@ export default function LiveSessionsPage() {
             {/* Data Table */}
             <DataTable
                 columns={columns}
-                data={sessions}
+                data={filteredSessions}
+                onSearch={handleSearch}
                 actions={actions}
             />
 

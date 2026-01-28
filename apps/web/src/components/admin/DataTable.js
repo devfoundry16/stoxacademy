@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { Search, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function DataTable({
@@ -11,11 +12,14 @@ export default function DataTable({
     pagination,
     actions
 }) {
+    const t = useTranslations('admin.table');
     const [searchTerm, setSearchTerm] = useState('');
 
     const handleSearch = (e) => {
         const value = e.target.value;
         setSearchTerm(value);
+
+        // Prefer parent-controlled search if provided
         if (onSearch) {
             onSearch(value);
         }
@@ -29,7 +33,7 @@ export default function DataTable({
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
                     <input
                         type="text"
-                        placeholder="Search..."
+                        placeholder={t('searchPlaceholder')}
                         value={searchTerm}
                         onChange={handleSearch}
                         className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -52,7 +56,7 @@ export default function DataTable({
                             ))}
                             {actions && (
                                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Actions
+                                    {t('actions')}
                                 </th>
                             )}
                         </tr>
@@ -81,7 +85,7 @@ export default function DataTable({
                                     colSpan={columns.length + (actions ? 1 : 0)}
                                     className="px-6 py-8 text-center text-gray-500"
                                 >
-                                    No data available
+                                    {t('noData')}
                                 </td>
                             </tr>
                         )}
@@ -93,9 +97,11 @@ export default function DataTable({
             {pagination && (
                 <div className="px-4 py-3 border-t border-gray-200 flex items-center justify-between">
                     <div className="text-sm text-gray-700">
-                        Showing {((pagination.page - 1) * pagination.limit) + 1} to{' '}
-                        {Math.min(pagination.page * pagination.limit, pagination.total)} of{' '}
-                        {pagination.total} results
+                        {t('showingRange', {
+                            from: ((pagination.page - 1) * pagination.limit) + 1,
+                            to: Math.min(pagination.page * pagination.limit, pagination.total),
+                            total: pagination.total,
+                        })}
                     </div>
                     <div className="flex gap-2">
                         <button

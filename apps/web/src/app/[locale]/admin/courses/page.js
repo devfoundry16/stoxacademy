@@ -13,6 +13,7 @@ import { courseService } from '@/lib/courseService';
 export default function CoursesPage() {
     const t = useTranslations('admin.courses');
     const [courses, setcourses] = useState([]);
+    const [filteredCourses, setFilteredCourses] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedCourse, setSelectedCourse] = useState(null);
@@ -38,6 +39,7 @@ export default function CoursesPage() {
             setLoading(true);
             const response = await courseService.getAllCourses();
             setcourses(response.courses);
+            setFilteredCourses(response.courses);
         } catch (error) {
             console.error('Failed to fetch courses:', error);
         } finally {
@@ -147,12 +149,31 @@ export default function CoursesPage() {
         try {
             await deleteCourse(courseToDelete.id);
             toast.success(t('courseDeleted'));
-            fetchCourses();
+            await fetchCourses();
             handleCloseDeleteModal();
         } catch (error) {
             console.error('Failed to delete course:', error);
             toast.error(t('failedToDeleteCourse'));
         }
+    };
+
+    // Client-side search across key fields
+    const handleSearch = (value) => {
+        const term = value.toLowerCase();
+        if (!term.trim()) {
+            setFilteredCourses(courses);
+            return;
+        }
+
+        const filtered = courses.filter((course) => {
+            const titleMatch = course.title?.toLowerCase().includes(term);
+            const instructorMatch = course.instructor?.toLowerCase().includes(term);
+            const levelMatch = course.level?.toLowerCase().includes(term);
+            const priceMatch = String(course.price ?? '').toLowerCase().includes(term);
+            return titleMatch || instructorMatch || levelMatch || priceMatch;
+        });
+
+        setFilteredCourses(filtered);
     };
 
     // Lesson management functions
@@ -259,7 +280,7 @@ export default function CoursesPage() {
             <div className="mb-8 flex items-center justify-between">
                 <div>
                     <h1 className="text-4xl font-bold text-gray-900 mb-2">{t('title')}</h1>
-                    <p className="text-gray-600">{t('description')}</p>
+                    <p className="text-gray-600">{t('pageDescription')}</p>
                 </div>
                 <button
                     onClick={handleCreateNew}
@@ -273,7 +294,8 @@ export default function CoursesPage() {
             {/* Data Table */}
             <DataTable
                 columns={columns}
-                data={courses}
+                data={filteredCourses}
+                onSearch={handleSearch}
                 actions={actions}
             />
 

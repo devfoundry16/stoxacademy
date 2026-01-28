@@ -141,7 +141,7 @@ function CourseProgressCard({ userCourse }) {
                         className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-linear-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all font-semibold"
                     >
                         <PlayCircle size={20} />
-                        <span>{t('myCourses.startLearning')}</span>
+                        <span>{t('myCourses.startLearningButton')}</span>
                     </motion.button>
                 )}
             </div>
@@ -324,7 +324,7 @@ export default function MyCoursesPage() {
                             <BookOpen size={40} className="text-gray-400" />
                         </div>
                         <h3 className="text-2xl font-bold text-gray-900 mb-3">{t('myCourses.noCoursesYet')}</h3>
-                        <p className="text-gray-600 text-lg mb-6">{t('myCourses.startLearning')}</p>
+                        <p className="text-gray-600 text-lg mb-6">{t('myCourses.startLearningDescription')}</p>
                         <motion.button
                             whileHover={{ y: -2 }}
                             whileTap={{ y: 0 }}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { Link, usePathname, useRouter } from '@/i18n/routing';
 import {
     LayoutDashboard,
@@ -18,6 +18,8 @@ import { useState } from 'react';
 import { useAuthStore } from '@/store/authStore';
 
 export default function AdminSidebar() {
+    const locale = useLocale();
+    const isRTL = locale === 'ar';
     const t = useTranslations('admin.sidebar');
     const tCommon = useTranslations('common');
     const pathname = usePathname();
@@ -56,7 +58,7 @@ export default function AdminSidebar() {
             {/* Mobile menu button */}
             <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-white rounded-lg shadow-lg"
+                className={`lg:hidden fixed top-4 z-50 p-2 bg-white rounded-lg shadow-lg ${isRTL ? 'right-4' : 'left-4'}`}
             >
                 {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
@@ -64,9 +66,15 @@ export default function AdminSidebar() {
             {/* Sidebar */}
             <aside
                 className={`
-          fixed top-0 left-0 h-screen w-64 bg-linear-to-b from-slate-900 to-slate-800 
+          fixed top-0 h-screen w-64 bg-linear-to-b from-slate-900 to-slate-800 
           text-white shadow-2xl z-40 transition-transform duration-300 ease-in-out
-          ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+          ${isRTL ? 'right-0' : 'left-0'}
+          ${isMobileMenuOpen 
+                ? 'translate-x-0' 
+                : isRTL 
+                    ? 'translate-x-full lg:translate-x-0' 
+                    : '-translate-x-full lg:translate-x-0'
+            }
         `}
             >
                 <div className="flex flex-col h-full">
@@ -142,8 +150,12 @@ export default function AdminSidebar() {
                                             onClick={() => setIsUserMenuOpen(false)}
                                         />
                                         
-                                        {/* Menu positioned to the right */}
-                                        <div className="absolute bottom-full mb-2 left-0 right-0 lg:left-auto lg:right-0 lg:bottom-0 lg:mb-0 lg:ml-2 lg:translate-x-full w-full lg:w-56 bg-slate-800 rounded-lg shadow-2xl border border-slate-600/50 overflow-hidden z-50 animate-in fade-in slide-in-from-bottom-2 duration-200">
+                                        {/* Menu positioned based on RTL */}
+                                        <div className={`absolute bottom-full mb-2 left-0 right-0 lg:bottom-0 lg:mb-0 w-full lg:w-56 bg-slate-800 rounded-lg shadow-2xl border border-slate-600/50 overflow-hidden z-50 animate-in fade-in slide-in-from-bottom-2 duration-200 ${
+                                            isRTL 
+                                                ? 'lg:right-auto lg:left-0 lg:mr-2 lg:-translate-x-full' 
+                                                : 'lg:left-auto lg:right-0 lg:ml-2 lg:translate-x-full'
+                                        }`}>
                                             <div className="p-2">
                                                 {/* User info in menu */}
                                                 <div className="px-3 py-2 border-b border-slate-700/50 mb-2">

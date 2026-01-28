@@ -68,7 +68,6 @@ export default function ChecklistSubmissionsPage() {
     const [submissions, setSubmissions] = useState([]);
     const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 0 });
     const [loading, setLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState('');
     const [stageFilter, setStageFilter] = useState('');
     const [selectedSubmission, setSelectedSubmission] = useState(null);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -80,7 +79,7 @@ export default function ChecklistSubmissionsPage() {
 
     useEffect(() => {
         fetchSubmissions();
-    }, [pagination.page, searchTerm, stageFilter]);
+    }, [pagination.page, stageFilter]);
 
     const fetchSubmissions = async () => {
         try {
@@ -88,7 +87,6 @@ export default function ChecklistSubmissionsPage() {
             const params = {
                 page: pagination.page,
                 limit: pagination.limit,
-                search: searchTerm,
             };
             if (stageFilter) {
                 params.stage = stageFilter;
@@ -107,13 +105,8 @@ export default function ChecklistSubmissionsPage() {
         }
     };
 
-    const handleSearch = (value) => {
-        setSearchTerm(value);
-        setPagination({ ...pagination, page: 1 });
-    };
-
     const handlePageChange = (newPage) => {
-        setPagination({ ...pagination, page: newPage });
+        setPagination(prev => ({ ...prev, page: newPage }));
     };
 
     const handleViewDetails = async (submission) => {
@@ -131,7 +124,6 @@ export default function ChecklistSubmissionsPage() {
         try {
             setLoading(true);
             await exportChecklistSubmissionsToExcel({
-                search: searchTerm,
                 stage: stageFilter,
             });
             toast.success(t('excelDownloaded'));
@@ -298,7 +290,7 @@ export default function ChecklistSubmissionsPage() {
                         value={stageFilter}
                         onChange={(e) => {
                             setStageFilter(e.target.value);
-                            setPagination({ ...pagination, page: 1 });
+                            setPagination(prev => ({ ...prev, page: 1 }));
                         }}
                         className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
@@ -315,7 +307,6 @@ export default function ChecklistSubmissionsPage() {
             <DataTable
                 columns={columns}
                 data={submissions}
-                onSearch={handleSearch}
                 onPageChange={handlePageChange}
                 pagination={pagination}
                 actions={(row) => (

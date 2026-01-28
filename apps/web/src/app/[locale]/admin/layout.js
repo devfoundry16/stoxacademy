@@ -1,11 +1,13 @@
 'use client';
 import { useEffect } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { useRouter } from '@/i18n/routing';
 import { useAdmin } from '@/lib/hooks/useAdmin';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 
 export default function AdminLayout({ children }) {
+    const locale = useLocale();
+    const isRTL = locale === 'ar';
     const t = useTranslations('admin.layout');
     const { loading, isAdmin } = useAdmin();
     const router = useRouter();
@@ -41,7 +43,7 @@ export default function AdminLayout({ children }) {
     return (
         <div className="min-h-screen bg-gray-50">
             <AdminSidebar />
-            <main className="lg:ml-64 min-h-screen justify-center items-center">
+            <main className={`min-h-screen justify-center items-center ${isRTL ? 'lg:mr-64' : 'lg:ml-64'}`}>
                 <div className="p-8">
                     {children}
                 </div>

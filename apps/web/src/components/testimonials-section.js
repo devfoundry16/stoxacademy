@@ -26,7 +26,9 @@ export function TestimonialsSection() {
         <div className="grid md:grid-cols-2 gap-8">
           {testimonials.map((testimonial, idx) => (
             <div key={idx} className="space-y-4">
-              <VideoPlayer videoUrl={testimonial.videoUrl} thumbnailUrl={testimonial.thumbnailUrl} className="lg:w-1/2 w-2/3 h-auto"/>
+              <div className="flex justify-center">
+                <VideoPlayer videoUrl={testimonial.videoUrl} thumbnailUrl={testimonial.thumbnailUrl} className="lg:w-1/2 w-2/3 h-auto"/>
+              </div>
               <div className="p-6 bg-blue-50 rounded-2xl">
                 <div className="flex gap-1 mb-4">
                   {[...Array(5)].map((_, i) => (

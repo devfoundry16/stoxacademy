@@ -25,34 +25,201 @@ interface ScoreResult {
 }
 
 /**
+ * Language-agnostic mappings for questions and answers
+ * Maps both English and Arabic text to canonical keys
+ */
+
+// Question mappings: maps question text (EN/AR) to question key
+const QUESTION_MAP: Record<string, string> = {
+    // Question 1: Goal
+    "What is your real goal in financial markets?": "goal",
+    "ما هو هدفك الحقيقي في الأسواق المالية؟": "goal",
+    
+    // Question 2: Current Level
+    "How would you describe your current level?": "current_level",
+    "كيف تصف مستواك الحالي؟": "current_level",
+    
+    // Question 4: Capital
+    "How much capital can you start with?": "capital",
+    "كم رأس المال الذي يمكنك البدء به؟": "capital",
+    
+    // Question 5: Risk
+    "How do you deal with risk?": "risk",
+    "كيف تتعامل مع المخاطر؟": "risk",
+    
+    // Question 7: Time Commitment
+    "How much time can you dedicate weekly?": "time_commitment",
+    "كم من الوقت يمكنك تخصيصه أسبوعياً؟": "time_commitment",
+    
+    // Question 9: Biggest Challenge
+    "Your biggest challenge right now?": "biggest_challenge",
+    "أكبر تحدٍ تواجهه الآن؟": "biggest_challenge",
+};
+
+// Answer mappings: maps answer text (EN/AR) to answer key
+const ANSWER_MAP: Record<string, string> = {
+    // Goal answers
+    "Build an extra income": "goal_extra_income",
+    "بناء دخل إضافي": "goal_extra_income",
+    "Achieve stable monthly incomes": "goal_stable_income",
+    "تحقيق دخل شهري مستقر": "goal_stable_income",
+    "Grow existing capital": "goal_grow_capital",
+    "تنمية رأس المال الحالي": "goal_grow_capital",
+    "Learn trading professionally": "goal_learn_professionally",
+    "تعلم التداول بشكل احترافي": "goal_learn_professionally",
+    "Still exploring my direction": "goal_exploring",
+    "ما زلت أستكشف اتجاهي": "goal_exploring",
+    
+    // Current Level answers
+    "Complete beginner": "level_beginner",
+    "مبتدئ تماماً": "level_beginner",
+    "Basic theoretical knowledge": "level_basic_theory",
+    "معرفة نظرية أساسية": "level_basic_theory",
+    "Tried trading and faced losses": "level_tried_losses",
+    "جربت التداول وواجهت خسائر": "level_tried_losses",
+    "Trading without a clear system": "level_no_system",
+    "أتداول بدون نظام واضح": "level_no_system",
+    "Trading with a system and results": "level_with_system",
+    "أتداول بنظام ونتائج": "level_with_system",
+    
+    // Capital answers
+    "I want to learn first": "capital_learn_first",
+    "أريد التعلم أولاً": "capital_learn_first",
+    "Less than $1,000": "capital_less_1000",
+    "أقل من 1,000 دولار": "capital_less_1000",
+    "$1,000 - $5,000": "capital_1000_5000",
+    "1,000 - 5,000 دولار": "capital_1000_5000",
+    "$5,000 - $15,000": "capital_5000_15000",
+    "5,000 - 15,000 دولار": "capital_5000_15000",
+    "More than $15,000": "capital_more_15000",
+    "أكثر من 15,000 دولار": "capital_more_15000",
+    
+    // Risk answers
+    "Very cautious": "risk_very_cautious",
+    "حذر جداً": "risk_very_cautious",
+    "Calculated risk": "risk_calculated",
+    "مخاطرة محسوبة": "risk_calculated",
+    "High risk tolerance": "risk_high_tolerance",
+    "تحمل عالي للمخاطر": "risk_high_tolerance",
+    "I need guidance": "risk_need_guidance",
+    "أحتاج إرشاد": "risk_need_guidance",
+    
+    // Time Commitment answers
+    "Less than 3 hours": "time_less_3",
+    "أقل من 3 ساعات": "time_less_3",
+    "3 - 6 hours": "time_3_6",
+    "3 - 6 ساعات": "time_3_6",
+    "6 - 10 hours": "time_6_10",
+    "6 - 10 ساعات": "time_6_10",
+    "More than 10 hours": "time_more_10",
+    "أكثر من 10 ساعات": "time_more_10",
+    
+    // Biggest Challenge answers
+    "Fear of loss": "challenge_fear_loss",
+    "الخوف من الخسارة": "challenge_fear_loss",
+    "Lack of understanding": "challenge_lack_understanding",
+    "قلة الفهم": "challenge_lack_understanding",
+    "No clear system": "challenge_no_system",
+    "لا يوجد نظام واضح": "challenge_no_system",
+    "Discipline issues": "challenge_discipline",
+    "مشاكل في الانضباط": "challenge_discipline",
+    "Lack of guidance": "challenge_lack_guidance",
+    "قلة الإرشاد": "challenge_lack_guidance",
+};
+
+/**
+ * Normalize question text to canonical key
+ */
+function normalizeQuestion(questionText: string): string | null {
+    return QUESTION_MAP[questionText] || null;
+}
+
+/**
+ * Normalize answer text to canonical key
+ */
+function normalizeAnswer(answerText: string): string | null {
+    if (!answerText) return null;
+    
+    // Try exact match first (handles both English and Arabic)
+    if (ANSWER_MAP[answerText]) {
+        return ANSWER_MAP[answerText];
+    }
+    
+    // Normalize whitespace
+    const normalizedText = answerText.trim().replace(/\s+/g, ' ');
+    
+    // Try exact match with normalized whitespace
+    if (ANSWER_MAP[normalizedText]) {
+        return ANSWER_MAP[normalizedText];
+    }
+    
+    // Try case-insensitive matching for English
+    const answerLower = normalizedText.toLowerCase();
+    for (const [key, value] of Object.entries(ANSWER_MAP)) {
+        const keyNormalized = key.trim().replace(/\s+/g, ' ');
+        if (keyNormalized.toLowerCase() === answerLower) {
+            return value;
+        }
+    }
+    
+    // Try partial matching (for both English and Arabic)
+    // This handles variations in formatting
+    for (const [key, value] of Object.entries(ANSWER_MAP)) {
+        const keyNormalized = key.trim().replace(/\s+/g, ' ');
+        const keyLower = keyNormalized.toLowerCase();
+        
+        // Check if either string contains the other (case-insensitive for English)
+        if (keyLower.includes(answerLower) || answerLower.includes(keyLower)) {
+            return value;
+        }
+        
+        // For Arabic, also try direct comparison (Arabic is case-insensitive)
+        if (keyNormalized === normalizedText) {
+            return value;
+        }
+    }
+    
+    return null;
+}
+
+/**
+ * Find answer by normalized question key
+ */
+function findAnswerByQuestionKey(answers: ChecklistAnswer[], questionKey: string): string | null {
+    for (const answer of answers) {
+        const normalizedQuestion = normalizeQuestion(answer.question);
+        if (normalizedQuestion === questionKey) {
+            const normalizedAnswer = normalizeAnswer(answer.answer);
+            return normalizedAnswer;
+        }
+    }
+    return null;
+}
+
+/**
  * Calculate Pillar 1: Knowledge & Experience (0-2.5)
  * Based on Question 2: "How would you describe your current level?"
  */
 function calculatePillar1(answers: ChecklistAnswer[]): number {
-    const question1 = answers.find(a => 
-        a.question === "How would you describe your current level?"
-    );
+    const answerKey = findAnswerByQuestionKey(answers, "current_level");
     
-    if (!question1) return 0;
+    if (!answerKey) return 0;
     
-    const answer = question1.answer;
-    
-    // Exact matching based on checklist options
-    if (answer === "Complete beginner") return 0.5;
-    if (answer === "Basic theoretical knowledge") return 1.0;
-    if (answer === "Tried trading and faced losses") return 1.5;
-    if (answer === "Trading without a clear system") return 2.0;
-    if (answer === "Trading with a system and results") return 2.5;
-    
-    // Fallback case-insensitive matching
-    const answerLower = answer.toLowerCase();
-    if (answerLower.includes("complete beginner")) return 0.5;
-    if (answerLower.includes("basic theoretical")) return 1.0;
-    if (answerLower.includes("tried trading") && answerLower.includes("loss")) return 1.5;
-    if (answerLower.includes("trading without") || answerLower.includes("no clear system")) return 2.0;
-    if (answerLower.includes("trading with a system") || answerLower.includes("system and results")) return 2.5;
-    
-    return 0.5; // Default to lowest score
+    // Score based on normalized answer keys
+    switch (answerKey) {
+        case "level_beginner":
+            return 0.5;
+        case "level_basic_theory":
+            return 1.0;
+        case "level_tried_losses":
+            return 1.5;
+        case "level_no_system":
+            return 2.0;
+        case "level_with_system":
+            return 2.5;
+        default:
+            return 0.5; // Default to lowest score
+    }
 }
 
 /**
@@ -60,48 +227,28 @@ function calculatePillar1(answers: ChecklistAnswer[]): number {
  * Based on Question 1 (Goal) + Question 7 (Time Commitment)
  */
 function calculatePillar2(answers: ChecklistAnswer[]): number {
-    const goalQuestion = answers.find(a => 
-        a.question === "What is your real goal in financial markets?"
-    );
-    const timeQuestion = answers.find(a => 
-        a.question === "How much time can you dedicate weekly?"
-    );
+    const goalKey = findAnswerByQuestionKey(answers, "goal");
+    const timeKey = findAnswerByQuestionKey(answers, "time_commitment");
     
-    if (!goalQuestion || !timeQuestion) return 0;
+    if (!goalKey || !timeKey) return 0;
     
-    const goal = goalQuestion.answer;
-    const time = timeQuestion.answer;
+    // Check if goal is unclear
+    const isGoalUnclear = goalKey === "goal_exploring";
     
-    // Check if goal is unclear (exact match)
-    const isGoalUnclear = goal === "Still exploring my direction";
-    
-    // Check time commitment (exact matches)
-    const isLessThan3Hours = time === "Less than 3 hours";
-    const is3To6Hours = time === "3 - 6 hours";
-    const is6OrMoreHours = time === "6 - 10 hours" || time === "More than 10 hours";
+    // Check time commitment
+    const isLessThan3Hours = timeKey === "time_less_3";
+    const is3To6Hours = timeKey === "time_3_6";
+    const is6OrMoreHours = timeKey === "time_6_10" || timeKey === "time_more_10";
     
     // Scoring logic based on requirements
     if (isGoalUnclear && isLessThan3Hours) return 0.5;
     if (!isGoalUnclear && is3To6Hours) return 1.5;
     if (!isGoalUnclear && is6OrMoreHours) return 2.5;
     
-    // Fallback case-insensitive matching
-    const goalLower = goal.toLowerCase();
-    const timeLower = time.toLowerCase();
-    const isGoalUnclearFallback = goalLower.includes("still exploring") || goalLower.includes("not sure");
-    const isLessThan3HoursFallback = timeLower.includes("less than 3");
-    const is3To6HoursFallback = timeLower.includes("3 - 6") || timeLower.includes("3-6");
-    const is6OrMoreHoursFallback = timeLower.includes("6 - 10") || timeLower.includes("more than 10") || 
-                                   timeLower.includes("6-10");
-    
-    if (isGoalUnclearFallback && isLessThan3HoursFallback) return 0.5;
-    if (!isGoalUnclearFallback && is3To6HoursFallback) return 1.5;
-    if (!isGoalUnclearFallback && is6OrMoreHoursFallback) return 2.5;
-    
     // Partial matches
-    if (!isGoalUnclearFallback && isLessThan3HoursFallback) return 1.0;
-    if (isGoalUnclearFallback && is3To6HoursFallback) return 1.0;
-    if (isGoalUnclearFallback && is6OrMoreHoursFallback) return 1.5;
+    if (!isGoalUnclear && isLessThan3Hours) return 1.0;
+    if (isGoalUnclear && is3To6Hours) return 1.0;
+    if (isGoalUnclear && is6OrMoreHours) return 1.5;
     
     return 0.5; // Default
 }
@@ -111,28 +258,23 @@ function calculatePillar2(answers: ChecklistAnswer[]): number {
  * Based on Question 4: "How much capital can you start with?"
  */
 function calculatePillar3(answers: ChecklistAnswer[]): number {
-    const capitalQuestion = answers.find(a => 
-        a.question === "How much capital can you start with?"
-    );
+    const answerKey = findAnswerByQuestionKey(answers, "capital");
     
-    if (!capitalQuestion) return 0;
+    if (!answerKey) return 0;
     
-    const answer = capitalQuestion.answer;
-    
-    // Exact matching based on checklist options
-    if (answer === "I want to learn first") return 0.5;
-    if (answer === "Less than $1,000") return 0.5;
-    if (answer === "$1,000 - $5,000") return 1.5;
-    if (answer === "$5,000 - $15,000" || answer === "More than $15,000") return 2.5;
-    
-    // Fallback case-insensitive matching
-    const answerLower = answer.toLowerCase();
-    if (answerLower.includes("want to learn first") || answerLower.includes("learn first")) return 0.5;
-    if (answerLower.includes("less than $1,000") || answerLower.includes("< $1,000")) return 0.5;
-    if (answerLower.includes("$1,000 - $5,000") || answerLower.includes("$1,000-$5,000")) return 1.5;
-    if (answerLower.includes("$5,000") || answerLower.includes("$15,000") || answerLower.includes("more than $15")) return 2.5;
-    
-    return 0.5; // Default
+    // Score based on normalized answer keys
+    switch (answerKey) {
+        case "capital_learn_first":
+        case "capital_less_1000":
+            return 0.5;
+        case "capital_1000_5000":
+            return 1.5;
+        case "capital_5000_15000":
+        case "capital_more_15000":
+            return 2.5;
+        default:
+            return 0.5; // Default
+    }
 }
 
 /**
@@ -140,62 +282,31 @@ function calculatePillar3(answers: ChecklistAnswer[]): number {
  * Based on Question 5 (Risk Tolerance) + Question 9 (Biggest Challenge)
  */
 function calculatePillar4(answers: ChecklistAnswer[]): number {
-    const riskQuestion = answers.find(a => 
-        a.question === "How do you deal with risk?"
-    );
-    const challengeQuestion = answers.find(a => 
-        a.question === "Your biggest challenge right now?"
-    );
+    const riskKey = findAnswerByQuestionKey(answers, "risk");
+    const challengeKey = findAnswerByQuestionKey(answers, "biggest_challenge");
     
-    if (!riskQuestion || !challengeQuestion) return 0;
-    
-    const risk = riskQuestion.answer;
-    const challenge = challengeQuestion.answer;
-    
-    // Exact matching first
-    const riskLower = risk.toLowerCase();
-    const challengeLower = challenge.toLowerCase();
+    if (!riskKey || !challengeKey) return 0;
     
     // Check for fearful/doesn't understand risk
-    const isFearful = risk === "Very cautious" || 
-                     risk === "I need guidance" ||
-                     challenge === "Fear of loss" ||
-                     challenge === "Lack of understanding";
+    const isFearful = riskKey === "risk_very_cautious" || 
+                     riskKey === "risk_need_guidance" ||
+                     challengeKey === "challenge_fear_loss" ||
+                     challengeKey === "challenge_lack_understanding";
     
     // Check for accepts calculated risk
-    const acceptsRisk = risk === "Calculated risk";
+    const acceptsRisk = riskKey === "risk_calculated";
     
     // Check for understands risk & discipline (calculated risk + discipline/system challenges)
-    const understandsRisk = (risk === "Calculated risk" || risk === "High risk tolerance") &&
-                           (challenge === "Discipline issues" || challenge === "No clear system");
+    const understandsRisk = (riskKey === "risk_calculated" || riskKey === "risk_high_tolerance") &&
+                           (challengeKey === "challenge_discipline" || challengeKey === "challenge_no_system");
     
     // Scoring logic
     if (isFearful) return 0.5;
     if (acceptsRisk && !understandsRisk) return 1.5;
     if (understandsRisk) return 2.5;
     
-    // Fallback case-insensitive matching
-    const isFearfulFallback = riskLower.includes("very cautious") || 
-                             riskLower.includes("need guidance") ||
-                             challengeLower.includes("fear of loss") ||
-                             challengeLower.includes("lack of understanding");
-    
-    const acceptsRiskFallback = riskLower.includes("calculated risk");
-    const understandsRiskFallback = (riskLower.includes("calculated risk") || riskLower.includes("high risk tolerance")) &&
-                                   (challengeLower.includes("discipline") || challengeLower.includes("no clear system"));
-    
-    if (isFearfulFallback) return 0.5;
-    if (acceptsRiskFallback && !understandsRiskFallback && 
-        !challengeLower.includes("fear") && !challengeLower.includes("lack of understanding")) {
-        return 1.5;
-    }
-    if (understandsRiskFallback || (acceptsRiskFallback && 
-        (challengeLower.includes("discipline") || challengeLower.includes("no clear system")))) {
-        return 2.5;
-    }
-    
     // If risk is calculated but challenge is fear/lack of understanding
-    if (acceptsRiskFallback && (challengeLower.includes("fear") || challengeLower.includes("lack of understanding"))) {
+    if (acceptsRisk && (challengeKey === "challenge_fear_loss" || challengeKey === "challenge_lack_understanding")) {
         return 1.0;
     }
     

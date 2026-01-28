@@ -112,13 +112,6 @@ export function getEmail1Template(data: EmailTemplateData): EmailTemplate {
         
         <p>Every successful trader started somewhere. What matters most is having the right guidance and system to move forward.</p>
         
-        <div style="text-align: center; margin: 30px 0;">
-            <a href="${baseUrl}/book-call?stage={stage}&score={score}" 
-               style="background: #667eea; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">
-                Book Your Guidance Call
-            </a>
-        </div>
-        
         <p style="color: #666; font-size: 14px; margin-top: 30px;">
             Best regards,<br>
             The STOX Academy Team
@@ -169,12 +162,6 @@ export function getEmail2Template(data: EmailTemplateData): EmailTemplate {
         
         <p>Our approach is different: we don't just teach you strategies. We give you a complete system with clear rules, risk management protocols, and the discipline framework to execute consistently.</p>
         
-        <div style="text-align: center; margin: 30px 0;">
-            <a href="${baseUrl}{ctaDestination}" 
-               style="background: #667eea; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">
-                See How Professionals Build Systems
-            </a>
-        </div>
         
         <p style="color: #666; font-size: 14px; margin-top: 30px;">
             Best regards,<br>
@@ -232,12 +219,6 @@ export function getEmail3Template(data: EmailTemplateData): EmailTemplate {
         
         <p><strong>Risk management and realism are at the core of everything we teach.</strong></p>
         
-        <div style="text-align: center; margin: 30px 0;">
-            <a href="${baseUrl}/book-call?stage={stage}&score={score}" 
-               style="background: #667eea; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">
-                Talk to a STOX Advisor
-            </a>
-        </div>
         
         <p style="color: #666; font-size: 14px; margin-top: 30px;">
             Best regards,<br>
@@ -296,12 +277,6 @@ export function getEmail4Template(data: EmailTemplateData): EmailTemplate {
         
         <p><strong>This is your chance to get personalized guidance based on your unique situation.</strong></p>
         
-        <div style="text-align: center; margin: 30px 0;">
-            <a href="${baseUrl}/book-call?stage={stage}&score={score}&urgent=true" 
-               style="background: #dc3545; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold; font-size: 16px;">
-                Schedule Your Call Now
-            </a>
-        </div>
         
         <p style="color: #666; font-size: 14px; margin-top: 30px;">
             Best regards,<br>

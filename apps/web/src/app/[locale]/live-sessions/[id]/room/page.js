@@ -39,7 +39,7 @@ export default function LiveSessionRoomPage({ params }) {
                     iframeStyle: {
                         width: '100%',
                         height: '100%',
-                        minHeight: '70vh',
+                        minHeight: '80vh',
                         border: 'none',
                         borderRadius: '8px',
                     },
@@ -92,7 +92,7 @@ export default function LiveSessionRoomPage({ params }) {
         <>
             <Header />
             <main className="min-h-screen bg-gray-50 pt-24 pb-12 px-4">
-                <div className="max-w-6xl mx-auto">
+                <div className="max-w-7xl mx-auto">
                     <button
                         onClick={handleBack}
                         className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6"
@@ -104,7 +104,6 @@ export default function LiveSessionRoomPage({ params }) {
                     {loading && (
                         <div className="flex flex-col items-center justify-center py-24">
                             <LoadingSpinner />
-                            <p className="mt-4 text-gray-600">{t('loadingMeeting')}</p>
                         </div>
                     )}
 

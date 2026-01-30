@@ -367,6 +367,11 @@
       "enrollNow": "سجل الآن - {price}",
       "signIn": "تسجيل الدخول",
       "backToLiveSessions": "العودة إلى الجلسات المباشرة",
+      "backToSession": "العودة إلى الجلسة",
+      "loadingMeeting": "جاري تحميل الاجتماع...",
+      "failedToLoadMeeting": "تعذر تحميل الاجتماع. تحقق من الدفع وحاول مرة أخرى.",
+      "joinVideoMeeting": "انضم إلى اجتماع الفيديو",
+      "joinLiveSession": "انضم إلى الجلسة المباشرة",
       "date": "التاريخ",
       "participants": "المشاركون",
       "price": "السعر"

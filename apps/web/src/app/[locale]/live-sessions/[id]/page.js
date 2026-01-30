@@ -89,7 +89,9 @@ export default function LiveSessionDetailPage({ params }) {
     };
 
     const handleJoinSession = () => {
-        if (session.meeting_url) {
+        if (session.video_provider === 'daily' && session.video_room_name) {
+            router.push(`/live-sessions/${session.id}/room`);
+        } else if (session.meeting_url) {
             window.open(session.meeting_url, '_blank');
         } else {
             toast.error(t('meetingLinkNotAvailable'));
@@ -340,7 +342,7 @@ export default function LiveSessionDetailPage({ params }) {
                             className="flex gap-4"
                         >
                             {session.isEnrolled ? (
-                                canJoin && session.meeting_url ? (
+                                canJoin && (session.video_provider === 'daily' && session.video_room_name || session.meeting_url) ? (
                                     <motion.button
                                         whileHover={{ y: -2 }}
                                         whileTap={{ y: 0 }}

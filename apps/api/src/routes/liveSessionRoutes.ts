@@ -3,6 +3,7 @@ import { authenticateToken } from "../middleware/auth";
 import {
     getAllLiveSessions,
     getLiveSessionById,
+    getMeetingToken,
     enrollInLiveSession,
     getUserLiveSessions,
 } from "../controllers/liveSessionController";
@@ -14,6 +15,7 @@ router.get("/", getAllLiveSessions);
 router.get("/:id", getLiveSessionById);
 
 // Protected routes (require authentication)
+router.get("/:sessionId/meeting-token", authenticateToken, getMeetingToken);
 router.post("/enroll", authenticateToken, enrollInLiveSession);
 router.get("/user/enrollments", authenticateToken, getUserLiveSessions);
 

@@ -24,4 +24,9 @@ export const liveSessionService = {
     const response = await apiClient.get("/api/live-sessions/user/enrollments");
     return response.data;
   },
+
+  getMeetingToken: async (sessionId) => {
+    const response = await apiClient.get(`/api/live-sessions/${sessionId}/meeting-token`);
+    return response.data;
+  },
 };

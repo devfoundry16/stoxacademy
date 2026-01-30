@@ -35,7 +35,6 @@ export default function LiveSessionsPage() {
         description: '',
         scheduled_at: '',
         duration: 60,
-        meeting_url: '',
         max_participants: '',
         price: 0,
     });
@@ -120,7 +119,6 @@ export default function LiveSessionsPage() {
             description: '',
             scheduled_at: '',
             duration: 60,
-            meeting_url: '',
             max_participants: '',
             price: 0,
         });
@@ -135,7 +133,6 @@ export default function LiveSessionsPage() {
             description: session.description || '',
             scheduled_at: toLocalDateTimeString(session.scheduled_at),
             duration: session.duration,
-            meeting_url: session.meeting_url || '',
             max_participants: session.max_participants || '',
             price: session.price || 0,
         });
@@ -433,20 +430,6 @@ export default function LiveSessionsPage() {
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                {t('meetingUrl')} *
-                            </label>
-                            <input
-                                type="url"
-                                value={formData.meeting_url}
-                                onChange={(e) => setFormData({ ...formData, meeting_url: e.target.value })}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="https://zoom.us/..."
-                                required
-                            />
-                        </div>
-
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
                                 {t('maxParticipants')}

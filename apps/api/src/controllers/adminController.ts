@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { supabaseAdmin } from "../config/supabase";
 import { randomUUID } from "crypto";
 import * as XLSX from "xlsx";
+import { createRoom, isDailyConfigured } from "../services/dailyService";
 
 // ==================== Dashboard Statistics ====================
 
@@ -572,14 +573,15 @@ export const createLiveSession = async (req: Request, res: Response) => {
             max_participants,
             price,
         } = req.body;
-        console.log(course_id, title, scheduled_at, duration, meeting_url, instructor_id, max_participants);
         if (!course_id || !title || !scheduled_at) {
             return res.status(400).json({ error: "Missing required fields" });
         }
 
         // Calculate initial status based on scheduled time
         const initialStatus = calculateSessionStatus(scheduled_at, duration || 60);
+        const durationMinutes = duration || 60;
 
+        // Insert session first (without video room; we get id then create room)
         const { data: session, error } = await supabaseAdmin
             .from("live_sessions")
             .insert({
@@ -587,7 +589,7 @@ export const createLiveSession = async (req: Request, res: Response) => {
                 title,
                 description: description || null,
                 scheduled_at,
-                duration: duration || 60,
+                duration: durationMinutes,
                 meeting_url: meeting_url || null,
                 instructor_id: instructor_id || null,
                 max_participants: max_participants || null,
@@ -604,6 +606,36 @@ export const createLiveSession = async (req: Request, res: Response) => {
             return res.status(400).json({ error: error.message });
         }
 
+        // Create Daily.co room and store video_room_name + video_provider
+        if (isDailyConfigured()) {
+            try {
+                const roomName = `session-${session.id}`.replace(/[^A-Za-z0-9_-]/g, "-");
+                const room = await createRoom({
+                    roomName,
+                    scheduledAt: scheduled_at,
+                    durationMinutes,
+                    maxParticipants: max_participants ? parseInt(String(max_participants), 10) : undefined,
+                });
+                await supabaseAdmin
+                    .from("live_sessions")
+                    .update({
+                        video_room_name: room.name,
+                        video_provider: "daily",
+                        meeting_url: room.url,
+                        updated_at: new Date().toISOString(),
+                    })
+                    .eq("id", session.id);
+                session.video_room_name = room.name;
+                session.video_provider = "daily";
+                session.meeting_url = room.url;
+            } catch (dailyError: any) {
+                console.error("Daily room creation failed:", dailyError);
+                return res.status(500).json({
+                    error: "Session created but video room could not be created. Please try again or add a meeting URL manually.",
+                });
+            }
+        }
+
         return res.status(201).json({ session });
     } catch (error: any) {
         return res.status(500).json({ error: error.message });
@@ -613,7 +645,13 @@ export const createLiveSession = async (req: Request, res: Response) => {
 export const updateLiveSession = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
-        const updateData = { ...req.body, updated_at: new Date().toISOString() };
+        const { meeting_url, video_room_name, video_provider, ...rest } = req.body;
+        // Do not allow updating video room or provider from client; only meeting_url for backward compat
+        const updateData: Record<string, unknown> = {
+            ...rest,
+            updated_at: new Date().toISOString(),
+        };
+        if (meeting_url !== undefined) updateData.meeting_url = meeting_url || null;
 
         // Check if scheduled_at or duration are being updated (these affect status)
         const statusAffectingFields = ['scheduled_at', 'duration'];

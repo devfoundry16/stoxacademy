@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { supabaseAdmin } from "../config/supabase";
+import { createMeetingToken, isDailyConfigured } from "../services/dailyService";
 
 // ==================== Helper Functions ====================
 
@@ -254,6 +255,83 @@ export const enrollInLiveSession = async (req: Request, res: Response) => {
         });
     } catch (error: any) {
         return res.status(500).json({ error: error.message });
+    }
+};
+
+export const getMeetingToken = async (req: Request, res: Response) => {
+    try {
+        const { sessionId } = req.params;
+        const authHeader = req.headers.authorization;
+        const token = authHeader && authHeader.split(" ")[1];
+
+        if (!token) {
+            return res.status(401).json({ error: "No token provided" });
+        }
+
+        const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
+        if (userError || !userData.user) {
+            return res.status(401).json({ error: "Invalid token" });
+        }
+
+        const { data: session, error: sessionError } = await supabaseAdmin
+            .from("live_sessions")
+            .select("id, video_room_name, video_provider, scheduled_at, duration, meeting_url")
+            .eq("id", sessionId)
+            .single();
+
+        if (sessionError || !session) {
+            return res.status(404).json({ error: "Live session not found" });
+        }
+
+        if (!isDailyConfigured() || session.video_provider !== "daily" || !session.video_room_name) {
+            return res.status(400).json({ error: "This session does not use in-app video. Meeting link may be available on the session page." });
+        }
+
+        const { data: enrollment } = await supabaseAdmin
+            .from("user_live_sessions")
+            .select("id")
+            .eq("user_id", userData.user.id)
+            .eq("session_id", sessionId)
+            .single();
+
+        if (!enrollment) {
+            return res.status(403).json({ error: "You must be enrolled in this session to join the meeting." });
+        }
+
+        const start = new Date(session.scheduled_at).getTime();
+        const durationMs = (session.duration || 60) * 60 * 1000;
+        const nbfSec = Math.floor(start / 1000) - 15 * 60;
+        const expSec = Math.floor((start + durationMs) / 1000);
+        const nowSec = Math.floor(Date.now() / 1000);
+        if (nowSec > expSec) {
+            return res.status(400).json({ error: "This session has ended." });
+        }
+        if (nowSec < nbfSec) {
+            return res.status(400).json({ error: "Meeting is not open yet. You can join 15 minutes before the session starts." });
+        }
+
+        const userName = userData.user.user_metadata?.full_name
+            || userData.user.user_metadata?.first_name
+            || userData.user.email
+            || "Participant";
+        const meetingToken = await createMeetingToken({
+            roomName: session.video_room_name,
+            exp: expSec,
+            nbf: nbfSec,
+            userId: userData.user.id,
+            userName: String(userName).slice(0, 128),
+        });
+
+        const roomUrl = (session as any).meeting_url || `https://${process.env.DAILY_DOMAIN || "your-domain"}.daily.co/${session.video_room_name}`;
+
+        return res.status(200).json({
+            token: meetingToken,
+            roomUrl,
+            roomName: session.video_room_name,
+        });
+    } catch (error: any) {
+        console.error("getMeetingToken error:", error);
+        return res.status(500).json({ error: error.message || "Failed to get meeting token" });
     }
 };
 

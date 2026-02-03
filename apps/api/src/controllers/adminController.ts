@@ -300,7 +300,7 @@ export const createCourse = async (req: Request, res: Response) => {
             description,
             price,
             level, // maps to level
-            thumbnail_url, // maps to thumbnail
+            thumbnail: thumbnail_url, // maps to thumbnail
             is_published,
             duration,
             instructor,
@@ -311,7 +311,6 @@ export const createCourse = async (req: Request, res: Response) => {
             lessons = [], // Array of lesson objects
         } = req.body;
 
-        console.log(title, description, price, level, thumbnail_url, is_published, duration, instructor, instructor_avatar, features, requirements, what_you_learn, lessons);
         if (!title || !description || price === undefined || !instructor || !duration) {
             return res.status(400).json({ error: "Missing required fields: title, description, price, instructor, duration" });
         }

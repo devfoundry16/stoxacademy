@@ -5,6 +5,27 @@ import { createMeetingToken, isDailyConfigured } from "../services/dailyService"
 // ==================== Helper Functions ====================
 
 /**
+ * Check if a user is an admin
+ */
+const isUserAdmin = async (userId: string): Promise<boolean> => {
+    try {
+        const { data: user, error } = await supabaseAdmin
+            .from("users")
+            .select("role")
+            .eq("id", userId)
+            .single();
+
+        if (error || !user) {
+            return false;
+        }
+
+        return user.role === "admin";
+    } catch (error) {
+        return false;
+    }
+};
+
+/**
  * Calculate live session status based on scheduled time and duration
  */
 const calculateSessionStatus = (scheduledAt: string, durationMinutes: number): string => {
@@ -150,18 +171,23 @@ export const getLiveSessionById = async (req: Request, res: Response) => {
         // Check if user has enrolled
         let isEnrolled = false;
         if (userId) {
-            // if user is instructor, isEnrolled is true
+            // if user is instructor or admin, isEnrolled is true
             if (userId === session.instructor_id) {
                 isEnrolled = true;
             } else {
-                const { data: enrollment } = await supabaseAdmin
-                    .from("user_live_sessions")
-                    .select("id")
-                    .eq("user_id", userId)
-                    .eq("session_id", id)
-                    .single();
+                const isAdmin = await isUserAdmin(userId);
+                if (isAdmin) {
+                    isEnrolled = true;
+                } else {
+                    const { data: enrollment } = await supabaseAdmin
+                        .from("user_live_sessions")
+                        .select("id")
+                        .eq("user_id", userId)
+                        .eq("session_id", id)
+                        .single();
 
-                isEnrolled = !!enrollment;
+                    isEnrolled = !!enrollment;
+                }
             }
         }
 
@@ -301,6 +327,10 @@ export const getMeetingToken = async (req: Request, res: Response) => {
             return res.status(400).json({ error: "This session does not use in-app video. Meeting link may be available on the session page." });
         }
 
+        // Check if user is admin
+        const isAdmin = await isUserAdmin(userData.user.id);
+
+        // Check enrollment
         const { data: enrollment } = await supabaseAdmin
             .from("user_live_sessions")
             .select("id")
@@ -308,8 +338,10 @@ export const getMeetingToken = async (req: Request, res: Response) => {
             .eq("session_id", sessionId)
             .single();
 
-        // if user is not instructor and enrollment is false
-        if (userData.user.id !== session.instructor_id && !enrollment) {
+        // User can join if they are: instructor, admin, or enrolled
+        const canJoin = userData.user.id === session.instructor_id || isAdmin || !!enrollment;
+        
+        if (!canJoin) {
             return res.status(403).json({ error: "You must be enrolled in this session to join the meeting." });
         }
 

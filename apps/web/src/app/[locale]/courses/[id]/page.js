@@ -15,11 +15,11 @@ import { ErrorState } from "@/components/ErrorState";
 import { EmptyState } from "@/components/EmptyState";
 import { LevelBadge } from "@/components/LevelBadge";
 import { CourseStats } from "@/components/CourseStats";
-import { 
-  Play, 
-  Lock, 
-  Clock, 
-  CheckCircle, 
+import {
+  Play,
+  Lock,
+  Clock,
+  CheckCircle,
   Users,
   BookOpen
 } from "lucide-react";
@@ -40,6 +40,12 @@ export default function CourseDetailPage({ params }) {
   const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
   const [clientSecret, setClientSecret] = useState(null);
   const [paymentIntentId, setPaymentIntentId] = useState(null);
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [discountInfo, setDiscountInfo] = useState({
+    originalPrice: 0,
+    finalPrice: 0,
+    discountPercentage: 0,
+  });
   const { id } = React.use(params);
   // Fetch course from API
   useEffect(() => {
@@ -64,18 +70,18 @@ export default function CourseDetailPage({ params }) {
       router.push("/login");
       return;
     }
-    
+
     if (!lesson.is_preview && !course?.isPurchased) {
       toast.error(t('courseDetail.purchaseToWatch'));
       return;
     }
-    
+
     setSelectedLesson(lesson);
   };
 
   const handleLessonProgressToggle = async (lesson, e) => {
     e.stopPropagation(); // Prevent triggering the lesson click handler
-    
+
     if (!isAuthenticated) {
       toast.error(t('courseDetail.signInToUpdateProgress'));
       router.push("/login");
@@ -102,7 +108,7 @@ export default function CourseDetailPage({ params }) {
 
       // Update progress on the server
       await courseService.updateLessonProgress(lesson.id, newCompletedStatus);
-      
+
       toast.success(
         newCompletedStatus
           ? t('courseDetail.lessonCompleted')
@@ -118,7 +124,7 @@ export default function CourseDetailPage({ params }) {
             : l
         ),
       }));
-      
+
       toast.error(err.response?.data?.error || t('courseDetail.failedToUpdateProgress'));
     }
   };
@@ -129,18 +135,67 @@ export default function CourseDetailPage({ params }) {
       router.push("/login");
       return;
     }
-    
+
     try {
       setLoading(true);
-      // Create payment intent
-      const { clientSecret, paymentIntentId } = await paymentService.createCoursePaymentIntent(course.id);
-      setClientSecret(clientSecret);
-      setPaymentIntentId(paymentIntentId);
+      // Create payment intent without coupon initially
+      const response = await paymentService.createCoursePaymentIntent(course.id);
+      setClientSecret(response.clientSecret);
+      setPaymentIntentId(response.paymentIntentId);
+      setDiscountInfo({
+        originalPrice: parseFloat(course.price),
+        finalPrice: parseFloat(course.price),
+        discountPercentage: 0,
+      });
       setCheckoutModalOpen(true);
     } catch (err) {
       toast.error(err.response?.data?.error || t('courseDetail.failedToInitializePayment'));
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleApplyCoupon = async (couponCode) => {
+    console.log('-------------Apply Coupon-----------')
+    console.log("couponCode", couponCode);
+    if (!couponCode) {
+      // Remove coupon - recreate payment intent without coupon
+      try {
+        const response = await paymentService.createCoursePaymentIntent(course.id);
+        setClientSecret(response.clientSecret);
+        setPaymentIntentId(response.paymentIntentId);
+        setAppliedCoupon(null);
+        setDiscountInfo({
+          originalPrice: parseFloat(course.price),
+          finalPrice: parseFloat(course.price),
+          discountPercentage: 0,
+        });
+        toast.success(t('courseDetail.couponRemoved'));
+      } catch (error) {
+        toast.error(t('courseDetail.failedToRemoveCoupon'));
+      }
+      return;
+    }
+
+    // Apply coupon - recreate payment intent with coupon
+    try {
+      const response = await paymentService.createCoursePaymentIntent(
+        course.id,
+        couponCode
+      );
+      setClientSecret(response.clientSecret);
+      setPaymentIntentId(response.paymentIntentId);
+      setAppliedCoupon(couponCode);
+      setDiscountInfo({
+        originalPrice: parseFloat(response.originalPrice),
+        finalPrice: parseFloat(response.finalPrice),
+        discountPercentage: response.discountPercentage,
+      });
+
+      toast.success(`${t('courseDetail.couponApplied')} ${response.discountPercentage}% ${t('courseDetail.off')}`);
+    } catch (error) {
+      toast.error(error.response?.data?.error || t('courseDetail.invalidCoupon'));
+      throw error;
     }
   };
 
@@ -202,7 +257,7 @@ export default function CourseDetailPage({ params }) {
       className="min-h-screen bg-gray-50"
     >
       <Header />
-      
+
       <div className="pt-15">
         {/* Course Header */}
         <motion.div
@@ -223,7 +278,7 @@ export default function CourseDetailPage({ params }) {
                 <p className="text-xl text-blue-100 mb-6">
                   {course.description}
                 </p>
-                
+
                 <div className="flex flex-wrap items-center gap-6 text-sm text-white">
                   <CourseStats
                     duration={course.duration}
@@ -290,11 +345,10 @@ export default function CourseDetailPage({ params }) {
                   <button
                     onClick={handlePurchase}
                     disabled={canAccess}
-                    className={`w-full py-3 rounded-lg font-semibold transition-colors mb-3 ${
-                      canAccess
-                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                        : "bg-blue-600 text-white hover:bg-blue-700"
-                    }`}
+                    className={`w-full py-3 rounded-lg font-semibold transition-colors mb-3 ${canAccess
+                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                      : "bg-blue-600 text-white hover:bg-blue-700"
+                      }`}
                   >
                     {canAccess ? t('courseDetail.alreadyEnrolled') : t('courseDetail.buyNow')}
                   </button>
@@ -358,11 +412,10 @@ export default function CourseDetailPage({ params }) {
                       <button
                         key={tab}
                         onClick={() => setActiveTab(tab)}
-                        className={`flex-1 px-6 py-4 text-sm font-semibold capitalize transition-colors ${
-                          activeTab === tab
-                            ? "text-blue-600 border-b-2 border-blue-600"
-                            : "text-gray-600 hover:text-gray-900"
-                        }`}
+                        className={`flex-1 px-6 py-4 text-sm font-semibold capitalize transition-colors ${activeTab === tab
+                          ? "text-blue-600 border-b-2 border-blue-600"
+                          : "text-gray-600 hover:text-gray-900"
+                          }`}
                       >
                         {t(`courseDetail.tabs.${tab}`)}
                       </button>
@@ -447,9 +500,8 @@ export default function CourseDetailPage({ params }) {
                         whileHover={{ x: 4 }}
                         whileTap={{ x: 0 }}
                         onClick={() => handleLessonClick(lesson)}
-                        className={`w-full p-4 text-left border-b border-gray-100 hover:bg-blue-50 transition-colors ${
-                          selectedLesson?.id === lesson.id ? "bg-blue-50" : ""
-                        }`}
+                        className={`w-full p-4 text-left border-b border-gray-100 hover:bg-blue-50 transition-colors ${selectedLesson?.id === lesson.id ? "bg-blue-50" : ""
+                          }`}
                       >
                         <div className="flex items-start gap-3">
                           <div className="shrink-0 w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
@@ -515,8 +567,12 @@ export default function CourseDetailPage({ params }) {
           isOpen={checkoutModalOpen}
           onClose={() => setCheckoutModalOpen(false)}
           clientSecret={clientSecret}
-          amount={parseFloat(course.price)}
+          amount={discountInfo.finalPrice}
           itemName={course.title}
+          originalPrice={discountInfo.originalPrice}
+          discountPercentage={discountInfo.discountPercentage}
+          appliedCoupon={appliedCoupon}
+          onApplyCoupon={handleApplyCoupon}
           onSuccess={handlePaymentSuccess}
           onError={handlePaymentError}
         />

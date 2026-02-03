@@ -2,8 +2,11 @@ import apiClient from "./api";
 
 export const paymentService = {
   // Course payments
-  createCoursePaymentIntent: async (courseId) => {
-    const response = await apiClient.post("/api/payments/course/create-intent", { courseId });
+  createCoursePaymentIntent: async (courseId, couponCode = null) => {
+    const response = await apiClient.post("/api/payments/course/create-intent", {
+      courseId,
+      couponCode
+    });
     return response.data;
   },
 
@@ -13,8 +16,11 @@ export const paymentService = {
   },
 
   // Live session payments
-  createLiveSessionPaymentIntent: async (sessionId) => {
-    const response = await apiClient.post("/api/payments/live-session/create-intent", { sessionId });
+  createLiveSessionPaymentIntent: async (sessionId, couponCode = null) => {
+    const response = await apiClient.post("/api/payments/live-session/create-intent", {
+      sessionId,
+      couponCode
+    });
     return response.data;
   },
 
@@ -22,4 +28,11 @@ export const paymentService = {
     const response = await apiClient.post("/api/payments/live-session/confirm", { paymentIntentId });
     return response.data;
   },
+
+  // Validate coupon
+  validateCoupon: async (code) => {
+    const response = await apiClient.get(`/api/coupons/validate/${code}`);
+    return response.data;
+  },
 };
+

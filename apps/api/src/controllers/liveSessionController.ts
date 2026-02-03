@@ -26,20 +26,20 @@ const calculateSessionStatus = (scheduledAt: string, durationMinutes: number): s
  */
 const updateSessionStatus = async (session: any) => {
     if (!session) return session;
-    
+
     const calculatedStatus = calculateSessionStatus(session.scheduled_at, session.duration);
-    
+
     // Update database if status has changed
     if (session.status !== calculatedStatus) {
         await supabaseAdmin
             .from("live_sessions")
-            .update({ 
+            .update({
                 status: calculatedStatus,
                 updated_at: new Date().toISOString()
             })
             .eq("id", session.id);
     }
-    
+
     return {
         ...session,
         status: calculatedStatus
@@ -97,7 +97,7 @@ export const getAllLiveSessions = async (req: Request, res: Response) => {
         const updatedSessions = await Promise.all(
             (sessions || []).map(async (session) => await updateSessionStatus(session))
         );
-        
+
         let sessionsWithEnrollment = updatedSessions.map((updatedSession) => {
             return {
                 ...updatedSession,
@@ -150,14 +150,19 @@ export const getLiveSessionById = async (req: Request, res: Response) => {
         // Check if user has enrolled
         let isEnrolled = false;
         if (userId) {
-            const { data: enrollment } = await supabaseAdmin
-                .from("user_live_sessions")
-                .select("id")
-                .eq("user_id", userId)
-                .eq("session_id", id)
-                .single();
+            // if user is instructor, isEnrolled is true
+            if (userId === session.instructor_id) {
+                isEnrolled = true;
+            } else {
+                const { data: enrollment } = await supabaseAdmin
+                    .from("user_live_sessions")
+                    .select("id")
+                    .eq("user_id", userId)
+                    .eq("session_id", id)
+                    .single();
 
-            isEnrolled = !!enrollment;
+                isEnrolled = !!enrollment;
+            }
         }
 
         return res.status(200).json({
@@ -173,7 +178,7 @@ export const getLiveSessionById = async (req: Request, res: Response) => {
 
 export const enrollInLiveSession = async (req: Request, res: Response) => {
     try {
-        const { sessionId } = req.body;
+        const { sessionId, couponCode, discountPercentage, originalPrice } = req.body;
         const authHeader = req.headers.authorization;
         const token = authHeader && authHeader.split(" ")[1];
 
@@ -216,13 +221,22 @@ export const enrollInLiveSession = async (req: Request, res: Response) => {
             return res.status(400).json({ error: "Already enrolled in this live session" });
         }
 
+        // Calculate actual price paid (with discount if applicable)
+        let pricePaid = parseFloat(session.price);
+        if (discountPercentage && discountPercentage > 0) {
+            pricePaid = pricePaid * (1 - discountPercentage / 100);
+        }
+
         // Create enrollment record
         const { data: enrollment, error: enrollmentError } = await supabaseAdmin
             .from("user_live_sessions")
             .insert({
                 user_id: userData.user.id,
                 session_id: sessionId,
-                price_paid: session.price,
+                price_paid: pricePaid,
+                coupon_code: couponCode || null,
+                discount_percentage: discountPercentage || null,
+                original_price: originalPrice || parseFloat(session.price),
             })
             .select()
             .single();
@@ -242,7 +256,7 @@ export const enrollInLiveSession = async (req: Request, res: Response) => {
             const newCount = (currentSession.participants_count || 0) + 1;
             await supabaseAdmin
                 .from("live_sessions")
-                .update({ 
+                .update({
                     participants_count: newCount,
                     updated_at: new Date().toISOString()
                 })
@@ -275,7 +289,7 @@ export const getMeetingToken = async (req: Request, res: Response) => {
 
         const { data: session, error: sessionError } = await supabaseAdmin
             .from("live_sessions")
-            .select("id, video_room_name, video_provider, scheduled_at, duration, meeting_url")
+            .select("id, video_room_name, video_provider, scheduled_at, duration, meeting_url, instructor_id")
             .eq("id", sessionId)
             .single();
 
@@ -294,7 +308,8 @@ export const getMeetingToken = async (req: Request, res: Response) => {
             .eq("session_id", sessionId)
             .single();
 
-        if (!enrollment) {
+        // if user is not instructor and enrollment is false
+        if (userData.user.id !== session.instructor_id && !enrollment) {
             return res.status(403).json({ error: "You must be enrolled in this session to join the meeting." });
         }
 

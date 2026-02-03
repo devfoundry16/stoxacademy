@@ -270,7 +270,12 @@
     "continueLearning": "متابعة التعلم",
     "signIn": "تسجيل الدخول",
     "markLessonComplete": "تحديد الدرس \"{title}\" كمكتمل",
-    "markLessonIncomplete": "تحديد الدرس \"{title}\" كغير مكتمل"
+    "markLessonIncomplete": "تحديد الدرس \"{title}\" كغير مكتمل",
+    "couponApplied": "تم تطبيق القسيمة!",
+    "couponRemoved": "تمت إزالة القسيمة",
+    "failedToRemoveCoupon": "فشل إزالة القسيمة",
+    "invalidCoupon": "رمز قسيمة غير صالح",
+    "off": "خصم"
   },
   "signup": {
     "createAccount": "إنشاء حساب",
@@ -374,7 +379,12 @@
       "joinLiveSession": "انضم إلى الجلسة المباشرة",
       "date": "التاريخ",
       "participants": "المشاركون",
-      "price": "السعر"
+      "price": "السعر",
+      "couponApplied": "تم تطبيق القسيمة!",
+      "couponRemoved": "تمت إزالة القسيمة",
+      "failedToRemoveCoupon": "فشل إزالة القسيمة",
+      "invalidCoupon": "رمز قسيمة غير صالح",
+      "off": "خصم"
     }
   },
   "profile": {

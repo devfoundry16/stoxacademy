@@ -270,7 +270,12 @@
     "continueLearning": "Continue Learning",
     "signIn": "Sign In",
     "markLessonComplete": "Mark lesson \"{title}\" as complete",
-    "markLessonIncomplete": "Mark lesson \"{title}\" as incomplete"
+    "markLessonIncomplete": "Mark lesson \"{title}\" as incomplete",
+    "couponApplied": "Coupon applied!",
+    "couponRemoved": "Coupon removed",
+    "failedToRemoveCoupon": "Failed to remove coupon",
+    "invalidCoupon": "Invalid coupon code",
+    "off": "off"
   },
   "signup": {
     "createAccount": "Create Account",
@@ -374,7 +379,12 @@
       "joinLiveSession": "Join Live Session",
       "date": "Date",
       "participants": "Participants",
-      "price": "Price"
+      "price": "Price",
+      "couponApplied": "Coupon applied!",
+      "couponRemoved": "Coupon removed",
+      "failedToRemoveCoupon": "Failed to remove coupon",
+      "invalidCoupon": "Invalid coupon code",
+      "off": "off"
     }
   },
   "profile": {

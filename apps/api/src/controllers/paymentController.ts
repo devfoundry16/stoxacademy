@@ -1,12 +1,13 @@
 import { Request, Response } from "express";
 import { stripe } from "../config/stripe";
 import { supabaseAdmin } from "../config/supabase";
+import { incrementCouponUsage } from "./couponController";
 
 // ==================== Course Payment ====================
 
 export const createCoursePaymentIntent = async (req: Request, res: Response) => {
     try {
-        const { courseId } = req.body;
+        const { courseId, couponCode } = req.body;
         const authHeader = req.headers.authorization;
         const token = authHeader && authHeader.split(" ")[1];
 
@@ -44,24 +45,60 @@ export const createCoursePaymentIntent = async (req: Request, res: Response) => 
             return res.status(400).json({ error: "Course already purchased" });
         }
 
+        let finalPrice = parseFloat(course.price);
+        let discountPercentage = 0;
+        let validCouponCode = null;
+
+        // Validate and apply coupon if provided
+        if (couponCode) {
+            const upperCode = couponCode.toUpperCase().trim();
+            const { data: coupon, error: couponError } = await supabaseAdmin
+                .from("coupons")
+                .select("*")
+                .eq("code", upperCode)
+                .single();
+
+            if (couponError || !coupon) {
+                return res.status(400).json({ error: "Invalid coupon code" });
+            }
+
+            if (!coupon.is_active) {
+                return res.status(400).json({ error: "This coupon is not active" });
+            }
+
+            if (coupon.usage_limit && coupon.usage_count >= coupon.usage_limit) {
+                return res.status(400).json({ error: "This coupon has reached its usage limit" });
+            }
+
+            // Apply discount
+            discountPercentage = coupon.percentage;
+            finalPrice = finalPrice * (1 - discountPercentage / 100);
+            validCouponCode = upperCode;
+        }
+
         // Create Stripe payment intent
         const paymentIntent = await stripe.paymentIntents.create({
-            amount: Math.round(parseFloat(course.price) * 100), // Convert to cents
+            amount: Math.round(finalPrice * 100), // Convert to cents
             currency: "usd",
             metadata: {
                 userId: userData.user.id,
                 courseId: course.id,
                 courseTitle: course.title,
                 type: "course",
+                couponCode: validCouponCode || "",
+                discountPercentage: discountPercentage.toString(),
+                originalPrice: course.price,
             },
             automatic_payment_methods: {
                 enabled: true,
             },
         });
-
         return res.status(200).json({
             clientSecret: paymentIntent.client_secret,
             paymentIntentId: paymentIntent.id,
+            discountPercentage,
+            originalPrice: course.price,
+            finalPrice: finalPrice.toFixed(2),
         });
     } catch (error: any) {
         console.error("Create payment intent error:", error);
@@ -110,9 +147,9 @@ export const confirmCoursePayment = async (req: Request, res: Response) => {
             .single();
 
         if (existingPurchase) {
-            return res.status(200).json({ 
+            return res.status(200).json({
                 message: "Already enrolled",
-                alreadyEnrolled: true 
+                alreadyEnrolled: true
             });
         }
 
@@ -123,19 +160,37 @@ export const confirmCoursePayment = async (req: Request, res: Response) => {
             .eq("id", courseId)
             .single();
 
+        // Get coupon info from metadata
+        const couponCode = paymentIntent.metadata.couponCode || null;
+        const discountPercentage = paymentIntent.metadata.discountPercentage ? parseInt(paymentIntent.metadata.discountPercentage) : null;
+        const originalPrice = paymentIntent.metadata.originalPrice ? parseFloat(paymentIntent.metadata.originalPrice) : null;
+
+        // Calculate actual price paid (with discount if applicable)
+        let pricePaid = parseFloat(course?.price);
+        if (discountPercentage && discountPercentage > 0) {
+            pricePaid = pricePaid * (1 - discountPercentage / 100);
+        }
         // Create enrollment record
         const { data: purchase, error: purchaseError } = await supabaseAdmin
             .from("user_courses")
             .insert({
                 user_id: userId,
                 course_id: courseId,
-                price_paid: course?.price || 0,
+                price_paid: pricePaid,
+                coupon_code: couponCode,
+                discount_percentage: discountPercentage,
+                original_price: originalPrice,
             })
             .select()
             .single();
 
         if (purchaseError) {
             return res.status(400).json({ error: purchaseError.message });
+        }
+
+        // Increment coupon usage if coupon was used
+        if (couponCode) {
+            await incrementCouponUsage(couponCode);
         }
 
         // Increment student count
@@ -149,7 +204,7 @@ export const confirmCoursePayment = async (req: Request, res: Response) => {
             const newStudentCount = (currentCourse.students || 0) + 1;
             await supabaseAdmin
                 .from("courses")
-                .update({ 
+                .update({
                     students: newStudentCount,
                     updated_at: new Date().toISOString()
                 })
@@ -170,7 +225,7 @@ export const confirmCoursePayment = async (req: Request, res: Response) => {
 
 export const createLiveSessionPaymentIntent = async (req: Request, res: Response) => {
     try {
-        const { sessionId } = req.body;
+        const { sessionId, couponCode } = req.body;
         const authHeader = req.headers.authorization;
         const token = authHeader && authHeader.split(" ")[1];
 
@@ -213,15 +268,49 @@ export const createLiveSessionPaymentIntent = async (req: Request, res: Response
             return res.status(400).json({ error: "Already enrolled in this live session" });
         }
 
+        let finalPrice = parseFloat(session.price);
+        let discountPercentage = 0;
+        let validCouponCode = null;
+
+        // Validate and apply coupon if provided
+        if (couponCode) {
+            const upperCode = couponCode.toUpperCase().trim();
+            const { data: coupon, error: couponError } = await supabaseAdmin
+                .from("coupons")
+                .select("*")
+                .eq("code", upperCode)
+                .single();
+
+            if (couponError || !coupon) {
+                return res.status(400).json({ error: "Invalid coupon code" });
+            }
+
+            if (!coupon.is_active) {
+                return res.status(400).json({ error: "This coupon is not active" });
+            }
+
+            if (coupon.usage_limit && coupon.usage_count >= coupon.usage_limit) {
+                return res.status(400).json({ error: "This coupon has reached its usage limit" });
+            }
+
+            // Apply discount
+            discountPercentage = coupon.percentage;
+            finalPrice = finalPrice * (1 - discountPercentage / 100);
+            validCouponCode = upperCode;
+        }
+
         // Create Stripe payment intent
         const paymentIntent = await stripe.paymentIntents.create({
-            amount: Math.round(parseFloat(session.price) * 100), // Convert to cents
+            amount: Math.round(finalPrice * 100), // Convert to cents
             currency: "usd",
             metadata: {
                 userId: userData.user.id,
                 sessionId: session.id,
                 sessionTitle: session.title,
                 type: "live_session",
+                couponCode: validCouponCode || "",
+                discountPercentage: discountPercentage.toString(),
+                originalPrice: session.price,
             },
             automatic_payment_methods: {
                 enabled: true,
@@ -231,6 +320,9 @@ export const createLiveSessionPaymentIntent = async (req: Request, res: Response
         return res.status(200).json({
             clientSecret: paymentIntent.client_secret,
             paymentIntentId: paymentIntent.id,
+            discountPercentage,
+            originalPrice: session.price,
+            finalPrice: finalPrice.toFixed(2),
         });
     } catch (error: any) {
         console.error("Create payment intent error:", error);
@@ -279,9 +371,9 @@ export const confirmLiveSessionPayment = async (req: Request, res: Response) => 
             .single();
 
         if (existingEnrollment) {
-            return res.status(200).json({ 
+            return res.status(200).json({
                 message: "Already enrolled",
-                alreadyEnrolled: true 
+                alreadyEnrolled: true
             });
         }
 
@@ -292,19 +384,38 @@ export const confirmLiveSessionPayment = async (req: Request, res: Response) => 
             .eq("id", sessionId)
             .single();
 
+        // Get coupon info from metadata
+        const couponCode = paymentIntent.metadata.couponCode || null;
+        const discountPercentage = paymentIntent.metadata.discountPercentage ? parseInt(paymentIntent.metadata.discountPercentage) : null;
+        const originalPrice = paymentIntent.metadata.originalPrice ? parseFloat(paymentIntent.metadata.originalPrice) : null;
+
+        // Calculate actual price paid (with discount if applicable)
+        let pricePaid = parseFloat(session?.price);
+        if (discountPercentage && discountPercentage > 0) {
+            pricePaid = pricePaid * (1 - discountPercentage / 100);
+        }
+
         // Create enrollment record
         const { data: enrollment, error: enrollmentError } = await supabaseAdmin
             .from("user_live_sessions")
             .insert({
                 user_id: userId,
                 session_id: sessionId,
-                price_paid: session?.price || 0,
+                price_paid: pricePaid,
+                coupon_code: couponCode,
+                discount_percentage: discountPercentage,
+                original_price: originalPrice,
             })
             .select()
             .single();
 
         if (enrollmentError) {
             return res.status(400).json({ error: enrollmentError.message });
+        }
+
+        // Increment coupon usage if coupon was used
+        if (couponCode) {
+            await incrementCouponUsage(couponCode);
         }
 
         // Increment participants count
@@ -318,7 +429,7 @@ export const confirmLiveSessionPayment = async (req: Request, res: Response) => 
             const newCount = (currentSession.participants_count || 0) + 1;
             await supabaseAdmin
                 .from("live_sessions")
-                .update({ 
+                .update({
                     participants_count: newCount,
                     updated_at: new Date().toISOString()
                 })

@@ -98,12 +98,12 @@ export const exportChecklistSubmissionsToExcel = async (filters = {}) => {
     if (filters.stage) params.append('stage', filters.stage);
 
     const response = await apiClient.get(`/api/admin/checklist-submissions/export/excel?${params.toString()}`, { responseType: 'blob' });
-    
+
     // Create download link
     const url = window.URL.createObjectURL(new Blob([response.data]));
     const link = document.createElement('a');
     link.href = url;
-    
+
     // Extract filename from Content-Disposition header or use default
     const contentDisposition = response.headers['content-disposition'];
     let filename = 'checklist_submissions.xlsx';
@@ -113,12 +113,45 @@ export const exportChecklistSubmissionsToExcel = async (filters = {}) => {
             filename = filenameMatch[1];
         }
     }
-    
+
     link.setAttribute('download', filename);
     document.body.appendChild(link);
     link.click();
     link.remove();
     window.URL.revokeObjectURL(url);
-    
+
     return response.data;
 };
+
+// ==================== Coupon Management ====================
+
+export const getAllCoupons = async (params = {}) => {
+    const response = await apiClient.get(`/api/coupons`, { params });
+    return response.data;
+};
+
+export const getCouponById = async (id) => {
+    const response = await apiClient.get(`/api/coupons/${id}`);
+    return response.data;
+};
+
+export const createCoupon = async (couponData) => {
+    const response = await apiClient.post(`/api/coupons`, couponData);
+    return response.data;
+};
+
+export const updateCoupon = async (id, couponData) => {
+    const response = await apiClient.put(`/api/coupons/${id}`, couponData);
+    return response.data;
+};
+
+export const deleteCoupon = async (id) => {
+    const response = await apiClient.delete(`/api/coupons/${id}`);
+    return response.data;
+};
+
+export const toggleCouponStatus = async (id) => {
+    const response = await apiClient.patch(`/api/coupons/${id}/toggle`);
+    return response.data;
+};
+

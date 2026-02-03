@@ -12,7 +12,8 @@ import {
     Menu,
     X,
     User,
-    Settings
+    Settings,
+    Tag
 } from 'lucide-react';
 import { useState } from 'react';
 import { useAuthStore } from '@/store/authStore';
@@ -33,6 +34,7 @@ export default function AdminSidebar() {
         { name: t('users'), href: '/admin/users', icon: Users },
         { name: t('courses'), href: '/admin/courses', icon: BookOpen },
         { name: t('liveSessions'), href: '/admin/live-sessions', icon: Video },
+        { name: 'Coupons', href: '/admin/coupons', icon: Tag },
         { name: t('checklist'), href: '/admin/checklist', icon: FileText },
         { name: t('profile'), href: '/admin/profile', icon: Settings },
     ];
@@ -43,7 +45,7 @@ export default function AdminSidebar() {
         localStorage.removeItem('user');
         router.push('/login');
     };
-    
+
     const getFullName = (userData) => {
         if (userData.user_metadata?.full_name) {
             return userData.user_metadata?.full_name.split(' ')[0] + ' ' + userData.user_metadata?.full_name.split(' ')[1].charAt(0) + '.';
@@ -69,12 +71,12 @@ export default function AdminSidebar() {
           fixed top-0 h-screen w-64 bg-linear-to-b from-slate-900 to-slate-800 
           text-white shadow-2xl z-40 transition-transform duration-300 ease-in-out
           ${isRTL ? 'right-0' : 'left-0'}
-          ${isMobileMenuOpen 
-                ? 'translate-x-0' 
-                : isRTL 
-                    ? 'translate-x-full lg:translate-x-0' 
-                    : '-translate-x-full lg:translate-x-0'
-            }
+          ${isMobileMenuOpen
+                        ? 'translate-x-0'
+                        : isRTL
+                            ? 'translate-x-full lg:translate-x-0'
+                            : '-translate-x-full lg:translate-x-0'
+                    }
         `}
             >
                 <div className="flex flex-col h-full">
@@ -130,9 +132,8 @@ export default function AdminSidebar() {
                                         </p>
                                     </div>
                                     <svg
-                                        className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${
-                                            isUserMenuOpen ? 'rotate-180' : ''
-                                        }`}
+                                        className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${isUserMenuOpen ? 'rotate-180' : ''
+                                            }`}
                                         fill="none"
                                         stroke="currentColor"
                                         viewBox="0 0 24 24"
@@ -145,17 +146,16 @@ export default function AdminSidebar() {
                                 {isUserMenuOpen && (
                                     <>
                                         {/* Backdrop for mobile */}
-                                        <div 
+                                        <div
                                             className="lg:hidden fixed inset-0 bg-black/20 z-40"
                                             onClick={() => setIsUserMenuOpen(false)}
                                         />
-                                        
+
                                         {/* Menu positioned based on RTL */}
-                                        <div className={`absolute bottom-full mb-2 left-0 right-0 lg:bottom-0 lg:mb-0 w-full lg:w-56 bg-slate-800 rounded-lg shadow-2xl border border-slate-600/50 overflow-hidden z-50 animate-in fade-in slide-in-from-bottom-2 duration-200 ${
-                                            isRTL 
-                                                ? 'lg:right-auto lg:left-0 lg:mr-2 lg:-translate-x-full' 
+                                        <div className={`absolute bottom-full mb-2 left-0 right-0 lg:bottom-0 lg:mb-0 w-full lg:w-56 bg-slate-800 rounded-lg shadow-2xl border border-slate-600/50 overflow-hidden z-50 animate-in fade-in slide-in-from-bottom-2 duration-200 ${isRTL
+                                                ? 'lg:right-auto lg:left-0 lg:mr-2 lg:-translate-x-full'
                                                 : 'lg:left-auto lg:right-0 lg:ml-2 lg:translate-x-full'
-                                        }`}>
+                                            }`}>
                                             <div className="p-2">
                                                 {/* User info in menu */}
                                                 <div className="px-3 py-2 border-b border-slate-700/50 mb-2">
@@ -176,7 +176,7 @@ export default function AdminSidebar() {
                                                     </div>
                                                     <span className="text-sm font-medium text-slate-200 group-hover:text-white">{tCommon('profileSettings')}</span>
                                                 </Link>
-                                                
+
                                                 {/* Logout button blended with user section */}
                                                 <button
                                                     onClick={() => {

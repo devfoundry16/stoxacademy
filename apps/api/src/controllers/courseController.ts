@@ -96,7 +96,7 @@ export const getCourseById = async (req: Request, res: Response) => {
     // Check if user has purchased this course and get lesson progress
     let isPurchased = false;
     let lessonsWithProgress = lessons || [];
-    
+
     if (token) {
       const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
 
@@ -146,7 +146,7 @@ export const getCourseById = async (req: Request, res: Response) => {
 
 export const purchaseCourse = async (req: Request, res: Response) => {
   try {
-    const { courseId } = req.body;
+    const { courseId, couponCode, discountPercentage, originalPrice } = req.body;
     const authHeader = req.headers.authorization;
     const token = authHeader && authHeader.split(" ")[1];
 
@@ -184,13 +184,22 @@ export const purchaseCourse = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Course already purchased" });
     }
 
+    // Calculate actual price paid (with discount if applicable)
+    let pricePaid = parseFloat(course.price);
+    if (discountPercentage && discountPercentage > 0) {
+      pricePaid = pricePaid * (1 - discountPercentage / 100);
+    }
+
     // Create purchase record
     const { data: purchase, error: purchaseError } = await supabaseAdmin
       .from("user_courses")
       .insert({
         user_id: userData.user.id,
         course_id: courseId,
-        price_paid: course.price,
+        price_paid: pricePaid,
+        coupon_code: couponCode || null,
+        discount_percentage: discountPercentage || null,
+        original_price: originalPrice || parseFloat(course.price),
       })
       .select()
       .single();
@@ -213,7 +222,7 @@ export const purchaseCourse = async (req: Request, res: Response) => {
       // Update student count (don't fail purchase if this fails, just log it)
       const { error: updateError } = await supabaseAdmin
         .from("courses")
-        .update({ 
+        .update({
           students: newStudentCount,
           updated_at: new Date().toISOString()
         })

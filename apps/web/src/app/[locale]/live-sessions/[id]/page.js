@@ -25,7 +25,13 @@ export default function LiveSessionDetailPage({ params }) {
     const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
     const [clientSecret, setClientSecret] = useState(null);
     const [paymentIntentId, setPaymentIntentId] = useState(null);
-    const { id} = React.use(params);
+    const [appliedCoupon, setAppliedCoupon] = useState(null);
+    const [discountInfo, setDiscountInfo] = useState({
+        originalPrice: 0,
+        finalPrice: 0,
+        discountPercentage: 0,
+    });
+    const { id } = React.use(params);
 
     useEffect(() => {
         setIsAuthenticated(authService.isAuthenticated());
@@ -55,15 +61,63 @@ export default function LiveSessionDetailPage({ params }) {
 
         try {
             setEnrolling(true);
-            // Create payment intent
-            const { clientSecret, paymentIntentId } = await paymentService.createLiveSessionPaymentIntent(session.id);
-            setClientSecret(clientSecret);
-            setPaymentIntentId(paymentIntentId);
+            // Create payment intent without coupon initially
+            const response = await paymentService.createLiveSessionPaymentIntent(session.id);
+            setClientSecret(response.clientSecret);
+            setPaymentIntentId(response.paymentIntentId);
+            setDiscountInfo({
+                originalPrice: parseFloat(session.price || 0),
+                finalPrice: parseFloat(session.price || 0),
+                discountPercentage: 0,
+            });
             setCheckoutModalOpen(true);
         } catch (err) {
             toast.error(err.response?.data?.error || t('failedToInitializePayment'));
         } finally {
             setEnrolling(false);
+        }
+    };
+
+    const handleApplyCoupon = async (couponCode) => {
+        if (!couponCode) {
+            // Remove coupon - recreate payment intent without coupon
+            try {
+                const response = await paymentService.createLiveSessionPaymentIntent(session.id);
+                setClientSecret(response.clientSecret);
+                setPaymentIntentId(response.paymentIntentId);
+                setAppliedCoupon(null);
+                setDiscountInfo({
+                    originalPrice: parseFloat(session.price || 0),
+                    finalPrice: parseFloat(session.price || 0),
+                    discountPercentage: 0,
+                });
+                toast.success(t('couponRemoved'));
+            } catch (error) {
+                toast.error(t('failedToRemoveCoupon'));
+            }
+            return;
+        }
+
+        // Apply coupon - recreate payment intent with coupon
+        try {
+            const response = await paymentService.createLiveSessionPaymentIntent(
+                session.id,
+                couponCode
+            );
+
+            setClientSecret(response.clientSecret);
+            setPaymentIntentId(response.paymentIntentId);
+            setAppliedCoupon(couponCode);
+            setDiscountInfo({
+                originalPrice: parseFloat(response.originalPrice),
+                finalPrice: parseFloat(response.finalPrice),
+                discountPercentage: response.discountPercentage,
+            });
+
+            toast.success(`${t('couponApplied')} ${response.discountPercentage}% ${t('off')}`);
+        } catch (error) {
+            toast.error(error.response?.data?.error || t('invalidCoupon'));
+            throw error;
         }
     };
 
@@ -175,7 +229,7 @@ export default function LiveSessionDetailPage({ params }) {
             className="min-h-screen bg-gray-50"
         >
             <Header />
-            
+
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -398,8 +452,12 @@ export default function LiveSessionDetailPage({ params }) {
                     isOpen={checkoutModalOpen}
                     onClose={() => setCheckoutModalOpen(false)}
                     clientSecret={clientSecret}
-                    amount={parseFloat(session.price || 0)}
+                    amount={discountInfo.finalPrice}
                     itemName={session.title}
+                    originalPrice={discountInfo.originalPrice}
+                    discountPercentage={discountInfo.discountPercentage}
+                    appliedCoupon={appliedCoupon}
+                    onApplyCoupon={handleApplyCoupon}
                     onSuccess={handlePaymentSuccess}
                     onError={handlePaymentError}
                 />

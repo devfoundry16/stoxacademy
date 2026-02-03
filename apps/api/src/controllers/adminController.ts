@@ -573,6 +573,11 @@ export const createLiveSession = async (req: Request, res: Response) => {
             max_participants,
             price,
         } = req.body;
+        const authHeader = req.headers.authorization;
+        const token = authHeader && authHeader.split(" ")[1];
+        if (!token) {
+            return res.status(401).json({ error: "No token provided" });
+        }
         if (!course_id || !title || !scheduled_at) {
             return res.status(400).json({ error: "Missing required fields" });
         }
@@ -580,6 +585,14 @@ export const createLiveSession = async (req: Request, res: Response) => {
         // Calculate initial status based on scheduled time
         const initialStatus = calculateSessionStatus(scheduled_at, duration || 60);
         const durationMinutes = duration || 60;
+
+        //current user id
+        
+        const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
+        if (userError || !userData.user) {
+            return res.status(401).json({ error: "Invalid token" });
+        }
+        const currentUserId = userData.user.id;
 
         // Insert session first (without video room; we get id then create room)
         const { data: session, error } = await supabaseAdmin
@@ -591,7 +604,7 @@ export const createLiveSession = async (req: Request, res: Response) => {
                 scheduled_at,
                 duration: durationMinutes,
                 meeting_url: meeting_url || null,
-                instructor_id: instructor_id || null,
+                instructor_id: currentUserId || null,
                 max_participants: max_participants || null,
                 price: price || 0,
                 status: initialStatus,

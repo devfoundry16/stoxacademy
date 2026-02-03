@@ -185,7 +185,6 @@ export const getLiveSessionById = async (req: Request, res: Response) => {
                         .eq("user_id", userId)
                         .eq("session_id", id)
                         .single();
-
                     isEnrolled = !!enrollment;
                 }
             }

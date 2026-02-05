@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/routing';
-import { Calendar, Clock, Users, DollarSign, Video, ExternalLink, Lock, CheckCircle, ArrowLeft } from 'lucide-react';
+import { Calendar, Clock, Users, DollarSign, Video, ExternalLink, Lock, CheckCircle, ArrowLeft, PhoneOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Header, LoadingSpinner, ErrorState } from '@/components';
 import { liveSessionService } from '@/lib/liveSessionService';
@@ -31,6 +31,7 @@ export default function LiveSessionDetailPage({ params }) {
         finalPrice: 0,
         discountPercentage: 0,
     });
+    const [endingMeeting, setEndingMeeting] = useState(false);
     const { id } = React.use(params);
 
     useEffect(() => {
@@ -149,6 +150,23 @@ export default function LiveSessionDetailPage({ params }) {
             window.open(session.meeting_url, '_blank');
         } else {
             toast.error(t('meetingLinkNotAvailable'));
+        }
+    };
+
+    const user = authService.getStoredUser();
+    const isHost = session?.instructor_id && user?.id === session.instructor_id;
+
+    const handleEndMeeting = async () => {
+        if (!session?.id || !isHost) return;
+        try {
+            setEndingMeeting(true);
+            await liveSessionService.endMeeting(session.id);
+            toast.success(t('meetingEnded'));
+            await fetchSession();
+        } catch (err) {
+            toast.error(err.response?.data?.error || t('failedToEndMeeting'));
+        } finally {
+            setEndingMeeting(false);
         }
     };
 
@@ -397,15 +415,29 @@ export default function LiveSessionDetailPage({ params }) {
                         >
                             {session.isEnrolled ? (
                                 canJoin && (session.video_provider === 'daily' && session.video_room_name || session.meeting_url) ? (
-                                    <motion.button
-                                        whileHover={{ y: -2 }}
-                                        whileTap={{ y: 0 }}
-                                        onClick={handleJoinSession}
-                                        className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold text-lg"
-                                    >
-                                        <ExternalLink size={24} />
-                                        {t('joinLiveSession')}
-                                    </motion.button>
+                                    <>
+                                        <motion.button
+                                            whileHover={{ y: -2 }}
+                                            whileTap={{ y: 0 }}
+                                            onClick={handleJoinSession}
+                                            className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold text-lg"
+                                        >
+                                            <ExternalLink size={24} />
+                                            {t('joinLiveSession')}
+                                        </motion.button>
+                                        {isHost && session.status === 'live' && (
+                                            <motion.button
+                                                whileHover={{ y: -2 }}
+                                                whileTap={{ y: 0 }}
+                                                onClick={handleEndMeeting}
+                                                disabled={endingMeeting}
+                                                className="flex items-center justify-center gap-2 px-6 py-4 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors font-semibold text-lg"
+                                            >
+                                                <PhoneOff size={24} />
+                                                {endingMeeting ? t('endingMeeting') : t('endMeeting')}
+                                            </motion.button>
+                                        )}
+                                    </>
                                 ) : (
                                     <div className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-gray-100 text-gray-500 rounded-lg font-semibold text-lg cursor-not-allowed">
                                         <Lock size={24} />

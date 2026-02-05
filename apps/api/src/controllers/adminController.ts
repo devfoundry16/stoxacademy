@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { supabaseAdmin } from "../config/supabase";
 import { randomUUID } from "crypto";
 import * as XLSX from "xlsx";
-import { createRoom, isDailyConfigured } from "../services/dailyService";
+import { createRoom, getRoomMeetingStatus, isDailyConfigured } from "../services/dailyService";
 
 // ==================== Dashboard Statistics ====================
 
@@ -480,45 +480,30 @@ export const deleteCourse = async (req: Request, res: Response) => {
 // ==================== Live Session Management ====================
 
 /**
- * Calculate live session status based on scheduled time and duration
- */
-const calculateSessionStatus = (scheduledAt: string, durationMinutes: number): string => {
-    const now = new Date();
-    const scheduledDate = new Date(scheduledAt);
-    const endDate = new Date(scheduledDate.getTime() + durationMinutes * 60 * 1000);
-
-    if (now < scheduledDate) {
-        return 'scheduled';
-    } else if (now >= scheduledDate && now < endDate) {
-        return 'live';
-    } else {
-        return 'completed';
-    }
-};
-
-/**
- * Update session with calculated status and persist to database if changed
+ * Update session status from Daily.co meeting state.
+ * Does not overwrite 'cancelled'. If Daily status unavailable, keeps current DB status.
  */
 const updateSessionStatus = async (session: any) => {
     if (!session) return session;
-    
-    const calculatedStatus = calculateSessionStatus(session.scheduled_at, session.duration);
-    
-    // Update database if status has changed
-    if (session.status !== calculatedStatus) {
-        await supabaseAdmin
-            .from("live_sessions")
-            .update({ 
-                status: calculatedStatus,
-                updated_at: new Date().toISOString()
-            })
-            .eq("id", session.id);
+    if (session.status === "cancelled") return session;
+
+    // Only update status if we can get it from Daily
+    if (isDailyConfigured() && session.video_provider === "daily" && session.video_room_name) {
+        const dailyStatus = await getRoomMeetingStatus(session.video_room_name);
+        if (dailyStatus && session.status !== dailyStatus) {
+            await supabaseAdmin
+                .from("live_sessions")
+                .update({
+                    status: dailyStatus,
+                    updated_at: new Date().toISOString(),
+                })
+                .eq("id", session.id);
+            return { ...session, status: dailyStatus };
+        }
     }
-    
-    return {
-        ...session,
-        status: calculatedStatus
-    };
+
+    // Keep current status if Daily not available or not configured
+    return session;
 };
 
 export const getLiveSessions = async (req: Request, res: Response) => {
@@ -581,8 +566,8 @@ export const createLiveSession = async (req: Request, res: Response) => {
             return res.status(400).json({ error: "Missing required fields" });
         }
 
-        // Calculate initial status based on scheduled time
-        const initialStatus = calculateSessionStatus(scheduled_at, duration || 60);
+        // New sessions start as scheduled; status will be driven by Daily.co once room is used
+        const initialStatus = "scheduled";
         const durationMinutes = duration || 60;
 
         //current user id
@@ -650,6 +635,7 @@ export const createLiveSession = async (req: Request, res: Response) => {
 
         return res.status(201).json({ session });
     } catch (error: any) {
+        console.error("createLiveSession error:", error);
         return res.status(500).json({ error: error.message });
     }
 };

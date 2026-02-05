@@ -29,4 +29,9 @@ export const liveSessionService = {
     const response = await apiClient.get(`/api/live-sessions/${sessionId}/meeting-token`);
     return response.data;
   },
+
+  endMeeting: async (sessionId) => {
+    const response = await apiClient.post(`/api/live-sessions/${sessionId}/end-meeting`);
+    return response.data;
+  },
 };

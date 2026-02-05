@@ -44,6 +44,26 @@ async function dailyFetch<T>(path: string, options: RequestInit = {}): Promise<T
 }
 
 /**
+ * Delete a Daily.co room. Ends the meeting and prevents new joins.
+ * Idempotent: 404 (room not found) is treated as success.
+ */
+export async function deleteRoom(roomName: string): Promise<void> {
+    if (!DAILY_API_KEY) return;
+    const url = `${DAILY_API_URL}/rooms/${encodeURIComponent(roomName)}`;
+    const res = await fetch(url, {
+        method: "DELETE",
+        headers: {
+            Authorization: `Bearer ${DAILY_API_KEY}`,
+        },
+    });
+    if (res.status === 404) return; // Room already deleted
+    if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`Daily API error ${res.status}: ${text}`);
+    }
+}
+
+/**
  * Create a Daily.co room for a live session.
  * Room name must be [A-Za-z0-9_-], max 128 chars.
  */
@@ -59,6 +79,9 @@ export async function createRoom(options: CreateRoomOptions): Promise<CreateRoom
         properties: {
             nbf: nbfSec,
             exp: expSec,
+            enable_network_ui: true,
+            start_video_off: true,
+            start_audio_off: true,
         },
     };
     if (maxParticipants != null && maxParticipants > 0) {
@@ -96,4 +119,68 @@ export async function createMeetingToken(options: CreateMeetingTokenOptions): Pr
 
 export function isDailyConfigured(): boolean {
     return dailyConfig.isConfigured;
+}
+
+/** Session status derived from Daily.co meeting state */
+export type DailySessionStatus = "scheduled" | "live" | "completed";
+
+interface MeetingSession {
+    id: string;
+    room: string;
+    start_time: number;
+    duration: number;
+    ongoing: boolean;
+}
+
+interface MeetingsResponse {
+    total_count: number;
+    data: MeetingSession[];
+}
+
+/**
+ * Check if a Daily.co room still exists (not deleted). Returns false on 404 or error.
+ */
+async function roomExists(roomName: string): Promise<boolean> {
+    if (!DAILY_API_KEY) return false;
+    const url = `${DAILY_API_URL}/rooms/${encodeURIComponent(roomName)}`;
+    const res = await fetch(url, {
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${DAILY_API_KEY}`,
+        },
+    });
+    return res.ok; // 200 = exists, 404 = deleted
+}
+
+/**
+ * Get live session status from Daily.co for a room.
+ * - If the room was deleted (GET /rooms/:name → 404), returns 'completed' (meeting.ongoing can stay true after delete).
+ * - Otherwise uses GET /meetings?room=name&limit=1: ongoing true → 'live', ongoing false → 'completed', no meeting → 'scheduled'.
+ * Returns null on API error or when Daily is not configured.
+ */
+export async function getRoomMeetingStatus(roomName: string): Promise<DailySessionStatus | null> {
+    if (!DAILY_API_KEY) return null;
+    try {
+        // Deleted rooms return 404; meeting.ongoing may still be true, so treat missing room as completed
+        const exists = await roomExists(roomName);
+        if (!exists) return "completed";
+
+        const path = `/meetings?room=${encodeURIComponent(roomName)}&limit=1`;
+        const res = await fetch(`${DAILY_API_URL}${path}`, {
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${DAILY_API_KEY}`,
+            },
+        });
+        if (!res.ok) {
+            const text = await res.text();
+            throw new Error(`Daily API error ${res.status}: ${text}`);
+        }
+        const json = (await res.json()) as MeetingsResponse;
+        const meeting = json.data?.[0];
+        if (!meeting) return "scheduled";
+        return meeting.ongoing ? "live" : "completed";
+    } catch {
+        return null;
+    }
 }

@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { supabaseAdmin } from "../config/supabase";
-import { createMeetingToken, isDailyConfigured } from "../services/dailyService";
+import { createMeetingToken, deleteRoom, getRoomMeetingStatus, isDailyConfigured } from "../services/dailyService";
 
 // ==================== Helper Functions ====================
 
@@ -26,45 +26,34 @@ const isUserAdmin = async (userId: string): Promise<boolean> => {
 };
 
 /**
- * Calculate live session status based on scheduled time and duration
- */
-const calculateSessionStatus = (scheduledAt: string, durationMinutes: number): string => {
-    const now = new Date();
-    const scheduledDate = new Date(scheduledAt);
-    const endDate = new Date(scheduledDate.getTime() + durationMinutes * 60 * 1000);
-
-    if (now < scheduledDate) {
-        return 'scheduled';
-    } else if (now >= scheduledDate && now < endDate) {
-        return 'live';
-    } else {
-        return 'completed';
-    }
-};
-
-/**
- * Update session with calculated status and persist to database if changed
+ * Update session status from Daily.co meeting state.
+ * Does not overwrite 'cancelled'. If Daily status unavailable, keeps current DB status.
  */
 const updateSessionStatus = async (session: any) => {
     if (!session) return session;
+    if (session.status === "cancelled") return session;
 
-    const calculatedStatus = calculateSessionStatus(session.scheduled_at, session.duration);
-
-    // Update database if status has changed
-    if (session.status !== calculatedStatus) {
-        await supabaseAdmin
-            .from("live_sessions")
-            .update({
-                status: calculatedStatus,
-                updated_at: new Date().toISOString()
-            })
-            .eq("id", session.id);
+    // Only update status if we can get it from Daily
+    if (isDailyConfigured() && session.video_provider === "daily" && session.video_room_name) {
+        const dailyStatus = await getRoomMeetingStatus(session.video_room_name);
+        console.log('--------------------------------');
+        console.log('Daily status:', dailyStatus);
+        console.log('Session status:', session.status);
+        console.log('--------------------------------');
+        if (dailyStatus && session.status !== dailyStatus) {
+            await supabaseAdmin
+                .from("live_sessions")
+                .update({
+                    status: dailyStatus,
+                    updated_at: new Date().toISOString(),
+                })
+                .eq("id", session.id);
+            return { ...session, status: dailyStatus };
+        }
     }
 
-    return {
-        ...session,
-        status: calculatedStatus
-    };
+    // Keep current status if Daily not available or not configured
+    return session;
 };
 
 // ==================== Public Live Session Routes ====================
@@ -374,10 +363,72 @@ export const getMeetingToken = async (req: Request, res: Response) => {
             token: meetingToken,
             roomUrl,
             roomName: session.video_room_name,
+            hostUserId: session.instructor_id ?? null,
         });
     } catch (error: any) {
         console.error("getMeetingToken error:", error);
         return res.status(500).json({ error: error.message || "Failed to get meeting token" });
+    }
+};
+
+/**
+ * End a live session meeting permanently. Only the host (instructor) can call this.
+ * Sets session status to 'completed' and deletes the Daily room so all participants are disconnected.
+ */
+export const endMeeting = async (req: Request, res: Response) => {
+    try {
+        const { sessionId } = req.params;
+        const authHeader = req.headers.authorization;
+        const token = authHeader && authHeader.split(" ")[1];
+
+        if (!token) {
+            return res.status(401).json({ error: "No token provided" });
+        }
+
+        const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
+        if (userError || !userData.user) {
+            return res.status(401).json({ error: "Invalid token" });
+        }
+
+        const { data: session, error: sessionError } = await supabaseAdmin
+            .from("live_sessions")
+            .select("id, video_room_name, video_provider, instructor_id, status")
+            .eq("id", sessionId)
+            .single();
+
+        if (sessionError || !session) {
+            return res.status(404).json({ error: "Live session not found" });
+        }
+
+        const isHost = session.instructor_id && userData.user.id === session.instructor_id;
+        const isAdmin = await isUserAdmin(userData.user.id);
+        if (!isHost && !isAdmin) {
+            return res.status(403).json({ error: "Only the host can end the meeting." });
+        }
+
+        await supabaseAdmin
+            .from("live_sessions")
+            .update({
+                status: "completed",
+                updated_at: new Date().toISOString(),
+            })
+            .eq("id", sessionId);
+
+        if (session.video_provider === "daily" && session.video_room_name && isDailyConfigured()) {
+            try {
+                await deleteRoom(session.video_room_name);
+                console.log('--------------------------------');
+                console.log('Daily room deleted');
+                console.log('--------------------------------');
+            } catch (dailyErr: any) {
+                console.warn("Daily deleteRoom failed (session already ended in DB):", dailyErr?.message);
+            }
+        }
+
+        return res.status(200).json({ success: true, message: "Meeting ended." });
+    } catch (error: any) {
+        console.error("endMeeting error:", error);
+        return res.status(500).json({ error: error.message || "Failed to end meeting" });
     }
 };
 

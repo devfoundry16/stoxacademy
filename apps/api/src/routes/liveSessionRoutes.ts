@@ -6,6 +6,7 @@ import {
     getMeetingToken,
     enrollInLiveSession,
     getUserLiveSessions,
+    endMeeting,
 } from "../controllers/liveSessionController";
 
 const router = Router();
@@ -16,6 +17,7 @@ router.get("/:id", getLiveSessionById);
 
 // Protected routes (require authentication)
 router.get("/:sessionId/meeting-token", authenticateToken, getMeetingToken);
+router.post("/:sessionId/end-meeting", authenticateToken, endMeeting);
 router.post("/enroll", authenticateToken, enrollInLiveSession);
 router.get("/user/enrollments", authenticateToken, getUserLiveSessions);
 

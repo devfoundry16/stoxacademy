@@ -36,10 +36,6 @@ const updateSessionStatus = async (session: any) => {
     // Only update status if we can get it from Daily
     if (isDailyConfigured() && session.video_provider === "daily" && session.video_room_name) {
         const dailyStatus = await getRoomMeetingStatus(session.video_room_name);
-        console.log('--------------------------------');
-        console.log('Daily status:', dailyStatus);
-        console.log('Session status:', session.status);
-        console.log('--------------------------------');
         if (dailyStatus && session.status !== dailyStatus) {
             await supabaseAdmin
                 .from("live_sessions")
@@ -417,9 +413,6 @@ export const endMeeting = async (req: Request, res: Response) => {
         if (session.video_provider === "daily" && session.video_room_name && isDailyConfigured()) {
             try {
                 await deleteRoom(session.video_room_name);
-                console.log('--------------------------------');
-                console.log('Daily room deleted');
-                console.log('--------------------------------');
             } catch (dailyErr: any) {
                 console.warn("Daily deleteRoom failed (session already ended in DB):", dailyErr?.message);
             }

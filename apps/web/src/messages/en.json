@@ -651,6 +651,7 @@
       "failedToSaveSession": "Failed to save live session",
       "sessionDeleted": "Live session deleted successfully!",
       "failedToDeleteSession": "Failed to delete session",
+      "joinSession": "Join session",
       "scheduledCount": "Scheduled",
       "liveNow": "Live Now",
       "completedCount": "Completed",

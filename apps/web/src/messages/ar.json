@@ -651,6 +651,7 @@
       "failedToSaveSession": "فشل حفظ الجلسة المباشرة",
       "sessionDeleted": "تم حذف الجلسة المباشرة بنجاح!",
       "failedToDeleteSession": "فشل حذف الجلسة",
+      "joinSession": "انضم إلى الجلسة",
       "scheduledCount": "مجدولة",
       "liveNow": "مباشرة الآن",
       "completedCount": "مكتملة",

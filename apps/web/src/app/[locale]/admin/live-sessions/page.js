@@ -3,8 +3,8 @@
 export const dynamic = 'force-dynamic';
 
 import { useEffect, useState } from 'react';
-import { useTranslations } from 'next-intl';
-import { Edit, Trash2, Plus, Calendar, Clock, Users as UsersIcon } from 'lucide-react';
+import { useTranslations, useLocale } from 'next-intl';
+import { Edit, Trash2, Plus, Calendar, Clock, Users as UsersIcon, Video } from 'lucide-react';
 import toast from 'react-hot-toast';
 import DataTable from '@/components/admin/DataTable';
 import Modal from '@/components/admin/Modal';
@@ -20,6 +20,7 @@ import {
 export default function LiveSessionsPage() {
     const t = useTranslations('admin.liveSessions');
     const tStatus = useTranslations('liveSessions.status');
+    const locale = useLocale();
     const [sessions, setSessions] = useState([]);
     const [filteredSessions, setFilteredSessions] = useState([]);
     const [courses, setCourses] = useState([]);
@@ -248,8 +249,29 @@ export default function LiveSessionsPage() {
         },
     ];
 
+    const canJoinSession = (row) =>
+        row.status !== 'completed' &&
+        ((row.video_provider === 'daily' && row.video_room_name) || row.meeting_url);
+
+    const handleJoinSession = (row) => {
+        if (row.video_provider === 'daily' && row.video_room_name) {
+            window.open(`/${locale}/live-sessions/${row.id}/room`, '_blank', 'noopener,noreferrer');
+        } else if (row.meeting_url) {
+            window.open(row.meeting_url, '_blank', 'noopener,noreferrer');
+        }
+    };
+
     const actions = (row) => (
         <>
+            {canJoinSession(row) && (
+                <button
+                    onClick={() => handleJoinSession(row)}
+                    className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                    title={t('joinSession')}
+                >
+                    <Video size={18} />
+                </button>
+            )}
             <button
                 onClick={() => handleEdit(row)}
                 className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"

@@ -19,6 +19,20 @@
   }
 }
 
+/* Input/textarea: placeholder and value visibility in light and dark (Chrome dark appearance) */
+
+@media (prefers-color-scheme: dark) {
+  input::placeholder,
+  textarea::placeholder {
+    color: #9ca3af; /* gray-400 – visible on dark inputs */
+  }
+
+  input,
+  textarea {
+    color: black; /* light text – visible on dark inputs */
+  }
+}
+
 body {
   background: var(--background);
   color: var(--foreground);

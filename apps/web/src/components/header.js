@@ -96,14 +96,14 @@ export function Header() {
                         <Link
                           href="/profile"
                           onClick={() => setUserDropdownOpen(false)}
-                          className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 transition-colors"
+                          className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 text-black transition-colors"
                         >
                           <Settings className="w-4 h-4" />
                           {t('common.profileSettings')}
                         </Link>
                         <button
                           onClick={handleSignOut}
-                          className="w-full flex items-center gap-2 px-4 py-2 hover:bg-red-50 transition-colors"
+                          className="w-full flex items-center gap-2 px-4 py-2 hover:bg-red-50 text-black transition-colors"
                         >
                           <LogOut className="w-4 h-4" />
                           {t('common.logout')}

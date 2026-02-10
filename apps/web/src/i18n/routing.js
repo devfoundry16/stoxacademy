@@ -5,8 +5,9 @@ export const routing = defineRouting({
   // A list of all locales that are supported (Arabic first = default)
   locales: ['ar', 'en'],
 
-  // Used when no locale matches
-  defaultLocale: 'ar'
+  // Used when no locale matches (e.g. visiting /)
+  defaultLocale: 'ar',
+  localeDetection: false
 });
 
 // Lightweight wrappers around Next.js' navigation APIs

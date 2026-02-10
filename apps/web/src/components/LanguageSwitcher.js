@@ -12,8 +12,8 @@ export function LanguageSwitcher() {
   const [isOpen, setIsOpen] = useState(false);
 
   const languages = [
-    { code: 'en', name: 'English', flag: '🇺🇸' },
     { code: 'ar', name: 'العربية', flag: '🇸🇦' },
+    { code: 'en', name: 'English', flag: '🇺🇸' },
   ];
 
   const handleLanguageChange = (newLocale) => {

@@ -19,7 +19,7 @@ function AuthCallbackContent() {
       
       // Remove any locale prefix (router.push will add it automatically)
       // Handle both /en/ and /ar/ prefixes
-      const locales = ['en', 'ar'];
+      const locales = ['ar', 'en'];
       for (const loc of locales) {
         if (nextPath.startsWith(`/${loc}/`)) {
           nextPath = nextPath.substring(`/${loc}`.length);

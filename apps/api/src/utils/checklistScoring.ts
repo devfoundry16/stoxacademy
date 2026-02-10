@@ -49,7 +49,7 @@ const QUESTION_MAP: Record<string, string> = {
     
     // Question 7: Time Commitment
     "How much time can you dedicate weekly?": "time_commitment",
-    "كم من الوقت يمكنك تخصيصه أسبوعياً؟": "time_commitment",
+    "كم من الوقت يمكنك أن تخصّص أسبوعيًا؟": "time_commitment",
     
     // Question 9: Biggest Challenge
     "Your biggest challenge right now?": "biggest_challenge",
@@ -78,39 +78,39 @@ const ANSWER_MAP: Record<string, string> = {
     "Tried trading and faced losses": "level_tried_losses",
     "جربت التداول وواجهت خسائر": "level_tried_losses",
     "Trading without a clear system": "level_no_system",
-    "أتداول بدون نظام واضح": "level_no_system",
+    "التداول بدون نظام واضح": "level_no_system",
     "Trading with a system and results": "level_with_system",
-    "أتداول بنظام ونتائج": "level_with_system",
+    "التداول بنظام وتحقيق نتائج": "level_with_system",
     
     // Capital answers
     "I want to learn first": "capital_learn_first",
-    "أريد التعلم أولاً": "capital_learn_first",
+    "أريد أن أتعلم أولاً": "capital_learn_first",
     "Less than $1,000": "capital_less_1000",
-    "أقل من 1,000 دولار": "capital_less_1000",
+    "أقل من 1000 دولار": "capital_less_1000",
     "$1,000 - $5,000": "capital_1000_5000",
-    "1,000 - 5,000 دولار": "capital_1000_5000",
+    "1000 - 5000 دولار": "capital_1000_5000",
     "$5,000 - $15,000": "capital_5000_15000",
-    "5,000 - 15,000 دولار": "capital_5000_15000",
+    "5000 - 15000 دولار": "capital_5000_15000",
     "More than $15,000": "capital_more_15000",
-    "أكثر من 15,000 دولار": "capital_more_15000",
+    "أكثر من 15000 دولار": "capital_more_15000",
     
     // Risk answers
     "Very cautious": "risk_very_cautious",
-    "حذر جداً": "risk_very_cautious",
+    "حذر جدًا": "risk_very_cautious",
     "Calculated risk": "risk_calculated",
     "مخاطرة محسوبة": "risk_calculated",
     "High risk tolerance": "risk_high_tolerance",
-    "تحمل عالي للمخاطر": "risk_high_tolerance",
+    "قدرة عالية على تحمل المخاطر": "risk_high_tolerance",
     "I need guidance": "risk_need_guidance",
-    "أحتاج إرشاد": "risk_need_guidance",
+    "أحتاج إلى إرشاد": "risk_need_guidance",
     
     // Time Commitment answers
     "Less than 3 hours": "time_less_3",
     "أقل من 3 ساعات": "time_less_3",
     "3 - 6 hours": "time_3_6",
-    "3 - 6 ساعات": "time_3_6",
+    "من 3 إلى 6 ساعات": "time_3_6",
     "6 - 10 hours": "time_6_10",
-    "6 - 10 ساعات": "time_6_10",
+    "من 6 إلى 10 ساعات": "time_6_10",
     "More than 10 hours": "time_more_10",
     "أكثر من 10 ساعات": "time_more_10",
     
@@ -118,13 +118,13 @@ const ANSWER_MAP: Record<string, string> = {
     "Fear of loss": "challenge_fear_loss",
     "الخوف من الخسارة": "challenge_fear_loss",
     "Lack of understanding": "challenge_lack_understanding",
-    "قلة الفهم": "challenge_lack_understanding",
+    "عدم الإلمام": "challenge_lack_understanding",
     "No clear system": "challenge_no_system",
-    "لا يوجد نظام واضح": "challenge_no_system",
+    "عدم وجود نظام واضح": "challenge_no_system",
     "Discipline issues": "challenge_discipline",
-    "مشاكل في الانضباط": "challenge_discipline",
+    "مشاكل الانضباط": "challenge_discipline",
     "Lack of guidance": "challenge_lack_guidance",
-    "قلة الإرشاد": "challenge_lack_guidance",
+    "نقص التوجيه": "challenge_lack_guidance",
 };
 
 /**

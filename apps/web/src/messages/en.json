@@ -167,36 +167,44 @@
   "team": {
     "title": "Meet Our Expert Team",
     "description": "Our team of professional traders and educators are dedicated to helping you succeed in the financial markets. Each member brings real-world experience and a passion for teaching.",
+    "seeMore": "See More",
+    "seeLess": "See Less",
     "members": [
       {
-        "name": "Ameer Irshed",
-        "position": "Lead Trading Instructor",
-        "description": "Expert trader with 10+ years of market experience, specializing in technical analysis and risk management."
-      },
-      {
         "name": "Firas Elkader",
-        "position": "Stox Academy Founder & CEO",
-        "description": "Certified financial analyst with deep expertise in fundamental analysis and market trends."
+        "position": "CEO",
+        "description": "Experienced finance professional turning complex investment concepts into simple, actionable steps that empower you to take control of your financial future.",
+        "moreDescription": "Firas believes financial improvement is a conscious decision anyone can make by understanding the right investment principles. Through his work as an accountant and financial advisor, he’s seen how small, informed choices transform lives. His mission is to teach investing simply and honestly, so everyone can build a better financial future step by step."
       },
       {
         "name": "Majd Hawash",
-        "position": "Trading Strategy Expert",
-        "description": "Specialized in developing trading strategies and portfolio management for optimal returns."
+        "position": "Co-Founder",
+        "description": "Entrepreneur and pro trader turning real market experience into disciplined trading education.",
+        "moreDescription": "Majd began trading at 16, growing through real market challenges and over five years in crypto. He co-founded Stox to help thousands build strong trading skills rooted in discipline, risk management, and clear strategies. Majd teaches how to protect your capital, make smart decisions under pressure, and develop the mindset needed to succeed long-term—without chasing quick profits or false promises."
       },
       {
         "name": "Moataz Habiballa",
-        "position": "Cryptocurrency Specialist",
-        "description": "Leading expert in cryptocurrency markets and blockchain technology applications."
+        "position": "Director",
+        "description": "Real estate entrepreneur and founder of “A to Z,” with an international presence and a commitment to professionalism and transparency.",
+        "moreDescription": "Moataz leads “A to Z,” a real estate company headquartered in Dubai with offices in Germany, Italy, and Cyprus. As an investor in Stox Academy, he champions professionalism, transparency, and delivering real value to clients and investors across markets."
       },
       {
         "name": "Mohamed Nadaf",
-        "position": "Options Trading Instructor",
-        "description": "Professional options trader with extensive experience in derivatives and hedging strategies."
+        "position": "Sales Manager & Trading Coach",
+        "description": "Financial markets and real estate expert with 7+ years of hands-on experience, dedicated to practical investment education.",
+        "moreDescription": "Starting in 2016, Mohammad built deep market knowledge through real experience in financial markets and later expanded into real estate and mortgage consulting. He guides investors in Dubai and locally, helping analyze opportunities and build long-term investment plans. As a lecturer at STOX Academy, he’s educated over 2,000 students, focusing on practical application and sound financial decision-making."
       },
       {
         "name": "Ola Shalabni",
-        "position": "Technical Analysis Coach",
-        "description": "Specialized in chart patterns, indicators, and technical trading systems for consistent profitability."
+        "position": "COO",
+        "description": "",
+        "moreDescription": ""
+      },
+      {
+        "name": "Mahmoud Melhim",
+        "position": "Marketing & Photographer",
+        "description": "Marketing strategist and founder of Icon Media with 10+ years of experience in digital marketing and media production.",
+        "moreDescription": "With a Business Administration degree and a Digital Marketing certification from the Technion, Mahmoud Melhim combines sharp strategy with creative vision. As founder of Icon Media, he leverages 10+ years of experience in digital marketing, advertising, and high-impact video and photography production to help brands stand out and grow in a crowded market."
       }
     ]
   },

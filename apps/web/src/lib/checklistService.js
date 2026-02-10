@@ -1,7 +1,7 @@
 import apiClient from "./api";
 
 export const checklistService = {
-    getQuestions: async (locale = 'en') => {
+    getQuestions: async (locale = 'ar') => {
         const response = await apiClient.get("/api/checklist", {
             params: { locale }
         });

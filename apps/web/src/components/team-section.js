@@ -2,26 +2,26 @@
 
 import React from "react";
 import Image from "next/image";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { FaLinkedin, FaTwitter, FaEnvelope } from "react-icons/fa";
-import { useTranslations } from 'next-intl';
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { FaLinkedin, FaTwitter, FaEnvelope, FaInstagram } from "react-icons/fa";
+import { useTranslations } from "next-intl";
 
 const avatarPaths = [
-  "/images/team/Ameer Irshed.jpeg",
   "/images/team/firas elkader.jpeg",
   "/images/team/majd hawash.jpeg",
   "/images/team/Moataz habiballa.jpg",
   "/images/team/mohamed Nadaf.jpg",
   "/images/team/ola Shalabni.jpeg",
+  "/images/team/Ameer Irshed.jpeg",
 ];
 
 const socialLinks = [
-  { linkedin: "#", twitter: "#", email: "ameer@stoxacademy.com" },
-  { linkedin: "#", twitter: "#", email: "firas@stoxacademy.com" },
-  { linkedin: "#", twitter: "#", email: "majd@stoxacademy.com" },
-  { linkedin: "#", twitter: "#", email: "moataz@stoxacademy.com" },
-  { linkedin: "#", twitter: "#", email: "mohamed@stoxacademy.com" },
-  { linkedin: "#", twitter: "#", email: "ola@stoxacademy.com" },
+  { linkedin: "#", instagram: "#", email: "ameer@stoxacademy.com" },
+  { linkedin: "#", instagram: "#", email: "firas@stoxacademy.com" },
+  { linkedin: "#", instagram: "#", email: "majd@stoxacademy.com" },
+  { linkedin: "#", instagram: "#", email: "moataz@stoxacademy.com" },
+  { linkedin: "#", instagram: "#", email: "mohamed@stoxacademy.com" },
+  { linkedin: "#", instagram: "#", email: "ola@stoxacademy.com" },
 ];
 
 export function TeamSection() {
@@ -33,6 +33,7 @@ export function TeamSection() {
   }));
   const [currentIndex, setCurrentIndex] = React.useState(0);
   const [cardsToShow, setCardsToShow] = React.useState(3);
+  const [modalMember, setModalMember] = React.useState(null);
 
   React.useEffect(() => {
     const handleResize = () => {
@@ -66,6 +67,19 @@ export function TeamSection() {
     currentIndex,
     currentIndex + cardsToShow
   );
+
+  React.useEffect(() => {
+    if (!modalMember) return;
+    const handleEscape = (e) => {
+      if (e.key === "Escape") setModalMember(null);
+    };
+    document.addEventListener("keydown", handleEscape);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", handleEscape);
+      document.body.style.overflow = "";
+    };
+  }, [modalMember]);
 
   return (
     <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
@@ -134,21 +148,34 @@ export function TeamSection() {
                       {member.description}
                     </p>
 
+                    {/* See More - opens modal */}
+                    {member.moreDescription ? (
+                      <div className="mb-4">
+                        <button
+                          type="button"
+                          onClick={() => setModalMember(member)}
+                          className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                        >
+                          {t("team.seeMore")}
+                        </button>
+                      </div>
+                    ) : null}
+
                     {/* Social Links */}
                     <div className="flex justify-center gap-3 pt-4 border-t border-gray-100">
+                      <a
+                        href={member.social.instagram}
+                        className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-100 text-gray-600 hover:bg-blue-400 hover:text-white transition-colors duration-200"
+                        aria-label={`${member.name}'s Twitter`}
+                      >
+                        <FaInstagram className="w-5 h-5" />
+                      </a>
                       <a
                         href={member.social.linkedin}
                         className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-100 text-gray-600 hover:bg-blue-600 hover:text-white transition-colors duration-200"
                         aria-label={`${member.name}'s LinkedIn`}
                       >
                         <FaLinkedin className="w-5 h-5" />
-                      </a>
-                      <a
-                        href={member.social.twitter}
-                        className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-100 text-gray-600 hover:bg-blue-400 hover:text-white transition-colors duration-200"
-                        aria-label={`${member.name}'s Twitter`}
-                      >
-                        <FaTwitter className="w-5 h-5" />
                       </a>
                       <a
                         href={`mailto:${member.social.email}`}
@@ -181,6 +208,78 @@ export function TeamSection() {
           )}
         </div>
       </div>
+
+      {/* Team Member Modal */}
+      {modalMember && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+          onClick={() => setModalMember(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="modal-member-name"
+        >
+          <div
+            className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto bg-white rounded-2xl shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setModalMember(null)}
+              className="absolute top-4 right-4 z-10 w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200"
+              aria-label="Close"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="p-6 pt-12 text-center">
+              <div className="flex justify-center mb-4">
+                <div className="relative w-40 h-40 rounded-full overflow-hidden border-4 border-blue-100">
+                  <Image
+                    src={modalMember.avatar}
+                    alt={modalMember.name}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+              </div>
+              <h3 id="modal-member-name" className="text-2xl font-bold text-gray-900 mb-1">
+                {modalMember.name}
+              </h3>
+              <p className="text-blue-600 font-semibold mb-4">
+                {modalMember.position}
+              </p>
+
+              <p className="text-gray-600 text-sm leading-relaxed text-start">
+                {modalMember.moreDescription}
+              </p>
+
+              <div className="flex justify-center gap-3 mt-6 pt-4 border-t border-gray-100">
+              <a
+                  href={modalMember.social.instagram}
+                  className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-100 text-gray-600 hover:bg-blue-400 hover:text-white transition-colors duration-200"
+                  aria-label={`${modalMember.name}'s Twitter`}
+                >
+                  <FaInstagram className="w-5 h-5" />
+                </a>
+                <a
+                  href={modalMember.social.linkedin}
+                  className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-100 text-gray-600 hover:bg-blue-600 hover:text-white transition-colors duration-200"
+                  aria-label={`${modalMember.name}'s LinkedIn`}
+                >
+                  <FaLinkedin className="w-5 h-5" />
+                </a>
+                <a
+                  href={`mailto:${modalMember.social.email}`}
+                  className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-100 text-gray-600 hover:bg-green-600 hover:text-white transition-colors duration-200"
+                  aria-label={`Email ${modalMember.name}`}
+                >
+                  <FaEnvelope className="w-5 h-5" />
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

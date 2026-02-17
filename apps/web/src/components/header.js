@@ -1,14 +1,17 @@
 "use client";
 
 import React, { useState } from "react";
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from "next-intl";
 import { Menu, X, LogOut, User, ChevronDown, Settings } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { useRouter, Link } from "@/i18n/routing";
 import Image from "next/image";
 import { LanguageSwitcher } from "./LanguageSwitcher";
+
 export function Header() {
   const t = useTranslations();
+  const locale = useLocale();
+  const logoSrc = locale === "ar" ? "/logo/logo-ar.jpg" : "/logo/logo-en.jpg";
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const { user, signOut, isAuthenticated, loading } = useAuthStore();
@@ -26,8 +29,15 @@ export function Header() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center">
-              <Link href="/" className="text-2xl font-bold text-blue-600">
-                {t('header.brand')}
+              <Link href="/" className="flex items-center shrink-0">
+                <Image
+                  src={logoSrc}
+                  alt={t("header.brand")}
+                  width={90}
+                  height={30}
+                  className="w-auto object-contain object-left"
+                  priority
+                />
               </Link>
             </div>
             <nav className="hidden md:flex items-center gap-4">

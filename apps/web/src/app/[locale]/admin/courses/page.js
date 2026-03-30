@@ -4,11 +4,11 @@ export const dynamic = 'force-dynamic';
 
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Edit, Trash2, Plus, X } from 'lucide-react';
+import { Edit, Trash2, Plus, X, FileText, Upload } from 'lucide-react';
 import toast from 'react-hot-toast';
 import DataTable from '@/components/admin/DataTable';
 import Modal from '@/components/admin/Modal';
-import { createCourse, updateCourse, deleteCourse } from '@/lib/api/adminApi';
+import { createCourse, updateCourse, deleteCourse, uploadNotes } from '@/lib/api/adminApi';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { courseService } from '@/lib/courseService';
 
@@ -82,6 +82,12 @@ export default function CoursesPage() {
             console.error('Failed to fetch lessons:', error);
         }
 
+        // Normalize lessons from nested API response (each lesson already has sub_lessons array)
+        const normalizedLessons = courseLessons.map(lesson => ({
+            ...lesson,
+            sub_lessons: lesson.sub_lessons || [],
+        }));
+
         setFormData({
             title: course.title,
             description: course.description,
@@ -95,7 +101,7 @@ export default function CoursesPage() {
             features: Array.isArray(course.features) ? course.features.join('\n') : '',
             requirements: Array.isArray(course.requirements) ? course.requirements.join('\n') : '',
             what_you_learn: Array.isArray(course.what_you_learn) ? course.what_you_learn.join('\n') : '',
-            lessons: courseLessons,
+            lessons: normalizedLessons,
         });
         setIsModalOpen(true);
     };
@@ -190,6 +196,7 @@ export default function CoursesPage() {
                     duration: '',
                     video_url: '',
                     is_preview: false,
+                    sub_lessons: [],
                 }
             ]
         });
@@ -207,6 +214,48 @@ export default function CoursesPage() {
     const removeLesson = (index) => {
         const updatedLessons = formData.lessons.filter((_, i) => i !== index);
         setFormData({ ...formData, lessons: updatedLessons });
+    };
+
+    // Sub-lesson management
+    const addSubLesson = (lessonIndex) => {
+        const updatedLessons = [...formData.lessons];
+        updatedLessons[lessonIndex] = {
+            ...updatedLessons[lessonIndex],
+            sub_lessons: [
+                ...(updatedLessons[lessonIndex].sub_lessons || []),
+                { title: '', duration: '', video_url: '', notes_url: '' }
+            ]
+        };
+        setFormData({ ...formData, lessons: updatedLessons });
+    };
+
+    const updateSubLesson = (lessonIndex, subIndex, field, value) => {
+        const updatedLessons = [...formData.lessons];
+        const updatedSubs = [...(updatedLessons[lessonIndex].sub_lessons || [])];
+        updatedSubs[subIndex] = { ...updatedSubs[subIndex], [field]: value };
+        updatedLessons[lessonIndex] = { ...updatedLessons[lessonIndex], sub_lessons: updatedSubs };
+        setFormData({ ...formData, lessons: updatedLessons });
+    };
+
+    const removeSubLesson = (lessonIndex, subIndex) => {
+        const updatedLessons = [...formData.lessons];
+        updatedLessons[lessonIndex] = {
+            ...updatedLessons[lessonIndex],
+            sub_lessons: (updatedLessons[lessonIndex].sub_lessons || []).filter((_, i) => i !== subIndex)
+        };
+        setFormData({ ...formData, lessons: updatedLessons });
+    };
+
+    const handleNotesUpload = async (lessonIndex, subIndex, file) => {
+        if (!file) return;
+        try {
+            toast.loading('Uploading notes...', { id: `upload-${lessonIndex}-${subIndex}` });
+            const result = await uploadNotes(file);
+            updateSubLesson(lessonIndex, subIndex, 'notes_url', result.url);
+            toast.success('Notes uploaded', { id: `upload-${lessonIndex}-${subIndex}` });
+        } catch (err) {
+            toast.error('Failed to upload notes', { id: `upload-${lessonIndex}-${subIndex}` });
+        }
     };
 
     // Helper function to translate level values for display
@@ -472,9 +521,10 @@ export default function CoursesPage() {
                                 <p className="text-gray-500 text-sm">{t('noLessonsAdded')}</p>
                             </div>
                         ) : (
-                            <div className="space-y-4 max-h-96 overflow-y-auto">
+                            <div className="space-y-4 max-h-[600px] overflow-y-auto">
                                 {formData.lessons.map((lesson, index) => (
                                     <div key={index} className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                                        {/* Lesson header */}
                                         <div className="flex items-center justify-between mb-3">
                                             <h4 className="font-medium text-gray-900">{t('lesson', { number: index + 1 })}</h4>
                                             <button
@@ -505,7 +555,7 @@ export default function CoursesPage() {
                                             <div className="grid grid-cols-2 gap-3">
                                                 <div>
                                                     <label className="block text-xs font-medium text-gray-600 mb-1">
-                                                        {t('lessonDuration')} *
+                                                        {t('lessonDuration')}
                                                     </label>
                                                     <input
                                                         type="text"
@@ -513,7 +563,6 @@ export default function CoursesPage() {
                                                         onChange={(e) => updateLesson(index, 'duration', e.target.value)}
                                                         className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                                         placeholder="10:30"
-                                                        required
                                                     />
                                                 </div>
 
@@ -521,7 +570,7 @@ export default function CoursesPage() {
                                                     <label className="flex items-center gap-2 cursor-pointer">
                                                         <input
                                                             type="checkbox"
-                                                            checked={lesson.is_preview}
+                                                            checked={lesson.is_preview || false}
                                                             onChange={(e) => updateLesson(index, 'is_preview', e.target.checked)}
                                                             className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                                                         />
@@ -532,7 +581,7 @@ export default function CoursesPage() {
 
                                             <div>
                                                 <label className="block text-xs font-medium text-gray-600 mb-1">
-                                                    {t('videoUrl')} *
+                                                    {t('videoUrl')} <span className="text-gray-400">(optional if sub-lessons exist)</span>
                                                 </label>
                                                 <input
                                                     type="url"
@@ -540,8 +589,93 @@ export default function CoursesPage() {
                                                     onChange={(e) => updateLesson(index, 'video_url', e.target.value)}
                                                     className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                                     placeholder="https://..."
-                                                    required
                                                 />
+                                            </div>
+
+                                            {/* Sub-lessons section */}
+                                            <div className="border-t pt-3 mt-3">
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <span className="text-xs font-semibold text-gray-700 uppercase tracking-wide">
+                                                        Sub-lessons ({(lesson.sub_lessons || []).length})
+                                                    </span>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => addSubLesson(index)}
+                                                        className="flex items-center gap-1 px-2 py-1 bg-indigo-500 text-white text-xs rounded hover:bg-indigo-600 transition-colors"
+                                                    >
+                                                        <Plus size={12} />
+                                                        Add Sub-lesson
+                                                    </button>
+                                                </div>
+
+                                                {(lesson.sub_lessons || []).length > 0 && (
+                                                    <div className="space-y-3 pl-3 border-l-2 border-indigo-200">
+                                                        {(lesson.sub_lessons || []).map((sub, subIndex) => (
+                                                            <div key={subIndex} className="p-3 bg-white rounded-lg border border-indigo-100">
+                                                                <div className="flex items-center justify-between mb-2">
+                                                                    <span className="text-xs font-medium text-indigo-700">
+                                                                        Sub-lesson {subIndex + 1}
+                                                                    </span>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => removeSubLesson(index, subIndex)}
+                                                                        className="p-0.5 text-red-500 hover:bg-red-50 rounded"
+                                                                    >
+                                                                        <X size={14} />
+                                                                    </button>
+                                                                </div>
+                                                                <div className="space-y-2">
+                                                                    <input
+                                                                        type="text"
+                                                                        required
+                                                                        value={sub.title || ''}
+                                                                        onChange={(e) => updateSubLesson(index, subIndex, 'title', e.target.value)}
+                                                                        className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                                                        placeholder="Sub-lesson title *"
+                                                                    />
+                                                                    <input
+                                                                        type="text"
+                                                                        value={sub.duration || ''}
+                                                                        onChange={(e) => updateSubLesson(index, subIndex, 'duration', e.target.value)}
+                                                                        className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                                                        placeholder="Duration (e.g. 10:30)"
+                                                                    />
+                                                                    <input
+                                                                        type="url"
+                                                                        value={sub.video_url || ''}
+                                                                        onChange={(e) => updateSubLesson(index, subIndex, 'video_url', e.target.value)}
+                                                                        className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                                                        placeholder="Video URL (optional)"
+                                                                    />
+                                                                    {/* Notes upload */}
+                                                                    <div className="flex items-center gap-2">
+                                                                        <label className="flex items-center gap-1.5 cursor-pointer px-2 py-1.5 border border-gray-300 rounded text-xs text-gray-600 hover:bg-gray-50 transition-colors">
+                                                                            <Upload size={12} />
+                                                                            {sub.notes_url ? 'Replace Notes' : 'Upload Notes (.docx/.pdf)'}
+                                                                            <input
+                                                                                type="file"
+                                                                                accept=".docx,.doc,.pdf"
+                                                                                className="hidden"
+                                                                                onChange={(e) => handleNotesUpload(index, subIndex, e.target.files?.[0])}
+                                                                            />
+                                                                        </label>
+                                                                        {sub.notes_url && (
+                                                                            <a
+                                                                                href={sub.notes_url}
+                                                                                target="_blank"
+                                                                                rel="noopener noreferrer"
+                                                                                className="flex items-center gap-1 text-xs text-green-600 hover:underline"
+                                                                            >
+                                                                                <FileText size={12} />
+                                                                                View Notes
+                                                                            </a>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     </div>

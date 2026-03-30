@@ -1,6 +1,38 @@
 import { Request, Response } from "express";
 import { supabaseAdmin } from "../config/supabase";
 
+/**
+ * Nests sub-lessons inside their parent lessons.
+ * Returns only top-level lessons with a `sub_lessons` array.
+ */
+function nestLessons(lessons: any[]): any[] {
+    const topLevel = lessons.filter((l) => !l.parent_lesson_id);
+    const subLessons = lessons.filter((l) => l.parent_lesson_id);
+
+    return topLevel.map((parent) => ({
+        ...parent,
+        sub_lessons: subLessons
+            .filter((s) => s.parent_lesson_id === parent.id)
+            .sort((a, b) => a.order_index - b.order_index),
+    }));
+}
+
+/**
+ * Returns all trackable lesson IDs: top-level lessons that have a video,
+ * plus all sub-lessons (which may have video and/or notes).
+ */
+function getTrackableLessonIds(lessons: any[]): string[] {
+    const ids: string[] = [];
+    for (const lesson of lessons) {
+        if (!lesson.parent_lesson_id && lesson.video_url) {
+            ids.push(lesson.id);
+        } else if (lesson.parent_lesson_id) {
+            ids.push(lesson.id);
+        }
+    }
+    return ids;
+}
+
 export const getAllCourses = async (req: Request, res: Response) => {
   try {
     const { level, sortBy } = req.query;
@@ -82,8 +114,8 @@ export const getCourseById = async (req: Request, res: Response) => {
       return res.status(404).json({ error: "Course not found" });
     }
 
-    // Get lessons for this course
-    const { data: lessons, error: lessonsError } = await supabaseAdmin
+    // Get all lessons and sub-lessons for this course
+    const { data: allLessons, error: lessonsError } = await supabaseAdmin
       .from("lessons")
       .select("*")
       .eq("course_id", id)
@@ -95,7 +127,7 @@ export const getCourseById = async (req: Request, res: Response) => {
 
     // Check if user has purchased this course and get lesson progress
     let isPurchased = false;
-    let lessonsWithProgress = lessons || [];
+    let flatLessons = allLessons || [];
 
     if (token) {
       const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
@@ -110,24 +142,23 @@ export const getCourseById = async (req: Request, res: Response) => {
 
         isPurchased = !!purchase;
 
-        // Get user's progress for these lessons
-        const lessonIds = lessons?.map(l => l.id) || [];
-        if (lessonIds.length > 0) {
+        // Track progress for top-level lessons with video and all sub-lessons
+        const trackableIds = getTrackableLessonIds(flatLessons);
+        if (trackableIds.length > 0) {
           const { data: progress } = await supabaseAdmin
             .from("user_lesson_progress")
             .select("*")
             .eq("user_id", userData.user.id)
-            .in("lesson_id", lessonIds);
+            .in("lesson_id", trackableIds);
 
-          // Merge progress data with lessons
-          lessonsWithProgress = lessons?.map(lesson => {
+          flatLessons = flatLessons.map(lesson => {
             const lessonProgress = progress?.find(p => p.lesson_id === lesson.id);
             return {
               ...lesson,
               completed: lessonProgress?.completed || false,
               lastWatchedAt: lessonProgress?.last_watched_at || null,
             };
-          }) || [];
+          });
         }
       }
     }
@@ -136,7 +167,7 @@ export const getCourseById = async (req: Request, res: Response) => {
       course: {
         ...course,
         isPurchased,
-        lessons: lessonsWithProgress,
+        lessons: nestLessons(flatLessons),
       },
     });
   } catch (error: any) {
@@ -277,21 +308,23 @@ export const getUserCourses = async (req: Request, res: Response) => {
       (userCourses || []).map(async (userCourse) => {
         const courseId = userCourse.course_id;
 
-        // Get total lessons for this course
-        const { data: lessons, error: lessonsError } = await supabaseAdmin
+        // Get all lessons (including sub-lessons) for this course
+        const { data: lessons } = await supabaseAdmin
           .from("lessons")
-          .select("id")
+          .select("id, parent_lesson_id, video_url")
           .eq("course_id", courseId);
 
-        const totalLessons = lessons?.length || 0;
+        // Only track top-level lessons with video and all sub-lessons
+        const trackableIds = getTrackableLessonIds(lessons || []);
+        const totalLessons = trackableIds.length;
 
-        // Get completed lessons count for this user
-        const { data: completedLessons, error: progressError } = await supabaseAdmin
+        // Get completed trackable lessons count for this user
+        const { data: completedLessons } = await supabaseAdmin
           .from("user_lesson_progress")
           .select("lesson_id")
           .eq("user_id", userData.user.id)
           .eq("completed", true)
-          .in("lesson_id", lessons?.map(l => l.id) || []);
+          .in("lesson_id", trackableIds.length > 0 ? trackableIds : ["__none__"]);
 
         const completedCount = completedLessons?.length || 0;
         const progressPercentage = totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0;
@@ -369,8 +402,8 @@ export const getCourseLessons = async (req: Request, res: Response) => {
       return res.status(401).json({ error: "Invalid token" });
     }
 
-    // Get course lessons
-    const { data: lessons, error: lessonsError } = await supabaseAdmin
+    // Get all lessons and sub-lessons for this course
+    const { data: allLessons, error: lessonsError } = await supabaseAdmin
       .from("lessons")
       .select("*")
       .eq("course_id", id)
@@ -381,16 +414,15 @@ export const getCourseLessons = async (req: Request, res: Response) => {
       return res.status(400).json({ error: lessonsError.message });
     }
 
-    // Get user's progress for these lessons
-    const lessonIds = lessons?.map(l => l.id) || [];
+    // Get progress for trackable lessons (top-level with video + all sub-lessons)
+    const trackableIds = getTrackableLessonIds(allLessons || []);
     const { data: progress } = await supabaseAdmin
       .from("user_lesson_progress")
       .select("*")
       .eq("user_id", userData.user.id)
-      .in("lesson_id", lessonIds);
+      .in("lesson_id", trackableIds.length > 0 ? trackableIds : ["__none__"]);
 
-    // Merge progress data with lessons
-    const lessonsWithProgress = lessons?.map(lesson => {
+    const flatWithProgress = (allLessons || []).map(lesson => {
       const lessonProgress = progress?.find(p => p.lesson_id === lesson.id);
       return {
         ...lesson,
@@ -399,7 +431,7 @@ export const getCourseLessons = async (req: Request, res: Response) => {
       };
     });
 
-    return res.status(200).json({ lessons: lessonsWithProgress });
+    return res.status(200).json({ lessons: nestLessons(flatWithProgress) });
   } catch (error: any) {
     return res.status(500).json({ error: error.message });
   }
@@ -444,28 +476,27 @@ export const getCourseProgress = async (req: Request, res: Response) => {
       return res.status(404).json({ error: "Course not found" });
     }
 
-    // Get all lessons for this course
-    const { data: lessons } = await supabaseAdmin
+    // Get all lessons (including sub-lessons) for this course
+    const { data: allLessons } = await supabaseAdmin
       .from("lessons")
       .select("*")
       .eq("course_id", id)
       .order("order_index", { ascending: true });
 
-    const totalLessons = lessons?.length || 0;
+    const trackableIds = getTrackableLessonIds(allLessons || []);
+    const totalLessons = trackableIds.length;
 
-    // Get user's progress
-    const lessonIds = lessons?.map(l => l.id) || [];
+    // Get user's progress for trackable lessons
     const { data: progress } = await supabaseAdmin
       .from("user_lesson_progress")
       .select("*")
       .eq("user_id", userData.user.id)
-      .in("lesson_id", lessonIds);
+      .in("lesson_id", trackableIds.length > 0 ? trackableIds : ["__none__"]);
 
     const completedLessons = progress?.filter(p => p.completed).length || 0;
     const progressPercentage = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
 
-    // Merge progress with lessons
-    const lessonsWithProgress = lessons?.map(lesson => {
+    const flatWithProgress = (allLessons || []).map(lesson => {
       const lessonProgress = progress?.find(p => p.lesson_id === lesson.id);
       return {
         ...lesson,
@@ -482,7 +513,7 @@ export const getCourseProgress = async (req: Request, res: Response) => {
         remainingLessons: totalLessons - completedLessons,
         progressPercentage,
       },
-      lessons: lessonsWithProgress,
+      lessons: nestLessons(flatWithProgress),
     });
   } catch (error: any) {
     return res.status(500).json({ error: error.message });

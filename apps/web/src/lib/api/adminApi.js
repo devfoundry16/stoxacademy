@@ -58,6 +58,18 @@ export const deleteCourse = async (id) => {
     return response.data;
 };
 
+export const uploadNotes = async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    // apiClient defaults to Content-Type: application/json. For FormData, axios would
+    // otherwise stringify the body (see axios transformRequest). Clear the header so
+    // the real multipart body is sent and the browser sets boundary.
+    const response = await apiClient.post(`/api/admin/upload/notes`, formData, {
+        headers: { 'Content-Type': false },
+    });
+    return response.data;
+};
+
 // ==================== Live Session Management ====================
 
 export const getLiveSessions = async (params = {}) => {

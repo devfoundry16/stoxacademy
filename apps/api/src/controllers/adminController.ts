@@ -3,6 +3,7 @@ import { supabaseAdmin } from "../config/supabase";
 import { randomUUID } from "crypto";
 import * as XLSX from "xlsx";
 import { createRoom, getRoomMeetingStatus, isDailyConfigured } from "../services/dailyService";
+import multer from "multer";
 
 // ==================== Dashboard Statistics ====================
 
@@ -354,28 +355,61 @@ export const createCourse = async (req: Request, res: Response) => {
 
         // Create lessons if provided
         if (lessons.length > 0) {
-            const lessonsToInsert = lessons.map((lesson: any, index: number) => ({
+            const topLevelLessons = lessons.map((lesson: any, index: number) => ({
                 id: randomUUID(),
                 course_id: courseId,
-                course_title: title,
                 title: lesson.title || `Lesson ${index + 1}`,
                 duration: lesson.duration || "0:00",
                 video_url: lesson.video_url || null,
+                notes_url: lesson.notes_url || null,
                 is_preview: lesson.is_preview || false,
                 order_index: lesson.order_index || index + 1,
+                parent_lesson_id: null,
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString(),
+                _sub_lessons: lesson.sub_lessons || [],
             }));
 
             const { error: lessonsError } = await supabaseAdmin
                 .from("lessons")
-                .insert(lessonsToInsert);
+                .insert(topLevelLessons.map(({ _sub_lessons, ...l }) => l));
 
             if (lessonsError) {
                 console.log("Error creating lessons:", lessonsError);
-                // Rollback: delete the course if lessons creation fails
                 await supabaseAdmin.from("courses").delete().eq("id", courseId);
                 return res.status(400).json({ error: `Course created but lessons failed: ${lessonsError.message}` });
+            }
+
+            // Insert sub-lessons for each parent lesson
+            const subLessonsToInsert: any[] = [];
+            topLevelLessons.forEach((parent) => {
+                (parent._sub_lessons as any[]).forEach((sub: any, subIndex: number) => {
+                    subLessonsToInsert.push({
+                        id: randomUUID(),
+                        course_id: courseId,
+                        parent_lesson_id: parent.id,
+                        title: sub.title || `Sub-lesson ${subIndex + 1}`,
+                        duration: sub.duration || "0:00",
+                        video_url: sub.video_url || null,
+                        notes_url: sub.notes_url || null,
+                        is_preview: false,
+                        order_index: sub.order_index || subIndex + 1,
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString(),
+                    });
+                });
+            });
+
+            if (subLessonsToInsert.length > 0) {
+                const { error: subError } = await supabaseAdmin
+                    .from("lessons")
+                    .insert(subLessonsToInsert);
+
+                if (subError) {
+                    console.log("Error creating sub-lessons:", subError);
+                    await supabaseAdmin.from("courses").delete().eq("id", courseId);
+                    return res.status(400).json({ error: `Course created but sub-lessons failed: ${subError.message}` });
+                }
             }
         }
 
@@ -428,27 +462,62 @@ export const updateCourse = async (req: Request, res: Response) => {
                 return res.status(400).json({ error: `Failed to delete old lessons: ${deleteError.message}` });
             }
 
-            // Insert new lessons if any
-            const lessonsToInsert = lessons.map((lesson: any, index: number) => ({
+            // Insert new top-level lessons
+            const topLevelLessons = lessons.map((lesson: any, index: number) => ({
                 id: randomUUID(),
                 course_id: id,
-                course_title: course.title,
                 title: lesson.title || `Lesson ${index + 1}`,
                 duration: lesson.duration || "0:00",
                 video_url: lesson.video_url || null,
+                notes_url: lesson.notes_url || null,
                 is_preview: lesson.is_preview || false,
                 order_index: lesson.order_index || index + 1,
+                parent_lesson_id: null,
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString(),
+                _sub_lessons: lesson.sub_lessons || [],
             }));
 
-            const { error: lessonsError } = await supabaseAdmin
-                .from("lessons")
-                .insert(lessonsToInsert);
+            if (topLevelLessons.length > 0) {
+                const { error: lessonsError } = await supabaseAdmin
+                    .from("lessons")
+                    .insert(topLevelLessons.map(({ _sub_lessons, ...l }) => l));
 
-            if (lessonsError) {
-                console.log("Error creating lessons:", lessonsError);
-                return res.status(400).json({ error: `Course updated but lessons failed: ${lessonsError.message}` });
+                if (lessonsError) {
+                    console.log("Error creating lessons:", lessonsError);
+                    return res.status(400).json({ error: `Course updated but lessons failed: ${lessonsError.message}` });
+                }
+            }
+
+            // Insert sub-lessons
+            const subLessonsToInsert: any[] = [];
+            topLevelLessons.forEach((parent) => {
+                (parent._sub_lessons as any[]).forEach((sub: any, subIndex: number) => {
+                    subLessonsToInsert.push({
+                        id: randomUUID(),
+                        course_id: id,
+                        parent_lesson_id: parent.id,
+                        title: sub.title || `Sub-lesson ${subIndex + 1}`,
+                        duration: sub.duration || "0:00",
+                        video_url: sub.video_url || null,
+                        notes_url: sub.notes_url || null,
+                        is_preview: false,
+                        order_index: sub.order_index || subIndex + 1,
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString(),
+                    });
+                });
+            });
+
+            if (subLessonsToInsert.length > 0) {
+                const { error: subError } = await supabaseAdmin
+                    .from("lessons")
+                    .insert(subLessonsToInsert);
+
+                if (subError) {
+                    console.log("Error creating sub-lessons:", subError);
+                    return res.status(400).json({ error: `Course updated but sub-lessons failed: ${subError.message}` });
+                }
             }
         }
 
@@ -472,6 +541,57 @@ export const deleteCourse = async (req: Request, res: Response) => {
         }
 
         return res.status(200).json({ message: "Course deleted successfully" });
+    } catch (error: any) {
+        return res.status(500).json({ error: error.message });
+    }
+};
+
+// ==================== Notes File Upload ====================
+
+export const uploadStorage = multer({ storage: multer.memoryStorage() });
+
+export const uploadNotes = async (req: Request, res: Response) => {
+    try {
+        console.log("Uploading notes...");
+        if (!req.file) {
+            console.log("No file provided");
+            return res.status(400).json({ error: "No file provided" });
+        }
+
+        const file = req.file;
+        const allowedTypes = [
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "application/msword",
+            "application/pdf",
+        ];
+
+        if (!allowedTypes.includes(file.mimetype)) {
+            console.log("Invalid file type");
+            return res.status(400).json({ error: "Only .docx, .doc, and .pdf files are allowed" });
+        }
+
+        console.log("File type is valid");
+
+        const ext = file.originalname.split(".").pop() || "docx";
+        const filename = `${randomUUID()}.${ext}`;
+
+        const { error: uploadError } = await supabaseAdmin.storage
+            .from("course-notes")
+            .upload(filename, file.buffer, {
+                contentType: file.mimetype,
+                upsert: false,
+            });
+
+        if (uploadError) {
+            console.error("Supabase storage upload error:", uploadError);
+            return res.status(400).json({ error: `Storage upload failed: ${uploadError.message}` });
+        }
+
+        const { data: publicUrlData } = supabaseAdmin.storage
+            .from("course-notes")
+            .getPublicUrl(filename);
+
+        return res.status(200).json({ url: publicUrlData.publicUrl });
     } catch (error: any) {
         return res.status(500).json({ error: error.message });
     }

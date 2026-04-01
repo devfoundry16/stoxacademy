@@ -4,11 +4,11 @@ export const dynamic = 'force-dynamic';
 
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Edit, Trash2, Plus, X, FileText, Upload } from 'lucide-react';
+import { Edit, Trash2, Plus, X, FileText, Upload, ChevronDown, ChevronRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 import DataTable from '@/components/admin/DataTable';
 import Modal from '@/components/admin/Modal';
-import { createCourse, updateCourse, deleteCourse, uploadNotes } from '@/lib/api/adminApi';
+import { createCourse, updateCourse, deleteCourse, uploadNotes, uploadThumbnail } from '@/lib/api/adminApi';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { courseService } from '@/lib/courseService';
 
@@ -22,6 +22,9 @@ export default function CoursesPage() {
     const [selectedCourse, setSelectedCourse] = useState(null);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [courseToDelete, setCourseToDelete] = useState(null);
+    // Track which lessons/sub-lessons are expanded in the form
+    const [expandedLessons, setExpandedLessons] = useState(new Set());
+    const [expandedSubLessons, setExpandedSubLessons] = useState({});
     const [formData, setFormData] = useState({
         title: '',
         description: '',
@@ -67,6 +70,8 @@ export default function CoursesPage() {
             what_you_learn: '', // Textarea string
             lessons: [],
         });
+        setExpandedLessons(new Set());
+        setExpandedSubLessons({});
         setIsModalOpen(true);
     };
 
@@ -103,6 +108,8 @@ export default function CoursesPage() {
             what_you_learn: Array.isArray(course.what_you_learn) ? course.what_you_learn.join('\n') : '',
             lessons: normalizedLessons,
         });
+        setExpandedLessons(new Set());
+        setExpandedSubLessons({});
         setIsModalOpen(true);
     };
 
@@ -185,8 +192,25 @@ export default function CoursesPage() {
         setFilteredCourses(filtered);
     };
 
+    const toggleLesson = (index) => {
+        setExpandedLessons((prev) => {
+            const next = new Set(prev);
+            next.has(index) ? next.delete(index) : next.add(index);
+            return next;
+        });
+    };
+
+    const toggleSubLesson = (lessonIndex, subIndex) => {
+        setExpandedSubLessons((prev) => {
+            const lessonSet = new Set(prev[lessonIndex] || []);
+            lessonSet.has(subIndex) ? lessonSet.delete(subIndex) : lessonSet.add(subIndex);
+            return { ...prev, [lessonIndex]: lessonSet };
+        });
+    };
+
     // Lesson management functions
     const addLesson = () => {
+        const newIndex = formData.lessons.length;
         setFormData({
             ...formData,
             lessons: [
@@ -200,6 +224,8 @@ export default function CoursesPage() {
                 }
             ]
         });
+        // Auto-expand the new lesson
+        setExpandedLessons((prev) => new Set([...prev, newIndex]));
     };
 
     const updateLesson = (index, field, value) => {
@@ -214,11 +240,24 @@ export default function CoursesPage() {
     const removeLesson = (index) => {
         const updatedLessons = formData.lessons.filter((_, i) => i !== index);
         setFormData({ ...formData, lessons: updatedLessons });
+        setExpandedLessons((prev) => {
+            const next = new Set([...prev].filter((i) => i !== index).map((i) => (i > index ? i - 1 : i)));
+            return next;
+        });
+        setExpandedSubLessons((prev) => {
+            const next = {};
+            Object.entries(prev).forEach(([k, v]) => {
+                const ki = Number(k);
+                if (ki !== index) next[ki > index ? ki - 1 : ki] = v;
+            });
+            return next;
+        });
     };
 
     // Sub-lesson management
     const addSubLesson = (lessonIndex) => {
         const updatedLessons = [...formData.lessons];
+        const newSubIndex = (updatedLessons[lessonIndex].sub_lessons || []).length;
         updatedLessons[lessonIndex] = {
             ...updatedLessons[lessonIndex],
             sub_lessons: [
@@ -227,6 +266,12 @@ export default function CoursesPage() {
             ]
         };
         setFormData({ ...formData, lessons: updatedLessons });
+        // Auto-expand the new sub-lesson
+        setExpandedSubLessons((prev) => {
+            const lessonSet = new Set(prev[lessonIndex] || []);
+            lessonSet.add(newSubIndex);
+            return { ...prev, [lessonIndex]: lessonSet };
+        });
     };
 
     const updateSubLesson = (lessonIndex, subIndex, field, value) => {
@@ -244,6 +289,10 @@ export default function CoursesPage() {
             sub_lessons: (updatedLessons[lessonIndex].sub_lessons || []).filter((_, i) => i !== subIndex)
         };
         setFormData({ ...formData, lessons: updatedLessons });
+        setExpandedSubLessons((prev) => {
+            const lessonSet = new Set([...(prev[lessonIndex] || [])].filter((i) => i !== subIndex).map((i) => (i > subIndex ? i - 1 : i)));
+            return { ...prev, [lessonIndex]: lessonSet };
+        });
     };
 
     const handleNotesUpload = async (lessonIndex, subIndex, file) => {
@@ -255,6 +304,18 @@ export default function CoursesPage() {
             toast.success('Notes uploaded', { id: `upload-${lessonIndex}-${subIndex}` });
         } catch (err) {
             toast.error('Failed to upload notes', { id: `upload-${lessonIndex}-${subIndex}` });
+        }
+    };
+
+    const handleThumbnailUpload = async (file) => {
+        if (!file) return;
+        try {
+            toast.loading('Uploading thumbnail...', { id: 'thumbnail-upload' });
+            const result = await uploadThumbnail(file);
+            setFormData((prev) => ({ ...prev, thumbnail: result.url }));
+            toast.success('Thumbnail uploaded', { id: 'thumbnail-upload' });
+        } catch (err) {
+            toast.error('Failed to upload thumbnail', { id: 'thumbnail-upload' });
         }
     };
 
@@ -462,13 +523,32 @@ export default function CoursesPage() {
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                             {t('thumbnailUrl')}
                         </label>
-                        <input
-                            type="url"
-                            value={formData.thumbnail}
-                            onChange={(e) => setFormData({ ...formData, thumbnail: e.target.value })}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="https://..."
-                        />
+                        <label className="flex items-center gap-2 cursor-pointer w-fit px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-600 hover:bg-gray-50 transition-colors">
+                            <Upload size={15} />
+                            {formData.thumbnail ? 'Replace Thumbnail' : 'Upload Thumbnail'}
+                            <input
+                                type="file"
+                                accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
+                                className="hidden"
+                                onChange={(e) => handleThumbnailUpload(e.target.files?.[0])}
+                            />
+                        </label>
+                        {formData.thumbnail && (
+                            <div className="mt-2 relative w-40 h-24 rounded-lg overflow-hidden border border-gray-200">
+                                <img
+                                    src={formData.thumbnail}
+                                    alt="Thumbnail preview"
+                                    className="w-full h-full object-cover"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setFormData((prev) => ({ ...prev, thumbnail: '' }))}
+                                    className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-0.5 hover:bg-black/70"
+                                >
+                                    <X size={12} />
+                                </button>
+                            </div>
+                        )}
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
@@ -521,165 +601,205 @@ export default function CoursesPage() {
                                 <p className="text-gray-500 text-sm">{t('noLessonsAdded')}</p>
                             </div>
                         ) : (
-                            <div className="space-y-4 max-h-[600px] overflow-y-auto">
-                                {formData.lessons.map((lesson, index) => (
-                                    <div key={index} className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                                        {/* Lesson header */}
-                                        <div className="flex items-center justify-between mb-3">
-                                            <h4 className="font-medium text-gray-900">{t('lesson', { number: index + 1 })}</h4>
-                                            <button
-                                                type="button"
-                                                onClick={() => removeLesson(index)}
-                                                className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
-                                                title={t('removeLesson')}
+                            <div className="space-y-3 max-h-[600px] overflow-y-auto pr-1">
+                                {formData.lessons.map((lesson, index) => {
+                                    const isLessonOpen = expandedLessons.has(index);
+                                    return (
+                                        <div key={index} className="rounded-lg border border-gray-200 overflow-hidden">
+                                            {/* Lesson collapsible header */}
+                                            <div
+                                                role="button"
+                                                tabIndex={0}
+                                                onClick={() => toggleLesson(index)}
+                                                onKeyDown={(e) => e.key === 'Enter' && toggleLesson(index)}
+                                                className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer select-none"
                                             >
-                                                <X size={18} />
-                                            </button>
-                                        </div>
-
-                                        <div className="space-y-3">
-                                            <div>
-                                                <label className="block text-xs font-medium text-gray-600 mb-1">
-                                                    {t('lessonTitle')} *
-                                                </label>
-                                                <input
-                                                    type="text"
-                                                    required
-                                                    value={lesson.title}
-                                                    onChange={(e) => updateLesson(index, 'title', e.target.value)}
-                                                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                                    placeholder={t('lessonTitle')}
-                                                />
-                                            </div>
-
-                                            <div className="grid grid-cols-2 gap-3">
-                                                <div>
-                                                    <label className="block text-xs font-medium text-gray-600 mb-1">
-                                                        {t('lessonDuration')}
-                                                    </label>
-                                                    <input
-                                                        type="text"
-                                                        value={lesson.duration || ''}
-                                                        onChange={(e) => updateLesson(index, 'duration', e.target.value)}
-                                                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                                        placeholder="10:30"
-                                                    />
-                                                </div>
-
-                                                <div className="flex items-end">
-                                                    <label className="flex items-center gap-2 cursor-pointer">
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={lesson.is_preview || false}
-                                                            onChange={(e) => updateLesson(index, 'is_preview', e.target.checked)}
-                                                            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                                                        />
-                                                        <span className="text-xs font-medium text-gray-600">{t('previewLesson')}</span>
-                                                    </label>
-                                                </div>
-                                            </div>
-
-                                            <div>
-                                                <label className="block text-xs font-medium text-gray-600 mb-1">
-                                                    {t('videoUrl')} <span className="text-gray-400">(optional if sub-lessons exist)</span>
-                                                </label>
-                                                <input
-                                                    type="url"
-                                                    value={lesson.video_url || ''}
-                                                    onChange={(e) => updateLesson(index, 'video_url', e.target.value)}
-                                                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                                    placeholder="https://..."
-                                                />
-                                            </div>
-
-                                            {/* Sub-lessons section */}
-                                            <div className="border-t pt-3 mt-3">
-                                                <div className="flex items-center justify-between mb-2">
-                                                    <span className="text-xs font-semibold text-gray-700 uppercase tracking-wide">
-                                                        Sub-lessons ({(lesson.sub_lessons || []).length})
+                                                <div className="flex items-center gap-2">
+                                                    {isLessonOpen ? <ChevronDown size={16} className="text-gray-500 shrink-0" /> : <ChevronRight size={16} className="text-gray-500 shrink-0" />}
+                                                    <span className="font-medium text-gray-900 text-sm">
+                                                        {t('lesson', { number: index + 1 })}
+                                                        {lesson.title && <span className="ml-1 text-gray-500 font-normal">— {lesson.title}</span>}
                                                     </span>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => addSubLesson(index)}
-                                                        className="flex items-center gap-1 px-2 py-1 bg-indigo-500 text-white text-xs rounded hover:bg-indigo-600 transition-colors"
-                                                    >
-                                                        <Plus size={12} />
-                                                        Add Sub-lesson
-                                                    </button>
+                                                    {(lesson.sub_lessons || []).length > 0 && (
+                                                        <span className="text-xs text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded-full">
+                                                            {(lesson.sub_lessons || []).length} sub
+                                                        </span>
+                                                    )}
                                                 </div>
-
-                                                {(lesson.sub_lessons || []).length > 0 && (
-                                                    <div className="space-y-3 pl-3 border-l-2 border-indigo-200">
-                                                        {(lesson.sub_lessons || []).map((sub, subIndex) => (
-                                                            <div key={subIndex} className="p-3 bg-white rounded-lg border border-indigo-100">
-                                                                <div className="flex items-center justify-between mb-2">
-                                                                    <span className="text-xs font-medium text-indigo-700">
-                                                                        Sub-lesson {subIndex + 1}
-                                                                    </span>
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={() => removeSubLesson(index, subIndex)}
-                                                                        className="p-0.5 text-red-500 hover:bg-red-50 rounded"
-                                                                    >
-                                                                        <X size={14} />
-                                                                    </button>
-                                                                </div>
-                                                                <div className="space-y-2">
-                                                                    <input
-                                                                        type="text"
-                                                                        required
-                                                                        value={sub.title || ''}
-                                                                        onChange={(e) => updateSubLesson(index, subIndex, 'title', e.target.value)}
-                                                                        className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                                                                        placeholder="Sub-lesson title *"
-                                                                    />
-                                                                    <input
-                                                                        type="text"
-                                                                        value={sub.duration || ''}
-                                                                        onChange={(e) => updateSubLesson(index, subIndex, 'duration', e.target.value)}
-                                                                        className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                                                                        placeholder="Duration (e.g. 10:30)"
-                                                                    />
-                                                                    <input
-                                                                        type="url"
-                                                                        value={sub.video_url || ''}
-                                                                        onChange={(e) => updateSubLesson(index, subIndex, 'video_url', e.target.value)}
-                                                                        className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                                                                        placeholder="Video URL (optional)"
-                                                                    />
-                                                                    {/* Notes upload */}
-                                                                    <div className="flex items-center gap-2">
-                                                                        <label className="flex items-center gap-1.5 cursor-pointer px-2 py-1.5 border border-gray-300 rounded text-xs text-gray-600 hover:bg-gray-50 transition-colors">
-                                                                            <Upload size={12} />
-                                                                            {sub.notes_url ? 'Replace Notes' : 'Upload Notes (.docx/.pdf)'}
-                                                                            <input
-                                                                                type="file"
-                                                                                accept=".docx,.doc,.pdf"
-                                                                                className="hidden"
-                                                                                onChange={(e) => handleNotesUpload(index, subIndex, e.target.files?.[0])}
-                                                                            />
-                                                                        </label>
-                                                                        {sub.notes_url && (
-                                                                            <a
-                                                                                href={sub.notes_url}
-                                                                                target="_blank"
-                                                                                rel="noopener noreferrer"
-                                                                                className="flex items-center gap-1 text-xs text-green-600 hover:underline"
-                                                                            >
-                                                                                <FileText size={12} />
-                                                                                View Notes
-                                                                            </a>
-                                                                        )}
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                )}
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => { e.stopPropagation(); removeLesson(index); }}
+                                                    className="p-1 text-red-500 hover:bg-red-50 rounded transition-colors"
+                                                    title={t('removeLesson')}
+                                                >
+                                                    <X size={15} />
+                                                </button>
                                             </div>
+
+                                            {/* Lesson body */}
+                                            {isLessonOpen && (
+                                                <div className="p-4 bg-white space-y-3">
+                                                    <div>
+                                                        <label className="block text-xs font-medium text-gray-600 mb-1">
+                                                            {t('lessonTitle')} *
+                                                        </label>
+                                                        <input
+                                                            type="text"
+                                                            required
+                                                            value={lesson.title}
+                                                            onChange={(e) => updateLesson(index, 'title', e.target.value)}
+                                                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                            placeholder={t('lessonTitle')}
+                                                        />
+                                                    </div>
+
+                                                    <div className="grid grid-cols-2 gap-3">
+                                                        <div>
+                                                            <label className="block text-xs font-medium text-gray-600 mb-1">
+                                                                {t('lessonDuration')}
+                                                            </label>
+                                                            <input
+                                                                type="text"
+                                                                value={lesson.duration || ''}
+                                                                onChange={(e) => updateLesson(index, 'duration', e.target.value)}
+                                                                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                                placeholder="10:30"
+                                                            />
+                                                        </div>
+                                                        <div className="flex items-end">
+                                                            <label className="flex items-center gap-2 cursor-pointer">
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={lesson.is_preview || false}
+                                                                    onChange={(e) => updateLesson(index, 'is_preview', e.target.checked)}
+                                                                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                                                />
+                                                                <span className="text-xs font-medium text-gray-600">{t('previewLesson')}</span>
+                                                            </label>
+                                                        </div>
+                                                    </div>
+
+                                                    <div>
+                                                        <label className="block text-xs font-medium text-gray-600 mb-1">
+                                                            {t('videoUrl')} <span className="text-gray-400">(optional if sub-lessons exist)</span>
+                                                        </label>
+                                                        <input
+                                                            type="url"
+                                                            value={lesson.video_url || ''}
+                                                            onChange={(e) => updateLesson(index, 'video_url', e.target.value)}
+                                                            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                            placeholder="https://..."
+                                                        />
+                                                    </div>
+
+                                                    {/* Sub-lessons section */}
+                                                    <div className="border-t pt-3 mt-1">
+                                                        <div className="flex items-center justify-between mb-2">
+                                                            <span className="text-xs font-semibold text-gray-700 uppercase tracking-wide">
+                                                                Sub-lessons ({(lesson.sub_lessons || []).length})
+                                                            </span>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => addSubLesson(index)}
+                                                                className="flex items-center gap-1 px-2 py-1 bg-indigo-500 text-white text-xs rounded hover:bg-indigo-600 transition-colors"
+                                                            >
+                                                                <Plus size={12} />
+                                                                Add Sub-lesson
+                                                            </button>
+                                                        </div>
+
+                                                        {(lesson.sub_lessons || []).length > 0 && (
+                                                            <div className="space-y-2 pl-3 border-l-2 border-indigo-200">
+                                                                {(lesson.sub_lessons || []).map((sub, subIndex) => {
+                                                                    const isSubOpen = (expandedSubLessons[index] || new Set()).has(subIndex);
+                                                                    return (
+                                                                        <div key={subIndex} className="rounded-lg border border-indigo-100 overflow-hidden">
+                                                                            {/* Sub-lesson collapsible header */}
+                                                                            <div
+                                                                                role="button"
+                                                                                tabIndex={0}
+                                                                                onClick={() => toggleSubLesson(index, subIndex)}
+                                                                                onKeyDown={(e) => e.key === 'Enter' && toggleSubLesson(index, subIndex)}
+                                                                                className="w-full flex items-center justify-between px-3 py-2 bg-indigo-50 hover:bg-indigo-100 transition-colors cursor-pointer select-none"
+                                                                            >
+                                                                                <div className="flex items-center gap-1.5">
+                                                                                    {isSubOpen ? <ChevronDown size={13} className="text-indigo-400 shrink-0" /> : <ChevronRight size={13} className="text-indigo-400 shrink-0" />}
+                                                                                    <span className="text-xs font-medium text-indigo-700">
+                                                                                        Sub-lesson {subIndex + 1}
+                                                                                        {sub.title && <span className="ml-1 text-indigo-400 font-normal">— {sub.title}</span>}
+                                                                                    </span>
+                                                                                </div>
+                                                                                <button
+                                                                                    type="button"
+                                                                                    onClick={(e) => { e.stopPropagation(); removeSubLesson(index, subIndex); }}
+                                                                                    className="p-0.5 text-red-500 hover:bg-red-50 rounded"
+                                                                                >
+                                                                                    <X size={13} />
+                                                                                </button>
+                                                                            </div>
+
+                                                                            {/* Sub-lesson body */}
+                                                                            {isSubOpen && (
+                                                                                <div className="p-3 bg-white space-y-2">
+                                                                                    <input
+                                                                                        type="text"
+                                                                                        required
+                                                                                        value={sub.title || ''}
+                                                                                        onChange={(e) => updateSubLesson(index, subIndex, 'title', e.target.value)}
+                                                                                        className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                                                                        placeholder="Sub-lesson title *"
+                                                                                    />
+                                                                                    <input
+                                                                                        type="text"
+                                                                                        value={sub.duration || ''}
+                                                                                        onChange={(e) => updateSubLesson(index, subIndex, 'duration', e.target.value)}
+                                                                                        className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                                                                        placeholder="Duration (e.g. 10:30)"
+                                                                                    />
+                                                                                    <input
+                                                                                        type="url"
+                                                                                        value={sub.video_url || ''}
+                                                                                        onChange={(e) => updateSubLesson(index, subIndex, 'video_url', e.target.value)}
+                                                                                        className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                                                                        placeholder="Video URL (optional)"
+                                                                                    />
+                                                                                    {/* Notes upload */}
+                                                                                    <div className="flex items-center gap-2">
+                                                                                        <label className="flex items-center gap-1.5 cursor-pointer px-2 py-1.5 border border-gray-300 rounded text-xs text-gray-600 hover:bg-gray-50 transition-colors">
+                                                                                            <Upload size={12} />
+                                                                                            {sub.notes_url ? 'Replace Notes' : 'Upload Notes (.docx/.pdf)'}
+                                                                                            <input
+                                                                                                type="file"
+                                                                                                accept=".docx,.doc,.pdf"
+                                                                                                className="hidden"
+                                                                                                onChange={(e) => handleNotesUpload(index, subIndex, e.target.files?.[0])}
+                                                                                            />
+                                                                                        </label>
+                                                                                        {sub.notes_url && (
+                                                                                            <a
+                                                                                                href={sub.notes_url}
+                                                                                                target="_blank"
+                                                                                                rel="noopener noreferrer"
+                                                                                                className="flex items-center gap-1 text-xs text-green-600 hover:underline"
+                                                                                            >
+                                                                                                <FileText size={12} />
+                                                                                                View Notes
+                                                                                            </a>
+                                                                                        )}
+                                                                                    </div>
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         )}
                     </div>

@@ -546,9 +546,46 @@ export const deleteCourse = async (req: Request, res: Response) => {
     }
 };
 
-// ==================== Notes File Upload ====================
+// ==================== File Uploads ====================
 
 export const uploadStorage = multer({ storage: multer.memoryStorage() });
+
+export const uploadThumbnail = async (req: Request, res: Response) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: "No file provided" });
+        }
+
+        const file = req.file;
+        const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"];
+
+        if (!allowedTypes.includes(file.mimetype)) {
+            return res.status(400).json({ error: "Only image files are allowed (jpg, png, webp, gif)" });
+        }
+
+        const ext = file.originalname.split(".").pop() || "jpg";
+        const filename = `${randomUUID()}.${ext}`;
+
+        const { error: uploadError } = await supabaseAdmin.storage
+            .from("course-thumbnails")
+            .upload(filename, file.buffer, {
+                contentType: file.mimetype,
+                upsert: false,
+            });
+
+        if (uploadError) {
+            return res.status(400).json({ error: `Storage upload failed: ${uploadError.message}` });
+        }
+
+        const { data: publicUrlData } = supabaseAdmin.storage
+            .from("course-thumbnails")
+            .getPublicUrl(filename);
+
+        return res.status(200).json({ url: publicUrlData.publicUrl });
+    } catch (error: any) {
+        return res.status(500).json({ error: error.message });
+    }
+};
 
 export const uploadNotes = async (req: Request, res: Response) => {
     try {

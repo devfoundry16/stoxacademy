@@ -11,6 +11,7 @@ import {
     updateCourse,
     deleteCourse,
     uploadNotes,
+    uploadThumbnail,
     uploadStorage,
     getLiveSessions,
     createLiveSession,
@@ -41,6 +42,7 @@ router.post("/courses", createCourse);
 router.put("/courses/:id", updateCourse);
 router.delete("/courses/:id", deleteCourse);
 router.post("/upload/notes", uploadStorage.single("file"), uploadNotes);
+router.post("/upload/thumbnail", uploadStorage.single("file"), uploadThumbnail);
 
 // Live session management routes
 router.get("/live-sessions", getLiveSessions);

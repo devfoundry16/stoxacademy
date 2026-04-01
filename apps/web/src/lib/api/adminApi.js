@@ -58,6 +58,15 @@ export const deleteCourse = async (id) => {
     return response.data;
 };
 
+export const uploadThumbnail = async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await apiClient.post(`/api/admin/upload/thumbnail`, formData, {
+        headers: { 'Content-Type': false },
+    });
+    return response.data;
+};
+
 export const uploadNotes = async (file) => {
     const formData = new FormData();
     formData.append('file', file);

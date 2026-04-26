@@ -68,40 +68,97 @@
     "subtitle": "In our course, you don't just learn – you trade",
     "inPerson": "In-Person",
     "online": "Online",
-    "course1": {
-      "title": "Comprehensive Course in Stock and Crypto Investment and Trading",
-      "description": "Haifa | 7 Sessions | 19 Hours | 17:00-20:00",
-      "features": [
-        "Comprehensive understanding of stock and crypto market basics",
-        "Trading strategies based on real experiences",
-        "Company data analysis and chart reading",
-        "Using technical indicators to identify opportunities",
-        "Smart and wise risk management",
-        "Opening a real trading account and practicing real trades"
+    "section1": {
+      "title": "The 90 Circle",
+      "sectionLabel": "Mentorship Program",
+      "subtitle": "90 days of direct mentorship • 12 group sessions • 8 individual follow-up sessions",
+      "goal": "The goal: for the trainee to become completely independent in investing and trading after the end of the 90 days",
+      "includes": "The trainee receives a recorded online course with all the materials",
+      "price": "1,500",
+      "priceRecorded": "320",
+      "courses": [
+        {
+          "title": "Stock Market Mentorship",
+          "trainer": "Trainer: Firas Abdul Qader",
+          "modules": [
+            "Introduction to the financial market",
+            "Trading platforms (Brokers)",
+            "Fundamental Analysis",
+            "Technical Analysis",
+            "Reading candlesticks and trends",
+            "Long Term Investment",
+            "Building a personal investment plan",
+            "Analyzing and opening real trades"
+          ]
+        },
+        {
+          "title": "Gold & Forex",
+          "trainer": "Trainer: Mohammad Naddaf",
+          "modules": [
+            "Introduction to the financial markets",
+            "CFD Market",
+            "Commodities and metals (especially gold)",
+            "Foreign Exchange Market (FOREX)",
+            "Technical Analysis",
+            "Reading candlesticks and trends",
+            "Calculating pips and leverage",
+            "Risk management",
+            "Trading strategies",
+            "Live market analysis",
+            "Executing real trades",
+            "Building a personal investment plan",
+            "Trading account worth $200"
+          ]
+        },
+        {
+          "title": "Crypto",
+          "trainer": "Trainer: Majd Hawash",
+          "modules": [
+            "Introduction to digital currencies",
+            "Blockchain technology",
+            "Technical Analysis",
+            "Reading candlesticks and indicators",
+            "The difference between Spot and Futures",
+            "Risk management",
+            "Building an investment portfolio",
+            "Developing the trader's mindset and discipline",
+            "The psychological factor in daily trading",
+            "Practical application on real trades"
+          ]
+        }
       ]
     },
-    "course2": {
-      "title": "Crypto Investment and Trading Course - Online",
-      "description": "Fully online - Complete flexibility, tangible results",
-      "features": [
-        "Comprehensive understanding of crypto market basics",
-        "Proven trading strategies",
-        "Professional data and chart analysis",
-        "Using technical indicators to discover opportunities",
-        "Risk management and financial balance",
-        "Opening a real trading account and live trading experience"
-      ]
-    },
-    "course3": {
-      "title": "Stock Market and Technical Analysis Course - Online",
-      "description": "Get a free mini crypto course upon registration!",
-      "features": [
-        "Stock market basics",
-        "Successful trading strategies",
-        "Company and chart analysis",
-        "Using technical indicators",
-        "Smart risk management",
-        "Additional lesson on financial skills"
+    "section2": {
+      "title": "One-on-One Sessions",
+      "sectionLabel": "Individual Sessions",
+      "price3": "599",
+      "price6": "999",
+      "duration": "3 sessions or 6 sessions (1.5 hours per session)",
+      "sessions": [
+        {
+          "title": "Individual Session – Gold & Forex",
+          "description": "Fast personal development in the gold and currency markets",
+          "modules": [
+            "Analysis of current account",
+            "Building a personalized trading strategy",
+            "Correcting mistakes",
+            "Risk management",
+            "Trade follow-up",
+            "Setting a clear development plan"
+          ]
+        },
+        {
+          "title": "Individual Session – Crypto",
+          "description": "Fast personal development in cryptocurrencies",
+          "modules": [
+            "Analysis of current account",
+            "Building a personalized trading strategy",
+            "Correcting mistakes",
+            "Risk management",
+            "Trade follow-up",
+            "Setting a clear development plan"
+          ]
+        }
       ]
     },
     "page": {
@@ -193,18 +250,6 @@
         "position": "Sales Manager & Trading Coach",
         "description": "Financial markets and real estate expert with 7+ years of hands-on experience, dedicated to practical investment education.",
         "moreDescription": "Starting in 2016, Mohammad built deep market knowledge through real experience in financial markets and later expanded into real estate and mortgage consulting. He guides investors in Dubai and locally, helping analyze opportunities and build long-term investment plans. As a lecturer at STOX Academy, he’s educated over 2,000 students, focusing on practical application and sound financial decision-making."
-      },
-      {
-        "name": "Ola Shalabni",
-        "position": "COO",
-        "description": "",
-        "moreDescription": ""
-      },
-      {
-        "name": "Mahmoud Melhim",
-        "position": "Marketing & Photographer",
-        "description": "Marketing strategist and founder of Icon Media with 10+ years of experience in digital marketing and media production.",
-        "moreDescription": "With a Business Administration degree and a Digital Marketing certification from the Technion, Mahmoud Melhim combines sharp strategy with creative vision. As founder of Icon Media, he leverages 10+ years of experience in digital marketing, advertising, and high-impact video and photography production to help brands stand out and grow in a crowded market."
       }
     ]
   },

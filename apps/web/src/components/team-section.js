@@ -11,8 +11,6 @@ const avatarPaths = [
   "/images/team/majd hawash.jpeg",
   "/images/team/Moataz habiballa.jpg",
   "/images/team/mohamed Nadaf.jpg",
-  "/images/team/ola Shalabni.jpeg",
-  "/images/team/Ameer Irshed.jpeg",
 ];
 
 const socialLinks = [
@@ -20,13 +18,11 @@ const socialLinks = [
   { linkedin: "#", instagram: "#", email: "firas@stoxacademy.com" },
   { linkedin: "#", instagram: "#", email: "majd@stoxacademy.com" },
   { linkedin: "#", instagram: "#", email: "moataz@stoxacademy.com" },
-  { linkedin: "#", instagram: "#", email: "mohamed@stoxacademy.com" },
-  { linkedin: "#", instagram: "#", email: "ola@stoxacademy.com" },
 ];
 
 export function TeamSection() {
   const t = useTranslations();
-  const teamMembers = t.raw('team.members').map((member, index) => ({
+  const teamMembers = t.raw("team.members").map((member, index) => ({
     ...member,
     avatar: avatarPaths[index],
     social: socialLinks[index],
@@ -55,7 +51,7 @@ export function TeamSection() {
 
   const goToPrevious = () => {
     setCurrentIndex((prevIndex) =>
-      prevIndex === 0 ? maxIndex : prevIndex - 1
+      prevIndex === 0 ? maxIndex : prevIndex - 1,
     );
   };
 
@@ -65,7 +61,7 @@ export function TeamSection() {
 
   const visibleMembers = teamMembers.slice(
     currentIndex,
-    currentIndex + cardsToShow
+    currentIndex + cardsToShow,
   );
 
   React.useEffect(() => {
@@ -87,10 +83,10 @@ export function TeamSection() {
         {/* Section Header */}
         <div className="text-center mb-16">
           <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
-            {t('team.title')}
+            {t("team.title")}
           </h2>
           <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-            {t('team.description')}
+            {t("team.description")}
           </p>
         </div>
 
@@ -242,7 +238,10 @@ export function TeamSection() {
                   />
                 </div>
               </div>
-              <h3 id="modal-member-name" className="text-2xl font-bold text-gray-900 mb-1">
+              <h3
+                id="modal-member-name"
+                className="text-2xl font-bold text-gray-900 mb-1"
+              >
                 {modalMember.name}
               </h3>
               <p className="text-blue-600 font-semibold mb-4">
@@ -254,7 +253,7 @@ export function TeamSection() {
               </p>
 
               <div className="flex justify-center gap-3 mt-6 pt-4 border-t border-gray-100">
-              <a
+                <a
                   href={modalMember.social.instagram}
                   className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-100 text-gray-600 hover:bg-blue-400 hover:text-white transition-colors duration-200"
                   aria-label={`${modalMember.name}'s Twitter`}

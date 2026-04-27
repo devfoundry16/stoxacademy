@@ -562,7 +562,7 @@ export default function CourseDetailPage({ params }) {
                             >
                               <div className="flex items-start justify-between gap-2">
                                 <h4 className="font-semibold text-sm text-gray-900 line-clamp-2">
-                                  {index + 1}. {lesson.title}
+                                  {lesson.title}
                                 </h4>
                                 {isAuthenticated && isAccessible && lesson.video_url && (
                                   <input
@@ -619,7 +619,7 @@ export default function CourseDetailPage({ params }) {
                                   <div className="flex-1 min-w-0">
                                     <div className="flex items-start justify-between gap-2">
                                       <span className="text-xs font-medium text-gray-800 line-clamp-2">
-                                        {index + 1}.{subIndex + 1} {sub.title}
+                                        {sub.title}
                                       </span>
                                       {isAuthenticated && canAccess && (
                                         <input

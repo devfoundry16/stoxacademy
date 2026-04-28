@@ -14,10 +14,30 @@ const avatarPaths = [
 ];
 
 const socialLinks = [
-  { linkedin: "#", instagram: "#", email: "ameer@stoxacademy.com" },
-  { linkedin: "#", instagram: "#", email: "firas@stoxacademy.com" },
-  { linkedin: "#", instagram: "#", email: "majd@stoxacademy.com" },
-  { linkedin: "#", instagram: "#", email: "moataz@stoxacademy.com" },
+  {
+    linkedin:
+      "https://www.linkedin.com/in/firaselkader?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=ios_app",
+    instagram: "https://www.instagram.com/firasafeer?igsh=NTRpZjByMW9kNWtl",
+    email: "firas@stoxacademy.net",
+  },
+  {
+    linkedin: "https://www.linkedin.com/in/majd-hawash-159725377/",
+    instagram: "https://www.instagram.com/kingmajd23?igsh=MTk3b28xZjkxdmgxMA==",
+    email: "majd@stoxacademy.net",
+  },
+  {
+    linkedin: "https://www.linkedin.com/in/moataz-habib-252207268/",
+    instagram:
+      "https://www.instagram.com/moataz.habeballah?igsh=MWxxdG9uYzZ2Z21keQ==",
+    email: "Muataz.habeballah@gmail.com",
+  },
+  {
+    linkedin:
+      "https://www.linkedin.com/feed/?trk=guest_homepage-basic_nav-header-signin",
+    instagram:
+      "https://www.instagram.com/nadafrealestate?igsh=MXZ6NzZrMWJhejBlMQ==",
+    email: "nadaf@stoxacademy.net",
+  },
 ];
 
 export function TeamSection() {

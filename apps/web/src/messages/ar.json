@@ -556,7 +556,22 @@
     "atLeast6Characters": "6 أحرف على الأقل"
   },
   "checkout": {
-    "completePurchase": "إتمام عملية الشراء"
+    "completePurchase": "إتمام عملية الشراء",
+    "haveCouponCode": "هل لديك كود خصم؟",
+    "enterCouponCode": "أدخل كود الخصم",
+    "validating": "جارٍ التحقق...",
+    "apply": "تطبيق",
+    "pleaseEnterCouponCode": "الرجاء إدخال كود الخصم",
+    "couponApplied": "تم تطبيق الكوبون: {coupon}",
+    "discountPercent": "خصم {percent}%",
+    "removeCoupon": "إزالة الكوبون",
+    "originalPrice": "السعر الأصلي:",
+    "discount": "الخصم ({percent}%):",
+    "totalAmount": "المبلغ الإجمالي:",
+    "processing": "جارٍ المعالجة...",
+    "pay": "ادفع ${amount}",
+    "paymentProcessing": "جارٍ معالجة الدفع. يرجى الانتظار...",
+    "securedByStripe": "مؤمَّن بواسطة Stripe. معلومات الدفع الخاصة بك مشفرة وآمنة."
   },
   "courseCard": {
     "studentsEnrolled": "طالب مسجل",

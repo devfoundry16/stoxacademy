@@ -45,7 +45,7 @@ export default function StripeCheckoutModal({
 
   const handleApplyCoupon = async () => {
     if (!couponCode.trim()) {
-      toast.error('Please enter a coupon code');
+      toast.error(t('checkout.pleaseEnterCouponCode'));
       return;
     }
     setIsValidating(true);
@@ -72,7 +72,7 @@ export default function StripeCheckoutModal({
         {!appliedCoupon && (
           <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Have a coupon code?
+              {t('checkout.haveCouponCode')}
             </label>
             <div className="flex gap-2">
               <div className="relative flex-1">
@@ -81,7 +81,7 @@ export default function StripeCheckoutModal({
                   type="text"
                   value={couponCode}
                   onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                  placeholder="Enter coupon code"
+                  placeholder={t('checkout.enterCouponCode')}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono uppercase"
                   disabled={isValidating}
                 />
@@ -95,10 +95,10 @@ export default function StripeCheckoutModal({
                 {isValidating ? (
                   <>
                     <Loader2 className="animate-spin" size={18} />
-                    Validating...
+                    {t('checkout.validating')}
                   </>
                 ) : (
-                  'Apply'
+                  t('checkout.apply')
                 )}
               </button>
             </div>

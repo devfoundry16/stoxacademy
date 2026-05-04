@@ -7,6 +7,7 @@ import {
   useElements
 } from '@stripe/react-stripe-js';
 import { Loader2, Tag, X } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 export default function CheckoutForm({
   onSuccess,
@@ -20,6 +21,7 @@ export default function CheckoutForm({
 }) {
   const stripe = useStripe();
   const elements = useElements();
+  const t = useTranslations();
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState(null);
   const [isPaymentReady, setIsPaymentReady] = useState(false);
@@ -50,7 +52,7 @@ export default function CheckoutForm({
       setIsLoading(false);
       if (onSuccess) onSuccess(paymentIntent);
     } else {
-      setMessage('Payment processing. Please wait...');
+      setMessage(t('checkout.paymentProcessing'));
       setIsLoading(false);
     }
   };
@@ -66,10 +68,10 @@ export default function CheckoutForm({
             <Tag className="text-green-600" size={20} />
             <div>
               <p className="text-sm font-semibold text-green-800">
-                Coupon Applied: {appliedCoupon}
+                {t('checkout.couponApplied', { coupon: appliedCoupon })}
               </p>
               <p className="text-xs text-green-600">
-                {discountPercentage}% discount
+                {t('checkout.discountPercent', { percent: discountPercentage })}
               </p>
             </div>
           </div>
@@ -78,7 +80,7 @@ export default function CheckoutForm({
               type="button"
               onClick={onCouponRemove}
               className="p-1 hover:bg-green-100 rounded transition-colors"
-              title="Remove coupon"
+              title={t('checkout.removeCoupon')}
             >
               <X size={18} className="text-green-600" />
             </button>
@@ -90,18 +92,18 @@ export default function CheckoutForm({
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
         {hasDiscount && (
           <div className="flex justify-between items-center mb-2 pb-2 border-b border-blue-200">
-            <span className="text-sm text-gray-600">Original Price:</span>
+            <span className="text-sm text-gray-600">{t('checkout.originalPrice')}</span>
             <span className="text-sm text-gray-500 line-through">${originalPrice.toFixed(2)}</span>
           </div>
         )}
         {hasDiscount && (
           <div className="flex justify-between items-center mb-2 pb-2 border-b border-blue-200">
-            <span className="text-sm text-green-600 font-medium">Discount ({discountPercentage}%):</span>
+            <span className="text-sm text-green-600 font-medium">{t('checkout.discount', { percent: discountPercentage })}</span>
             <span className="text-sm text-green-600 font-medium">-${(originalPrice - amount).toFixed(2)}</span>
           </div>
         )}
         <div className="flex justify-between items-center">
-          <span className="text-gray-700 font-medium">Total Amount:</span>
+          <span className="text-gray-700 font-medium">{t('checkout.totalAmount')}</span>
           <span className="text-2xl font-bold text-blue-600">${amount.toFixed(2)}</span>
         </div>
         <p className="text-sm text-gray-600 mt-2">{itemName}</p>
@@ -125,15 +127,15 @@ export default function CheckoutForm({
         {isLoading ? (
           <>
             <Loader2 className="animate-spin" size={24} />
-            Processing...
+            {t('checkout.processing')}
           </>
         ) : (
-          `Pay $${amount.toFixed(2)}`
+          t('checkout.pay', { amount: amount.toFixed(2) })
         )}
       </button>
 
       <p className="text-xs text-gray-500 text-center mt-4">
-        Secured by Stripe. Your payment information is encrypted and secure.
+        {t('checkout.securedByStripe')}
       </p>
     </form>
   );

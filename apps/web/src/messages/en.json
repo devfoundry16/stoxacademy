@@ -556,7 +556,22 @@
     "atLeast6Characters": "At least 6 characters"
   },
   "checkout": {
-    "completePurchase": "Complete Your Purchase"
+    "completePurchase": "Complete Your Purchase",
+    "haveCouponCode": "Have a coupon code?",
+    "enterCouponCode": "Enter coupon code",
+    "validating": "Validating...",
+    "apply": "Apply",
+    "pleaseEnterCouponCode": "Please enter a coupon code",
+    "couponApplied": "Coupon Applied: {coupon}",
+    "discountPercent": "{percent}% discount",
+    "removeCoupon": "Remove coupon",
+    "originalPrice": "Original Price:",
+    "discount": "Discount ({percent}%):",
+    "totalAmount": "Total Amount:",
+    "processing": "Processing...",
+    "pay": "Pay ${amount}",
+    "paymentProcessing": "Payment processing. Please wait...",
+    "securedByStripe": "Secured by Stripe. Your payment information is encrypted and secure."
   },
   "courseCard": {
     "studentsEnrolled": "students enrolled",

@@ -22,6 +22,7 @@ export default function CheckoutForm({
   const elements = useElements();
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState(null);
+  const [isPaymentReady, setIsPaymentReady] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -106,7 +107,10 @@ export default function CheckoutForm({
         <p className="text-sm text-gray-600 mt-2">{itemName}</p>
       </div>
 
-      <PaymentElement id="payment-element" />
+      <PaymentElement
+        id="payment-element"
+        onChange={(e) => setIsPaymentReady(e.complete)}
+      />
 
       {message && (
         <div className="text-red-600 text-sm bg-red-50 border border-red-200 rounded-lg p-3">
@@ -115,7 +119,7 @@ export default function CheckoutForm({
       )}
 
       <button
-        disabled={isLoading || !stripe || !elements}
+        disabled={isLoading || !stripe || !elements || !isPaymentReady}
         className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-semibold text-lg"
       >
         {isLoading ? (

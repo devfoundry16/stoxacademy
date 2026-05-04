@@ -78,6 +78,13 @@
       "includes": "The trainee receives a recorded online course with all the materials",
       "price": "1,500",
       "priceRecorded": "320",
+      "subscribeButton": "Subscribe — $1,500",
+      "activeSubscription": "Active Subscription",
+      "subscriptionExpires": "Expires",
+      "groupSessionsRemaining": "group sessions remaining",
+      "individualSessionsRemaining": "individual sessions remaining",
+      "subscribing": "Processing...",
+      "subscribeSuccess": "90 Circle subscription activated!",
       "courses": [
         {
           "title": "Stock Market Mentorship",
@@ -136,6 +143,11 @@
       "price3": "599",
       "price6": "999",
       "duration": "3 sessions or 6 sessions (1.5 hours per session)",
+      "buy3Button": "3 Sessions — $599",
+      "buy6Button": "6 Sessions — $999",
+      "sessionsRemaining": "sessions remaining",
+      "packageActive": "Package Active",
+      "buySuccess": "Session package purchased successfully!",
       "sessions": [
         {
           "title": "Individual Session – Gold & Forex",

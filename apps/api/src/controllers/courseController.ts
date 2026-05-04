@@ -1,6 +1,19 @@
 import { Request, Response } from "express";
 import { supabaseAdmin } from "../config/supabase";
 
+async function hasActiveSubscription(userId: string): Promise<boolean> {
+    const now = new Date().toISOString();
+    const { data } = await supabaseAdmin
+        .from("user_subscriptions")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("status", "active")
+        .gt("expires_at", now)
+        .limit(1)
+        .maybeSingle();
+    return !!data;
+}
+
 /**
  * Nests sub-lessons inside their parent lessons.
  * Returns only top-level lessons with a `sub_lessons` array.
@@ -56,27 +69,32 @@ export const getAllCourses = async (req: Request, res: Response) => {
       return res.status(400).json({ error: error.message });
     }
 
-    // Check if user has purchased any courses
+    // Check if user has purchased any courses (or has an active subscription)
     let purchasedCourseIds: string[] = [];
+    let subscriptionActive = false;
     if (token) {
       const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
 
       if (!userError && userData.user) {
-        const { data: purchases } = await supabaseAdmin
-          .from("user_courses")
-          .select("course_id")
-          .eq("user_id", userData.user.id);
+        subscriptionActive = await hasActiveSubscription(userData.user.id);
 
-        if (purchases) {
-          purchasedCourseIds = purchases.map((p) => p.course_id);
+        if (!subscriptionActive) {
+          const { data: purchases } = await supabaseAdmin
+            .from("user_courses")
+            .select("course_id")
+            .eq("user_id", userData.user.id);
+
+          if (purchases) {
+            purchasedCourseIds = purchases.map((p) => p.course_id);
+          }
         }
       }
     }
 
-    // Add isPurchased field to each course
+    // Add isPurchased field to each course (subscription grants access to all courses)
     let sortedCourses = (courses || []).map((course) => ({
       ...course,
-      isPurchased: purchasedCourseIds.includes(course.id),
+      isPurchased: subscriptionActive || purchasedCourseIds.includes(course.id),
     }));
 
     // Sort courses
@@ -125,7 +143,7 @@ export const getCourseById = async (req: Request, res: Response) => {
       return res.status(400).json({ error: lessonsError.message });
     }
 
-    // Check if user has purchased this course and get lesson progress
+    // Check if user has purchased this course (or has an active subscription) and get lesson progress
     let isPurchased = false;
     let flatLessons = allLessons || [];
 
@@ -133,14 +151,21 @@ export const getCourseById = async (req: Request, res: Response) => {
       const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
 
       if (!userError && userData.user) {
-        const { data: purchase } = await supabaseAdmin
-          .from("user_courses")
-          .select("id")
-          .eq("user_id", userData.user.id)
-          .eq("course_id", id)
-          .single();
+        // Active subscription grants access to all courses
+        const subscriptionActive = await hasActiveSubscription(userData.user.id);
 
-        isPurchased = !!purchase;
+        if (subscriptionActive) {
+          isPurchased = true;
+        } else {
+          const { data: purchase } = await supabaseAdmin
+            .from("user_courses")
+            .select("id")
+            .eq("user_id", userData.user.id)
+            .eq("course_id", id)
+            .single();
+
+          isPurchased = !!purchase;
+        }
 
         // Track progress for top-level lessons with video and all sub-lessons
         const trackableIds = getTrackableLessonIds(flatLessons);

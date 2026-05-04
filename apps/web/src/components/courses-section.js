@@ -1,9 +1,14 @@
 "use client"
+import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "@/i18n/routing"
 import { useTranslations } from 'next-intl'
 import { motion } from "framer-motion"
 import { fadeInUp, staggerContainer, staggerItem, defaultTransition } from "@/lib/animations"
 import { useAuthStore } from "@/store/authStore"
+import { paymentService } from "@/lib/paymentService"
+import StripeCheckoutModal from "@/components/StripeCheckoutModal"
+import toast from "react-hot-toast"
+import { CheckCircle, Clock } from "lucide-react"
 
 const section1Colors = [
   { bgGradient: "from-blue-50 to-purple-50", badgeColor: "bg-blue-600", buttonColor: "bg-blue-600 hover:bg-blue-700", accentColor: "text-blue-600" },
@@ -16,6 +21,9 @@ const section2Colors = [
   { bgGradient: "from-indigo-50 to-blue-50", badgeColor: "bg-indigo-600", buttonColor: "bg-indigo-600 hover:bg-indigo-700", accentColor: "text-indigo-600" },
 ]
 
+// Map session index to category key used in backend
+const SESSION_CATEGORIES = ["gold_forex", "crypto"]
+
 export function CoursesSection() {
   const router = useRouter()
   const t = useTranslations()
@@ -23,6 +31,138 @@ export function CoursesSection() {
 
   const section1 = t.raw('courses.section1')
   const section2 = t.raw('courses.section2')
+
+  // Subscription + package state
+  const [subscription, setSubscription] = useState(null)
+  const [sessionPackages, setSessionPackages] = useState([])
+  const [statusLoading, setStatusLoading] = useState(false)
+
+  // Checkout modal state
+  const [checkoutModal, setCheckoutModal] = useState({
+    open: false,
+    clientSecret: null,
+    amount: null,
+    itemName: "",
+    paymentIntentId: null,
+    type: null,       // "subscription" | "session_package"
+    packageType: null,
+    category: null,
+  })
+  const [isCreatingIntent, setIsCreatingIntent] = useState(false)
+
+  const fetchStatus = useCallback(async () => {
+    if (!isAuthenticated) return
+    setStatusLoading(true)
+    try {
+      const data = await paymentService.getSubscriptionStatus()
+      setSubscription(data.subscription)
+      setSessionPackages(data.sessionPackages || [])
+    } catch {
+      // silent — status is non-critical on initial load
+    } finally {
+      setStatusLoading(false)
+    }
+  }, [isAuthenticated])
+
+  useEffect(() => {
+    fetchStatus()
+  }, [fetchStatus])
+
+  // ----- 90 Circle -----
+  const handleSubscribeClick = async () => {
+    if (!isAuthenticated) {
+      router.push('/signup')
+      return
+    }
+    setIsCreatingIntent(true)
+    try {
+      const data = await paymentService.createSubscriptionPaymentIntent()
+      setCheckoutModal({
+        open: true,
+        clientSecret: data.clientSecret,
+        amount: parseFloat(data.finalPrice),
+        itemName: t('courses.section1.title') + " — 90 Circle Subscription",
+        paymentIntentId: data.paymentIntentId,
+        type: "subscription",
+        packageType: null,
+        category: null,
+      })
+    } catch (err) {
+      toast.error(err?.response?.data?.error || "Failed to start checkout")
+    } finally {
+      setIsCreatingIntent(false)
+    }
+  }
+
+  const handleSubscriptionSuccess = async () => {
+    try {
+      await paymentService.confirmSubscriptionPayment(checkoutModal.paymentIntentId)
+      toast.success(t('courses.section1.subscribeSuccess'))
+      setCheckoutModal(m => ({ ...m, open: false }))
+      fetchStatus()
+    } catch (err) {
+      toast.error(err?.response?.data?.error || "Failed to confirm subscription")
+    }
+  }
+
+  // ----- Session Packages -----
+  const handleBuyPackageClick = async (packageType, category) => {
+    if (!isAuthenticated) {
+      router.push('/signup')
+      return
+    }
+    setIsCreatingIntent(true)
+    try {
+      const data = await paymentService.createSessionPackagePaymentIntent(packageType, category)
+      const sessions = packageType === "3_sessions" ? 3 : 6
+      setCheckoutModal({
+        open: true,
+        clientSecret: data.clientSecret,
+        amount: parseFloat(data.finalPrice),
+        itemName: `${sessions} ${t('courses.section2.sectionLabel')} (${category === 'gold_forex' ? 'Gold & Forex' : 'Crypto'})`,
+        paymentIntentId: data.paymentIntentId,
+        type: "session_package",
+        packageType,
+        category,
+      })
+    } catch (err) {
+      toast.error(err?.response?.data?.error || "Failed to start checkout")
+    } finally {
+      setIsCreatingIntent(false)
+    }
+  }
+
+  const handleSessionPackageSuccess = async () => {
+    try {
+      await paymentService.confirmSessionPackagePayment(checkoutModal.paymentIntentId)
+      toast.success(t('courses.section2.buySuccess'))
+      setCheckoutModal(m => ({ ...m, open: false }))
+      fetchStatus()
+    } catch (err) {
+      toast.error(err?.response?.data?.error || "Failed to confirm purchase")
+    }
+  }
+
+  const handleCheckoutSuccess = () => {
+    if (checkoutModal.type === "subscription") {
+      handleSubscriptionSuccess()
+    } else {
+      handleSessionPackageSuccess()
+    }
+  }
+
+  const closeModal = () => setCheckoutModal(m => ({ ...m, open: false }))
+
+  // Helpers
+  const activeSubscription = subscription && subscription.status === 'active'
+
+  const getPackageForCategory = (category) =>
+    sessionPackages.find(p => p.category === category && p.sessions_remaining > 0) || null
+
+  const formatExpiry = (dateStr) => {
+    if (!dateStr) return ""
+    return new Date(dateStr).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
+  }
 
   return (
     <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
@@ -104,7 +244,35 @@ export function CoursesSection() {
                     <div className="flex items-baseline gap-1 mb-4">
                       <span className="text-3xl font-bold text-gray-900">${section1.price}</span>
                     </div>
-                    {!isAuthenticated && (
+
+                    {/* CTA area */}
+                    {activeSubscription ? (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-green-700 font-semibold">
+                          <CheckCircle className="w-5 h-5" />
+                          <span>{t('courses.section1.activeSubscription')}</span>
+                        </div>
+                        <div className="text-xs text-gray-500 flex items-center gap-1">
+                          <Clock className="w-3.5 h-3.5" />
+                          {t('courses.section1.subscriptionExpires')}: {formatExpiry(subscription.expires_at)}
+                        </div>
+                        <div className="text-xs text-gray-600">
+                          {subscription.group_sessions_remaining} {t('courses.section1.groupSessionsRemaining')} &middot; {subscription.individual_sessions_remaining} {t('courses.section1.individualSessionsRemaining')}
+                        </div>
+                      </div>
+                    ) : isAuthenticated ? (
+                      <motion.button
+                        whileHover={{ y: -2 }}
+                        whileTap={{ y: 0 }}
+                        disabled={isCreatingIntent || statusLoading}
+                        className={`w-full px-6 py-3.5 ${colors.buttonColor} text-white font-semibold rounded-xl transition-colors disabled:opacity-60 disabled:cursor-not-allowed`}
+                        onClick={handleSubscribeClick}
+                      >
+                        {isCreatingIntent
+                          ? t('courses.section1.subscribing')
+                          : t('courses.section1.subscribeButton')}
+                      </motion.button>
+                    ) : (
                       <motion.button
                         whileHover={{ y: -2 }}
                         whileTap={{ y: 0 }}
@@ -145,6 +313,9 @@ export function CoursesSection() {
           >
             {section2.sessions.map((session, idx) => {
               const colors = section2Colors[idx] || section2Colors[0]
+              const category = SESSION_CATEGORIES[idx]
+              const existingPackage = getPackageForCategory(category)
+
               return (
                 <motion.div
                   key={idx}
@@ -179,7 +350,40 @@ export function CoursesSection() {
                         <span className="text-gray-500 text-sm">/6 sessions</span>
                       </div>
                     </div>
-                    {!isAuthenticated && (
+
+                    {/* CTA area */}
+                    {existingPackage ? (
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2 text-green-700 font-semibold">
+                          <CheckCircle className="w-5 h-5" />
+                          <span>{t('courses.section2.packageActive')}</span>
+                        </div>
+                        <p className="text-sm text-gray-600">
+                          {existingPackage.sessions_remaining} {t('courses.section2.sessionsRemaining')}
+                        </p>
+                      </div>
+                    ) : isAuthenticated ? (
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        <motion.button
+                          whileHover={{ y: -2 }}
+                          whileTap={{ y: 0 }}
+                          disabled={isCreatingIntent || statusLoading}
+                          className={`flex-1 px-4 py-3 ${colors.buttonColor} text-white font-semibold rounded-xl transition-colors text-sm disabled:opacity-60 disabled:cursor-not-allowed`}
+                          onClick={() => handleBuyPackageClick("3_sessions", category)}
+                        >
+                          {t('courses.section2.buy3Button')}
+                        </motion.button>
+                        <motion.button
+                          whileHover={{ y: -2 }}
+                          whileTap={{ y: 0 }}
+                          disabled={isCreatingIntent || statusLoading}
+                          className={`flex-1 px-4 py-3 border-2 border-current ${colors.accentColor} font-semibold rounded-xl transition-colors text-sm disabled:opacity-60 disabled:cursor-not-allowed hover:bg-gray-50`}
+                          onClick={() => handleBuyPackageClick("6_sessions", category)}
+                        >
+                          {t('courses.section2.buy6Button')}
+                        </motion.button>
+                      </div>
+                    ) : (
                       <motion.button
                         whileHover={{ y: -2 }}
                         whileTap={{ y: 0 }}
@@ -197,6 +401,17 @@ export function CoursesSection() {
         </motion.div>
 
       </div>
+
+      {/* Stripe Checkout Modal */}
+      <StripeCheckoutModal
+        isOpen={checkoutModal.open}
+        onClose={closeModal}
+        clientSecret={checkoutModal.clientSecret}
+        amount={checkoutModal.amount}
+        itemName={checkoutModal.itemName}
+        onSuccess={handleCheckoutSuccess}
+        onError={(err) => toast.error(err || "Payment failed")}
+      />
     </section>
   )
 }

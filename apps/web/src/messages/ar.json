@@ -78,6 +78,13 @@
       "includes": "يحصل المتدرب على دورة أونلاين مسجّلة بكل المواد",
       "price": "1,500",
       "priceRecorded": "320",
+      "subscribeButton": "اشترك — $1,500",
+      "activeSubscription": "اشتراك فعّال",
+      "subscriptionExpires": "ينتهي",
+      "groupSessionsRemaining": "لقاء جماعي متبقٍّ",
+      "individualSessionsRemaining": "لقاء فردي متبقٍّ",
+      "subscribing": "جارٍ المعالجة...",
+      "subscribeSuccess": "تم تفعيل اشتراك The 90 Circle!",
       "courses": [
         {
           "title": "مرافقة سوق الأسهم",
@@ -136,6 +143,11 @@
       "price3": "599",
       "price6": "999",
       "duration": "3 لقاءات أو 6 لقاءات (ساعة ونصف لكل لقاء)",
+      "buy3Button": "3 لقاءات — $599",
+      "buy6Button": "6 لقاءات — $999",
+      "sessionsRemaining": "لقاء متبقٍّ",
+      "packageActive": "الباقة فعّالة",
+      "buySuccess": "تم شراء باقة الجلسات بنجاح!",
       "sessions": [
         {
           "title": "لقاء فردي – الذهب والفوركس",

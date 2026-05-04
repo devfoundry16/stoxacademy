@@ -446,6 +446,303 @@ export const confirmLiveSessionPayment = async (req: Request, res: Response) => 
     }
 };
 
+// ==================== Subscription Payment (90 Circle) ====================
+
+const SUBSCRIPTION_PRICE_USD = 1500;
+
+export const createSubscriptionPaymentIntent = async (req: Request, res: Response) => {
+    try {
+        const authHeader = req.headers.authorization;
+        const token = authHeader && authHeader.split(" ")[1];
+
+        if (!token) {
+            return res.status(401).json({ error: "No token provided" });
+        }
+
+        const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
+        if (userError || !userData.user) {
+            return res.status(401).json({ error: "Invalid token" });
+        }
+
+        // Check for an existing active subscription
+        const now = new Date().toISOString();
+        const { data: existingSub } = await supabaseAdmin
+            .from("user_subscriptions")
+            .select("id, expires_at")
+            .eq("user_id", userData.user.id)
+            .eq("status", "active")
+            .gt("expires_at", now)
+            .maybeSingle();
+
+        if (existingSub) {
+            return res.status(400).json({ error: "You already have an active 90 Circle subscription" });
+        }
+
+        const paymentIntent = await stripe.paymentIntents.create({
+            amount: SUBSCRIPTION_PRICE_USD * 100,
+            currency: "usd",
+            metadata: {
+                userId: userData.user.id,
+                type: "subscription",
+            },
+            automatic_payment_methods: { enabled: true },
+        });
+
+        return res.status(200).json({
+            clientSecret: paymentIntent.client_secret,
+            paymentIntentId: paymentIntent.id,
+            finalPrice: SUBSCRIPTION_PRICE_USD.toFixed(2),
+        });
+    } catch (error: any) {
+        console.error("Create subscription payment intent error:", error);
+        return res.status(500).json({ error: error.message });
+    }
+};
+
+export const confirmSubscriptionPayment = async (req: Request, res: Response) => {
+    try {
+        const { paymentIntentId } = req.body;
+        const authHeader = req.headers.authorization;
+        const token = authHeader && authHeader.split(" ")[1];
+
+        if (!token) {
+            return res.status(401).json({ error: "No token provided" });
+        }
+
+        const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
+        if (userError || !userData.user) {
+            return res.status(401).json({ error: "Invalid token" });
+        }
+
+        const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+
+        if (paymentIntent.status !== "succeeded") {
+            return res.status(400).json({ error: "Payment not completed" });
+        }
+
+        if (paymentIntent.metadata.userId !== userData.user.id) {
+            return res.status(403).json({ error: "Unauthorized" });
+        }
+
+        // Idempotency: check if already recorded
+        const { data: existing } = await supabaseAdmin
+            .from("user_subscriptions")
+            .select("id")
+            .eq("stripe_payment_intent_id", paymentIntentId)
+            .maybeSingle();
+
+        if (existing) {
+            return res.status(200).json({ message: "Subscription already activated", alreadyActivated: true });
+        }
+
+        const now = new Date();
+        const expiresAt = new Date(now);
+        expiresAt.setMonth(expiresAt.getMonth() + 3);
+
+        const { data: subscription, error: subError } = await supabaseAdmin
+            .from("user_subscriptions")
+            .insert({
+                user_id: userData.user.id,
+                status: "active",
+                group_sessions_remaining: 12,
+                individual_sessions_remaining: 8,
+                price_paid: SUBSCRIPTION_PRICE_USD,
+                stripe_payment_intent_id: paymentIntentId,
+                started_at: now.toISOString(),
+                expires_at: expiresAt.toISOString(),
+            })
+            .select()
+            .single();
+
+        if (subError) {
+            return res.status(400).json({ error: subError.message });
+        }
+
+        return res.status(201).json({
+            message: "90 Circle subscription activated successfully",
+            subscription,
+        });
+    } catch (error: any) {
+        console.error("Confirm subscription payment error:", error);
+        return res.status(500).json({ error: error.message });
+    }
+};
+
+// ==================== Session Package Payment (Individual Sessions) ====================
+
+const SESSION_PACKAGE_PRICES: Record<string, number> = {
+    "3_sessions": 599,
+    "6_sessions": 999,
+};
+
+const SESSION_PACKAGE_COUNTS: Record<string, number> = {
+    "3_sessions": 3,
+    "6_sessions": 6,
+};
+
+export const createSessionPackagePaymentIntent = async (req: Request, res: Response) => {
+    try {
+        const { packageType, category } = req.body;
+        const authHeader = req.headers.authorization;
+        const token = authHeader && authHeader.split(" ")[1];
+
+        if (!token) {
+            return res.status(401).json({ error: "No token provided" });
+        }
+
+        if (!["3_sessions", "6_sessions"].includes(packageType)) {
+            return res.status(400).json({ error: "Invalid package type. Must be '3_sessions' or '6_sessions'" });
+        }
+
+        if (!["gold_forex", "crypto"].includes(category)) {
+            return res.status(400).json({ error: "Invalid category. Must be 'gold_forex' or 'crypto'" });
+        }
+
+        const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
+        if (userError || !userData.user) {
+            return res.status(401).json({ error: "Invalid token" });
+        }
+
+        const price = SESSION_PACKAGE_PRICES[packageType];
+
+        const paymentIntent = await stripe.paymentIntents.create({
+            amount: price * 100,
+            currency: "usd",
+            metadata: {
+                userId: userData.user.id,
+                type: "session_package",
+                packageType,
+                category,
+            },
+            automatic_payment_methods: { enabled: true },
+        });
+
+        return res.status(200).json({
+            clientSecret: paymentIntent.client_secret,
+            paymentIntentId: paymentIntent.id,
+            finalPrice: price.toFixed(2),
+        });
+    } catch (error: any) {
+        console.error("Create session package payment intent error:", error);
+        return res.status(500).json({ error: error.message });
+    }
+};
+
+export const confirmSessionPackagePayment = async (req: Request, res: Response) => {
+    try {
+        const { paymentIntentId } = req.body;
+        const authHeader = req.headers.authorization;
+        const token = authHeader && authHeader.split(" ")[1];
+
+        if (!token) {
+            return res.status(401).json({ error: "No token provided" });
+        }
+
+        const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
+        if (userError || !userData.user) {
+            return res.status(401).json({ error: "Invalid token" });
+        }
+
+        const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+
+        if (paymentIntent.status !== "succeeded") {
+            return res.status(400).json({ error: "Payment not completed" });
+        }
+
+        if (paymentIntent.metadata.userId !== userData.user.id) {
+            return res.status(403).json({ error: "Unauthorized" });
+        }
+
+        // Idempotency check
+        const { data: existing } = await supabaseAdmin
+            .from("user_session_packages")
+            .select("id")
+            .eq("stripe_payment_intent_id", paymentIntentId)
+            .maybeSingle();
+
+        if (existing) {
+            return res.status(200).json({ message: "Package already recorded", alreadyRecorded: true });
+        }
+
+        const packageType = paymentIntent.metadata.packageType;
+        const category = paymentIntent.metadata.category;
+        const sessionsTotal = SESSION_PACKAGE_COUNTS[packageType];
+        const price = SESSION_PACKAGE_PRICES[packageType];
+
+        const { data: pkg, error: pkgError } = await supabaseAdmin
+            .from("user_session_packages")
+            .insert({
+                user_id: userData.user.id,
+                category,
+                package_type: packageType,
+                sessions_total: sessionsTotal,
+                sessions_remaining: sessionsTotal,
+                price_paid: price,
+                stripe_payment_intent_id: paymentIntentId,
+                purchased_at: new Date().toISOString(),
+            })
+            .select()
+            .single();
+
+        if (pkgError) {
+            return res.status(400).json({ error: pkgError.message });
+        }
+
+        return res.status(201).json({
+            message: "Session package purchased successfully",
+            package: pkg,
+        });
+    } catch (error: any) {
+        console.error("Confirm session package payment error:", error);
+        return res.status(500).json({ error: error.message });
+    }
+};
+
+export const getSubscriptionStatus = async (req: Request, res: Response) => {
+    try {
+        const authHeader = req.headers.authorization;
+        const token = authHeader && authHeader.split(" ")[1];
+
+        if (!token) {
+            return res.status(401).json({ error: "No token provided" });
+        }
+
+        const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
+        if (userError || !userData.user) {
+            return res.status(401).json({ error: "Invalid token" });
+        }
+
+        const now = new Date().toISOString();
+
+        // Get active subscription
+        const { data: subscription } = await supabaseAdmin
+            .from("user_subscriptions")
+            .select("*")
+            .eq("user_id", userData.user.id)
+            .eq("status", "active")
+            .gt("expires_at", now)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+        // Get all session packages for this user
+        const { data: packages } = await supabaseAdmin
+            .from("user_session_packages")
+            .select("*")
+            .eq("user_id", userData.user.id)
+            .gt("sessions_remaining", 0)
+            .order("purchased_at", { ascending: false });
+
+        return res.status(200).json({
+            subscription: subscription || null,
+            sessionPackages: packages || [],
+        });
+    } catch (error: any) {
+        console.error("Get subscription status error:", error);
+        return res.status(500).json({ error: error.message });
+    }
+};
+
 // ==================== Webhook Handler ====================
 
 export const handleStripeWebhook = async (req: Request, res: Response) => {

@@ -12,10 +12,13 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* OS dark mode: keep light theme tokens. The product UI is light (white/gray-50
+   surfaces); a dark body + light foreground made inherited text invisible on cards. */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    color-scheme: light;
+    --background: #f9fafb;
+    --foreground: #111827;
   }
 }
 

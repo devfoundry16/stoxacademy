@@ -140,14 +140,13 @@ export function Header() {
               )}
             </nav>
             <button
-              className="md:hidden"
+              type="button"
+              className="md:hidden p-2 rounded-lg text-gray-900 hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-expanded={mobileMenuOpen}
+              aria-label={mobileMenuOpen ? t("header.closeMenu") : t("header.openMenu")}
             >
-              {mobileMenuOpen ? (
-                <X className="w-6 h-6" />
-              ) : (
-                <Menu className="w-6 h-6" />
-              )}
+              {mobileMenuOpen ? <X className="w-6 h-6 shrink-0" /> : <Menu className="w-6 h-6 shrink-0" />}
             </button>
           </div>
         </div>

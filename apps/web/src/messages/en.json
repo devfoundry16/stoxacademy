@@ -43,7 +43,9 @@
     "backToMyCourses": "Back to My Courses"
   },
   "header": {
-    "brand": "Stox"
+    "brand": "Stox",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
   },
   "hero": {
     "badge": "Register for the Stock Course and Get the Crypto Course for Free!",

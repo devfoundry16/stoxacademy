@@ -59,10 +59,12 @@ export default function AdminSidebar() {
         <>
             {/* Mobile menu button */}
             <button
+                type="button"
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className={`lg:hidden fixed top-4 z-50 p-2 bg-white rounded-lg shadow-lg ${isRTL ? 'right-4' : 'left-4'}`}
+                className={`lg:hidden fixed top-4 z-50 p-2 bg-white rounded-lg shadow-lg text-gray-900 hover:bg-gray-50 ${isRTL ? 'right-4' : 'left-4'}`}
+                aria-expanded={isMobileMenuOpen}
             >
-                {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+                {isMobileMenuOpen ? <X size={24} className="shrink-0" /> : <Menu size={24} className="shrink-0" />}
             </button>
 
             {/* Sidebar */}

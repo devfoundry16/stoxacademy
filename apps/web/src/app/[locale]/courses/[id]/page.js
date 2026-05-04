@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useTranslations } from 'next-intl';
+import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/routing";
 import Image from "next/image";
 import toast from "react-hot-toast";
@@ -28,8 +28,12 @@ import {
 } from "lucide-react";
 import { VideoPlayer } from "@/components/video-player";
 import { motion } from "framer-motion";
-import { fadeInUp, staggerContainer, staggerItem, defaultTransition } from "@/lib/animations";
-
+import {
+  fadeInUp,
+  staggerContainer,
+  staggerItem,
+  defaultTransition,
+} from "@/lib/animations";
 
 export default function CourseDetailPage({ params }) {
   const router = useRouter();
@@ -70,7 +74,7 @@ export default function CourseDetailPage({ params }) {
 
   const handleLessonClick = (lesson) => {
     if (!isAuthenticated) {
-      toast.error(t('courseDetail.signInToWatch'));
+      toast.error(t("courseDetail.signInToWatch"));
       router.push("/login");
       return;
     }
@@ -78,7 +82,7 @@ export default function CourseDetailPage({ params }) {
     // Sub-lessons (parent_lesson_id set) require purchase; top-level preview lessons are free
     const isFree = !lesson.parent_lesson_id && lesson.is_preview;
     if (!isFree && !course?.isPurchased) {
-      toast.error(t('courseDetail.purchaseToWatch'));
+      toast.error(t("courseDetail.purchaseToWatch"));
       return;
     }
 
@@ -86,19 +90,19 @@ export default function CourseDetailPage({ params }) {
   };
 
   const toggleLessonExpand = (lessonId) => {
-    setExpandedLessons(prev => ({ ...prev, [lessonId]: !prev[lessonId] }));
+    setExpandedLessons((prev) => ({ ...prev, [lessonId]: !prev[lessonId] }));
   };
 
   const updateLessonInState = (lessonId, patch) => {
-    setCourse(prevCourse => ({
+    setCourse((prevCourse) => ({
       ...prevCourse,
-      lessons: prevCourse.lessons.map(l => {
+      lessons: prevCourse.lessons.map((l) => {
         if (l.id === lessonId) return { ...l, ...patch };
         if (l.sub_lessons?.length) {
           return {
             ...l,
-            sub_lessons: l.sub_lessons.map(s =>
-              s.id === lessonId ? { ...s, ...patch } : s
+            sub_lessons: l.sub_lessons.map((s) =>
+              s.id === lessonId ? { ...s, ...patch } : s,
             ),
           };
         }
@@ -111,13 +115,13 @@ export default function CourseDetailPage({ params }) {
     e.stopPropagation();
 
     if (!isAuthenticated) {
-      toast.error(t('courseDetail.signInToUpdateProgress'));
+      toast.error(t("courseDetail.signInToUpdateProgress"));
       router.push("/login");
       return;
     }
 
     if (!course?.isPurchased && !lesson.is_preview) {
-      toast.error(t('courseDetail.purchaseToMarkComplete'));
+      toast.error(t("courseDetail.purchaseToMarkComplete"));
       return;
     }
 
@@ -128,18 +132,20 @@ export default function CourseDetailPage({ params }) {
       await courseService.updateLessonProgress(lesson.id, newCompletedStatus);
       toast.success(
         newCompletedStatus
-          ? t('courseDetail.lessonCompleted')
-          : t('courseDetail.lessonIncomplete')
+          ? t("courseDetail.lessonCompleted")
+          : t("courseDetail.lessonIncomplete"),
       );
     } catch (err) {
       updateLessonInState(lesson.id, { completed: !newCompletedStatus });
-      toast.error(err.response?.data?.error || t('courseDetail.failedToUpdateProgress'));
+      toast.error(
+        err.response?.data?.error || t("courseDetail.failedToUpdateProgress"),
+      );
     }
   };
 
   const handlePurchase = async () => {
     if (!isAuthenticated) {
-      toast.error(t('courseDetail.signInToPurchase'));
+      toast.error(t("courseDetail.signInToPurchase"));
       router.push("/login");
       return;
     }
@@ -147,7 +153,9 @@ export default function CourseDetailPage({ params }) {
     try {
       setLoading(true);
       // Create payment intent without coupon initially
-      const response = await paymentService.createCoursePaymentIntent(course.id);
+      const response = await paymentService.createCoursePaymentIntent(
+        course.id,
+      );
       setClientSecret(response.clientSecret);
       setPaymentIntentId(response.paymentIntentId);
       setDiscountInfo({
@@ -157,19 +165,24 @@ export default function CourseDetailPage({ params }) {
       });
       setCheckoutModalOpen(true);
     } catch (err) {
-      toast.error(err.response?.data?.error || t('courseDetail.failedToInitializePayment'));
+      toast.error(
+        err.response?.data?.error ||
+          t("courseDetail.failedToInitializePayment"),
+      );
     } finally {
       setLoading(false);
     }
   };
 
   const handleApplyCoupon = async (couponCode) => {
-    console.log('-------------Apply Coupon-----------')
+    console.log("-------------Apply Coupon-----------");
     console.log("couponCode", couponCode);
     if (!couponCode) {
       // Remove coupon - recreate payment intent without coupon
       try {
-        const response = await paymentService.createCoursePaymentIntent(course.id);
+        const response = await paymentService.createCoursePaymentIntent(
+          course.id,
+        );
         setClientSecret(response.clientSecret);
         setPaymentIntentId(response.paymentIntentId);
         setAppliedCoupon(null);
@@ -178,9 +191,9 @@ export default function CourseDetailPage({ params }) {
           finalPrice: parseFloat(course.price),
           discountPercentage: 0,
         });
-        toast.success(t('courseDetail.couponRemoved'));
+        toast.success(t("courseDetail.couponRemoved"));
       } catch (error) {
-        toast.error(t('courseDetail.failedToRemoveCoupon'));
+        toast.error(t("courseDetail.failedToRemoveCoupon"));
       }
       return;
     }
@@ -189,7 +202,7 @@ export default function CourseDetailPage({ params }) {
     try {
       const response = await paymentService.createCoursePaymentIntent(
         course.id,
-        couponCode
+        couponCode,
       );
       setClientSecret(response.clientSecret);
       setPaymentIntentId(response.paymentIntentId);
@@ -200,9 +213,13 @@ export default function CourseDetailPage({ params }) {
         discountPercentage: response.discountPercentage,
       });
 
-      toast.success(`${t('courseDetail.couponApplied')} ${response.discountPercentage}% ${t('courseDetail.off')}`);
+      toast.success(
+        `${t("courseDetail.couponApplied")} ${response.discountPercentage}% ${t("courseDetail.off")}`,
+      );
     } catch (error) {
-      toast.error(error.response?.data?.error || t('courseDetail.invalidCoupon'));
+      toast.error(
+        error.response?.data?.error || t("courseDetail.invalidCoupon"),
+      );
       throw error;
     }
   };
@@ -213,12 +230,15 @@ export default function CourseDetailPage({ params }) {
       // Confirm payment on backend
       await paymentService.confirmCoursePayment(paymentIntent.id);
       setCheckoutModalOpen(false);
-      toast.success(t('courseDetail.coursePurchased'));
+      toast.success(t("courseDetail.coursePurchased"));
       // Refresh course data
       const data = await courseService.getCourseById(id);
       setCourse(data.course);
     } catch (err) {
-      toast.error(err.response?.data?.error || t('courseDetail.paymentConfirmationFailed'));
+      toast.error(
+        err.response?.data?.error ||
+          t("courseDetail.paymentConfirmationFailed"),
+      );
     } finally {
       setLoading(false);
     }
@@ -226,14 +246,14 @@ export default function CourseDetailPage({ params }) {
 
   const handlePaymentError = (error) => {
     console.error("Payment error:", error);
-    toast.error(error.message || t('courseDetail.paymentFailed'));
+    toast.error(error.message || t("courseDetail.paymentFailed"));
   };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header />
-        <LoadingSpinner message={t('courseDetail.loadingCourse')} fullScreen />
+        <LoadingSpinner message={t("courseDetail.loadingCourse")} fullScreen />
       </div>
     );
   }
@@ -243,8 +263,8 @@ export default function CourseDetailPage({ params }) {
       <div className="min-h-screen bg-gray-50">
         <Header />
         <ErrorState
-          message={error || t('courseDetail.courseNotFound')}
-          actionLabel={t('common.backToCourses')}
+          message={error || t("courseDetail.courseNotFound")}
+          actionLabel={t("common.backToCourses")}
           onAction={() => router.push("/courses")}
           fullScreen
         />
@@ -254,8 +274,12 @@ export default function CourseDetailPage({ params }) {
 
   const canAccess = isAuthenticated && course.isPurchased;
   const features = Array.isArray(course.features) ? course.features : [];
-  const requirements = Array.isArray(course.requirements) ? course.requirements : [];
-  const whatYouLearn = Array.isArray(course.what_you_learn) ? course.what_you_learn : [];
+  const requirements = Array.isArray(course.requirements)
+    ? course.requirements
+    : [];
+  const whatYouLearn = Array.isArray(course.what_you_learn)
+    ? course.what_you_learn
+    : [];
 
   return (
     <motion.div
@@ -296,7 +320,10 @@ export default function CourseDetailPage({ params }) {
                   />
                   <div className="flex items-center gap-2">
                     <Users className="w-5 h-5" />
-                    <span>{course.students.toLocaleString()} {t('courseDetail.students')}</span>
+                    <span>
+                      {course.students.toLocaleString()}{" "}
+                      {t("courseDetail.students")}
+                    </span>
                   </div>
                 </div>
 
@@ -312,7 +339,9 @@ export default function CourseDetailPage({ params }) {
                       />
                     )}
                     <div>
-                      <p className="text-sm text-blue-200">{t('courseDetail.instructor')}</p>
+                      <p className="text-sm text-blue-200">
+                        {t("courseDetail.instructor")}
+                      </p>
                       <p className="font-semibold">{course.instructor}</p>
                     </div>
                   </div>
@@ -343,22 +372,29 @@ export default function CourseDetailPage({ params }) {
                     {canAccess ? (
                       <div className="flex items-center justify-center gap-2 text-green-600">
                         <CheckCircle className="w-5 h-5" />
-                        <span className="font-semibold">{t('courseDetail.enrolled')}</span>
+                        <span className="font-semibold">
+                          {t("courseDetail.enrolled")}
+                        </span>
                       </div>
                     ) : (
-                      <p className="text-gray-600">{t('courseDetail.oneTimePayment')}</p>
+                      <p className="text-gray-600">
+                        {t("courseDetail.oneTimePayment")}
+                      </p>
                     )}
                   </div>
 
                   <button
                     onClick={handlePurchase}
                     disabled={canAccess}
-                    className={`w-full py-3 rounded-lg font-semibold transition-colors mb-3 ${canAccess
-                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                      : "bg-blue-600 text-white hover:bg-blue-700"
-                      }`}
+                    className={`w-full py-3 rounded-lg font-semibold transition-colors mb-3 ${
+                      canAccess
+                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                        : "bg-blue-600 text-white hover:bg-blue-700"
+                    }`}
                   >
-                    {canAccess ? t('courseDetail.alreadyEnrolled') : t('courseDetail.buyNow')}
+                    {canAccess
+                      ? t("courseDetail.alreadyEnrolled")
+                      : t("courseDetail.buyNow")}
                   </button>
 
                   {features.length > 0 && (
@@ -388,44 +424,49 @@ export default function CourseDetailPage({ params }) {
             {/* Main Content */}
             <div className="lg:col-span-2">
               {/* Video Player + Notes */}
-              {selectedLesson && (selectedLesson.video_url || selectedLesson.notes_url) && (
-                <div className="mb-8">
-                  {selectedLesson.video_url && (
-                    <VideoPlayer
-                      videoUrl={selectedLesson.video_url}
-                      thumbnailUrl={course.thumbnail}
-                      className="w-full aspect-video"
-                    />
-                  )}
-                  <div className={`bg-white p-6 shadow-md ${selectedLesson.video_url ? 'rounded-b-xl' : 'rounded-xl'}`}>
-                    <h2 className="text-2xl font-bold mb-2">{selectedLesson.title}</h2>
-                    <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
-                      {selectedLesson.duration && (
-                        <span className="flex items-center gap-1">
-                          <Clock className="w-4 h-4" />
-                          {selectedLesson.duration}
-                        </span>
-                      )}
-                      {selectedLesson.is_preview && (
-                        <span className="px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-semibold">
-                          {t('courseDetail.freePreview')}
-                        </span>
-                      )}
-                      {selectedLesson.notes_url && (
-                        <a
-                          href={selectedLesson.notes_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors text-xs font-semibold"
-                        >
-                          <FileText className="w-4 h-4" />
-                          Download Notes
-                        </a>
-                      )}
+              {selectedLesson &&
+                (selectedLesson.video_url || selectedLesson.notes_url) && (
+                  <div className="mb-8">
+                    {selectedLesson.video_url && (
+                      <VideoPlayer
+                        videoUrl={selectedLesson.video_url}
+                        thumbnailUrl={course.thumbnail}
+                        className="w-full aspect-video"
+                      />
+                    )}
+                    <div
+                      className={`bg-white p-6 shadow-md ${selectedLesson.video_url ? "rounded-b-xl" : "rounded-xl"}`}
+                    >
+                      <h2 className="text-2xl font-bold mb-2">
+                        {selectedLesson.title}
+                      </h2>
+                      <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+                        {selectedLesson.duration && (
+                          <span className="flex items-center gap-1">
+                            <Clock className="w-4 h-4" />
+                            {selectedLesson.duration}
+                          </span>
+                        )}
+                        {selectedLesson.is_preview && (
+                          <span className="px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-semibold">
+                            {t("courseDetail.freePreview")}
+                          </span>
+                        )}
+                        {selectedLesson.notes_url && (
+                          <a
+                            href={selectedLesson.notes_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors text-xs font-semibold"
+                          >
+                            <FileText className="w-4 h-4" />
+                            Download Notes
+                          </a>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
 
               {/* Tabs */}
               <div className="bg-white rounded-xl shadow-md overflow-hidden">
@@ -435,10 +476,11 @@ export default function CourseDetailPage({ params }) {
                       <button
                         key={tab}
                         onClick={() => setActiveTab(tab)}
-                        className={`flex-1 px-6 py-4 text-sm font-semibold capitalize transition-colors ${activeTab === tab
-                          ? "text-blue-600 border-b-2 border-blue-600"
-                          : "text-gray-600 hover:text-gray-900"
-                          }`}
+                        className={`flex-1 px-6 py-4 text-sm font-semibold capitalize transition-colors ${
+                          activeTab === tab
+                            ? "text-blue-600 border-b-2 border-blue-600"
+                            : "text-gray-600 hover:text-gray-900"
+                        }`}
                       >
                         {t(`courseDetail.tabs.${tab}`)}
                       </button>
@@ -449,7 +491,9 @@ export default function CourseDetailPage({ params }) {
                 <div className="p-6">
                   {activeTab === "overview" && (
                     <div>
-                      <h3 className="text-xl font-bold mb-4">{t('courseDetail.whatYouWillLearn')}</h3>
+                      <h3 className="text-xl font-bold mb-4">
+                        {t("courseDetail.whatYouWillLearn")}
+                      </h3>
                       {whatYouLearn.length > 0 ? (
                         <div className="grid md:grid-cols-2 gap-3">
                           {whatYouLearn.map((item, index) => (
@@ -460,26 +504,35 @@ export default function CourseDetailPage({ params }) {
                           ))}
                         </div>
                       ) : (
-                        <p className="text-gray-600">{t('courseDetail.courseOverviewComingSoon')}</p>
+                        <p className="text-gray-600">
+                          {t("courseDetail.courseOverviewComingSoon")}
+                        </p>
                       )}
                     </div>
                   )}
 
                   {activeTab === "curriculum" && (
                     <div>
-                      <h3 className="text-xl font-bold mb-4">{t('courseDetail.courseCurriculum')}</h3>
+                      <h3 className="text-xl font-bold mb-4">
+                        {t("courseDetail.courseCurriculum")}
+                      </h3>
                       <div className="text-sm text-gray-600 mb-4">
-                        {t('courseDetail.lessonsAndDuration', { count: course.lessons?.length || 0, duration: course.duration })}
+                        {t("courseDetail.lessonsAndDuration", {
+                          count: course.lessons?.length || 0,
+                          duration: course.duration,
+                        })}
                       </div>
                       <p className="text-gray-600">
-                        {t('courseDetail.seeCompleteLessonList')}
+                        {t("courseDetail.seeCompleteLessonList")}
                       </p>
                     </div>
                   )}
 
                   {activeTab === "requirements" && (
                     <div>
-                      <h3 className="text-xl font-bold mb-4">{t('courseDetail.requirements')}</h3>
+                      <h3 className="text-xl font-bold mb-4">
+                        {t("courseDetail.requirements")}
+                      </h3>
                       {requirements.length > 0 ? (
                         <ul className="space-y-2">
                           {requirements.map((req, index) => (
@@ -490,7 +543,9 @@ export default function CourseDetailPage({ params }) {
                           ))}
                         </ul>
                       ) : (
-                        <p className="text-gray-600">{t('courseDetail.noSpecificRequirements')}</p>
+                        <p className="text-gray-600">
+                          {t("courseDetail.noSpecificRequirements")}
+                        </p>
                       )}
                     </div>
                   )}
@@ -507,9 +562,11 @@ export default function CourseDetailPage({ params }) {
                 className="bg-white rounded-xl shadow-md overflow-hidden sticky top-24"
               >
                 <div className="p-4 bg-gray-50 border-b border-gray-200">
-                  <h3 className="font-bold text-lg">{t('courseDetail.courseContent')}</h3>
+                  <h3 className="font-bold text-lg">
+                    {t("courseDetail.courseContent")}
+                  </h3>
                   <p className="text-sm text-gray-600">
-                    {course.lessons?.length || 0} {t('courseDetail.lessons')}
+                    {course.lessons?.length || 0} {t("courseDetail.lessons")}
                   </p>
                 </div>
                 <div className="max-h-[600px] overflow-y-auto">
@@ -520,9 +577,14 @@ export default function CourseDetailPage({ params }) {
                       const isAccessible = lesson.is_preview || canAccess;
 
                       return (
-                        <div key={lesson.id} className="border-b border-gray-100">
+                        <div
+                          key={lesson.id}
+                          className="border-b border-gray-100"
+                        >
                           {/* Top-level lesson row */}
-                          <div className={`flex items-start gap-3 p-4 transition-colors ${selectedLesson?.id === lesson.id ? 'bg-blue-50' : 'hover:bg-gray-50'}`}>
+                          <div
+                            className={`flex items-start gap-3 p-4 transition-colors ${selectedLesson?.id === lesson.id ? "bg-blue-50" : "hover:bg-gray-50"}`}
+                          >
                             {/* Expand/collapse toggle for lessons with sub-lessons */}
                             {hasSubLessons && (
                               <button
@@ -530,7 +592,11 @@ export default function CourseDetailPage({ params }) {
                                 onClick={() => toggleLessonExpand(lesson.id)}
                                 className="shrink-0 mt-0.5 text-gray-400 hover:text-gray-600"
                               >
-                                {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                                {isExpanded ? (
+                                  <ChevronDown className="w-4 h-4" />
+                                ) : (
+                                  <ChevronRight className="w-4 h-4" />
+                                )}
                               </button>
                             )}
 
@@ -558,36 +624,48 @@ export default function CourseDetailPage({ params }) {
                             {/* Lesson info */}
                             <div
                               className="flex-1 min-w-0 cursor-pointer"
-                              onClick={() => lesson.video_url && handleLessonClick(lesson)}
+                              onClick={() =>
+                                lesson.video_url && handleLessonClick(lesson)
+                              }
                             >
                               <div className="flex items-start justify-between gap-2">
                                 <h4 className="font-semibold text-sm text-gray-900 line-clamp-2">
                                   {lesson.title}
                                 </h4>
-                                {isAuthenticated && isAccessible && lesson.video_url && (
-                                  <input
-                                    type="checkbox"
-                                    checked={lesson.completed || false}
-                                    onChange={(e) => handleLessonProgressToggle(lesson, e)}
-                                    onClick={(e) => e.stopPropagation()}
-                                    className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer shrink-0"
-                                  />
-                                )}
+                                {isAuthenticated &&
+                                  isAccessible &&
+                                  lesson.video_url && (
+                                    <input
+                                      type="checkbox"
+                                      checked={lesson.completed || false}
+                                      onChange={(e) =>
+                                        handleLessonProgressToggle(lesson, e)
+                                      }
+                                      onClick={(e) => e.stopPropagation()}
+                                      className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer shrink-0"
+                                    />
+                                  )}
                               </div>
                               <div className="flex items-center gap-2 mt-1">
-                                {lesson.duration && <span className="text-xs text-gray-500">{lesson.duration}</span>}
+                                {lesson.duration && (
+                                  <span className="text-xs text-gray-500">
+                                    {lesson.duration}
+                                  </span>
+                                )}
                                 {hasSubLessons && (
-                                  <span className="text-xs text-gray-400">{lesson.sub_lessons.length} sub-lessons</span>
+                                  <span className="text-xs text-gray-400">
+                                    {lesson.sub_lessons.length} sub-lessons
+                                  </span>
                                 )}
                                 {lesson.is_preview && (
                                   <span className="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded font-semibold">
-                                    {t('courseDetail.preview')}
+                                    {t("courseDetail.preview")}
                                   </span>
                                 )}
                                 {lesson.completed && (
                                   <span className="text-xs flex items-center gap-1 text-green-600">
                                     <CheckCircle className="w-3 h-3" />
-                                    {t('courseDetail.completed')}
+                                    {t("courseDetail.completed")}
                                   </span>
                                 )}
                               </div>
@@ -600,7 +678,7 @@ export default function CourseDetailPage({ params }) {
                               {lesson.sub_lessons.map((sub, subIndex) => (
                                 <div
                                   key={sub.id}
-                                  className={`flex items-start gap-3 pl-8 pr-4 py-3 border-b border-gray-100 last:border-0 transition-colors cursor-pointer ${selectedLesson?.id === sub.id ? 'bg-blue-50' : 'hover:bg-blue-50/50'}`}
+                                  className={`flex items-start gap-3 pl-8 pr-4 py-3 border-b border-gray-100 last:border-0 transition-colors cursor-pointer ${selectedLesson?.id === sub.id ? "bg-blue-50" : "hover:bg-blue-50/50"}`}
                                   onClick={() => handleLessonClick(sub)}
                                 >
                                   <div className="shrink-0 w-7 h-7 rounded-full bg-white border border-gray-200 flex items-center justify-center">
@@ -625,14 +703,20 @@ export default function CourseDetailPage({ params }) {
                                         <input
                                           type="checkbox"
                                           checked={sub.completed || false}
-                                          onChange={(e) => handleLessonProgressToggle(sub, e)}
+                                          onChange={(e) =>
+                                            handleLessonProgressToggle(sub, e)
+                                          }
                                           onClick={(e) => e.stopPropagation()}
                                           className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer shrink-0"
                                         />
                                       )}
                                     </div>
                                     <div className="flex items-center gap-2 mt-0.5">
-                                      {sub.duration && <span className="text-xs text-gray-400">{sub.duration}</span>}
+                                      {sub.duration && (
+                                        <span className="text-xs text-gray-400">
+                                          {sub.duration}
+                                        </span>
+                                      )}
                                       {sub.notes_url && (
                                         <span className="text-xs flex items-center gap-0.5 text-indigo-500">
                                           <FileText className="w-3 h-3" />
@@ -642,7 +726,7 @@ export default function CourseDetailPage({ params }) {
                                       {sub.completed && (
                                         <span className="text-xs flex items-center gap-0.5 text-green-600">
                                           <CheckCircle className="w-3 h-3" />
-                                          {t('courseDetail.completed')}
+                                          {t("courseDetail.completed")}
                                         </span>
                                       )}
                                     </div>
@@ -658,8 +742,8 @@ export default function CourseDetailPage({ params }) {
                     <div className="p-4">
                       <EmptyState
                         icon={BookOpen}
-                        title={t('courseDetail.noLessonsAvailable')}
-                        description={t('courseDetail.lessonsWillBeAddedSoon')}
+                        title={t("courseDetail.noLessonsAvailable")}
+                        description={t("courseDetail.lessonsWillBeAddedSoon")}
                       />
                     </div>
                   )}

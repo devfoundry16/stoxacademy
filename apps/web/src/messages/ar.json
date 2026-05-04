@@ -350,6 +350,13 @@
     "phonePlaceholder": "+1234567890",
     "agePlaceholder": "25"
   },
+  "authCallback": {
+    "completingAuthentication": "جاري إكمال تسجيل الدخول…",
+    "redirectingToLogin": "جاري التوجيه إلى صفحة تسجيل الدخول…",
+    "authenticationFailed": "فشلت المصادقة",
+    "failedToSetSession": "تعذر إنشاء الجلسة أو جلب بيانات المستخدم",
+    "noAuthorizationCode": "لم يُعثر على رمز التفويض أو الرموز المطلوبة"
+  },
   "myCourses": {
     "loadingCourses": "جاري تحميل دوراتك...",
     "failedToLoadCourses": "فشل تحميل دوراتك. يرجى المحاولة مرة أخرى.",

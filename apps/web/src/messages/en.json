@@ -350,6 +350,13 @@
     "phonePlaceholder": "+1234567890",
     "agePlaceholder": "25"
   },
+  "authCallback": {
+    "completingAuthentication": "Completing authentication…",
+    "redirectingToLogin": "Redirecting to login…",
+    "authenticationFailed": "Authentication failed",
+    "failedToSetSession": "Failed to set session or fetch user data",
+    "noAuthorizationCode": "No authorization code or tokens found"
+  },
   "myCourses": {
     "loadingCourses": "Loading your courses...",
     "failedToLoadCourses": "Failed to load your courses. Please try again.",

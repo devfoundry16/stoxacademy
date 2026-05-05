@@ -342,7 +342,8 @@
     "couponRemoved": "Coupon removed",
     "failedToRemoveCoupon": "Failed to remove coupon",
     "invalidCoupon": "Invalid coupon code",
-    "off": "off"
+    "off": "off",
+    "checkEmailToSetPassword": "Check your email to set a password and access your course."
   },
   "signup": {
     "createAccount": "Create Account",
@@ -368,6 +369,21 @@
     "authenticationFailed": "Authentication failed",
     "failedToSetSession": "Failed to set session or fetch user data",
     "noAuthorizationCode": "No authorization code or tokens found"
+  },
+  "setPassword": {
+    "title": "Set Your Password",
+    "subtitle": "Create a password to access your account and purchases at any time.",
+    "newPassword": "New Password",
+    "confirmPassword": "Confirm Password",
+    "passwordPlaceholder": "At least 6 characters",
+    "confirmPlaceholder": "Repeat your password",
+    "submit": "Set Password",
+    "saving": "Saving…",
+    "minLength": "Password must be at least 6 characters",
+    "mismatch": "Passwords do not match",
+    "failed": "Failed to set password. Please try again.",
+    "successTitle": "Password Set!",
+    "successMessage": "You can now sign in with your email and password. Redirecting…"
   },
   "myCourses": {
     "loadingCourses": "Loading your courses...",
@@ -428,6 +444,7 @@
       "signInToEnroll": "Please sign in to enroll in this live session",
       "failedToInitializePayment": "Failed to initialize payment. Please try again.",
       "successfullyEnrolled": "Successfully enrolled in live session!",
+      "checkEmailToSetPassword": "Check your email to set a password and access your session.",
       "paymentConfirmationFailed": "Payment confirmation failed. Please contact support.",
       "paymentFailed": "Payment failed. Please try again.",
       "meetingLinkNotAvailable": "Meeting link not available yet. Please check back closer to the session time.",
@@ -571,7 +588,21 @@
     "processing": "Processing...",
     "pay": "Pay ${amount}",
     "paymentProcessing": "Payment processing. Please wait...",
-    "securedByStripe": "Secured by Stripe. Your payment information is encrypted and secure."
+    "securedByStripe": "Secured by Stripe. Your payment information is encrypted and secure.",
+    "guestCheckoutInfo": "No account needed — enter your email and we'll set one up for you automatically after purchase.",
+    "emailAddress": "Email Address",
+    "emailPlaceholder": "you@example.com",
+    "emailRequired": "Please enter your email address",
+    "firstName": "First Name",
+    "firstNamePlaceholder": "First name",
+    "lastName": "Last Name",
+    "lastNamePlaceholder": "Last name",
+    "preparing": "Preparing checkout...",
+    "continueToPayment": "Continue to Payment",
+    "alreadyHaveAccount": "Already have an account?",
+    "signIn": "Sign in",
+    "failedToInitialize": "Failed to initialize payment. Please try again.",
+    "checkEmailToSetPassword": "Check your email to set a password and access your purchase."
   },
   "courseCard": {
     "studentsEnrolled": "students enrolled",

@@ -36,8 +36,8 @@ export const paymentService = {
   },
 
   // 90 Circle subscription payments
-  createSubscriptionPaymentIntent: async () => {
-    const response = await apiClient.post("/api/payments/subscription/create-intent");
+  createSubscriptionPaymentIntent: async (programType) => {
+    const response = await apiClient.post("/api/payments/subscription/create-intent", { programType });
     return response.data;
   },
 
@@ -63,6 +63,85 @@ export const paymentService = {
   // Get current user's subscription + session package status
   getSubscriptionStatus: async () => {
     const response = await apiClient.get("/api/payments/subscription/status");
+    return response.data;
+  },
+
+  // Guest course payments (no auth required)
+  createGuestCoursePaymentIntent: async (courseId, email, firstName, lastName, couponCode = null) => {
+    const response = await apiClient.post("/api/payments/course/guest-create-intent", {
+      courseId,
+      email,
+      firstName,
+      lastName,
+      couponCode,
+    });
+    return response.data;
+  },
+
+  confirmGuestCoursePayment: async (paymentIntentId, guestToken) => {
+    const response = await apiClient.post("/api/payments/course/guest-confirm", {
+      paymentIntentId,
+      guestToken,
+    });
+    return response.data;
+  },
+
+  // Guest live session payments (no auth required)
+  createGuestLiveSessionPaymentIntent: async (sessionId, email, firstName, lastName, couponCode = null) => {
+    const response = await apiClient.post("/api/payments/live-session/guest-create-intent", {
+      sessionId,
+      email,
+      firstName,
+      lastName,
+      couponCode,
+    });
+    return response.data;
+  },
+
+  confirmGuestLiveSessionPayment: async (paymentIntentId, guestToken) => {
+    const response = await apiClient.post("/api/payments/live-session/guest-confirm", {
+      paymentIntentId,
+      guestToken,
+    });
+    return response.data;
+  },
+
+  // Guest subscription payments (no auth required)
+  createGuestSubscriptionPaymentIntent: async (email, firstName, lastName, programType) => {
+    const response = await apiClient.post("/api/payments/subscription/guest-create-intent", {
+      email,
+      firstName,
+      lastName,
+      programType,
+    });
+    return response.data;
+  },
+
+  confirmGuestSubscriptionPayment: async (paymentIntentId, guestToken) => {
+    const response = await apiClient.post("/api/payments/subscription/guest-confirm", {
+      paymentIntentId,
+      guestToken,
+    });
+    return response.data;
+  },
+
+  // Guest session package payments (no auth required)
+  createGuestSessionPackagePaymentIntent: async (packageType, category, email, firstName, lastName) => {
+    const response = await apiClient.post("/api/payments/session-package/guest-create-intent", {
+      packageType,
+      category,
+      email,
+      firstName,
+      lastName,
+    });
+    return response.data;
+  },
+
+  confirmGuestSessionPackagePayment: async (paymentIntentId, guestToken) => {
+    const response = await apiClient.post("/api/payments/session-package/guest-confirm", {
+      paymentIntentId,
+      guestToken,
+    });
     return response.data;
   },
 };

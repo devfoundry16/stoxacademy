@@ -144,33 +144,30 @@ export default function CourseDetailPage({ params }) {
   };
 
   const handlePurchase = async () => {
-    if (!isAuthenticated) {
-      toast.error(t("courseDetail.signInToPurchase"));
-      router.push("/login");
-      return;
-    }
-
-    try {
-      setLoading(true);
-      // Create payment intent without coupon initially
-      const response = await paymentService.createCoursePaymentIntent(
-        course.id,
-      );
-      setClientSecret(response.clientSecret);
-      setPaymentIntentId(response.paymentIntentId);
-      setDiscountInfo({
-        originalPrice: parseFloat(course.price),
-        finalPrice: parseFloat(course.price),
-        discountPercentage: 0,
-      });
+    if (isAuthenticated) {
+      // Authenticated flow: create intent immediately and open modal
+      try {
+        setLoading(true);
+        const response = await paymentService.createCoursePaymentIntent(course.id);
+        setClientSecret(response.clientSecret);
+        setPaymentIntentId(response.paymentIntentId);
+        setDiscountInfo({
+          originalPrice: parseFloat(course.price),
+          finalPrice: parseFloat(course.price),
+          discountPercentage: 0,
+        });
+        setCheckoutModalOpen(true);
+      } catch (err) {
+        toast.error(
+          err.response?.data?.error ||
+            t("courseDetail.failedToInitializePayment"),
+        );
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      // Guest flow: open modal immediately — Step 1 (email form) will be shown
       setCheckoutModalOpen(true);
-    } catch (err) {
-      toast.error(
-        err.response?.data?.error ||
-          t("courseDetail.failedToInitializePayment"),
-      );
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -224,14 +221,19 @@ export default function CourseDetailPage({ params }) {
     }
   };
 
-  const handlePaymentSuccess = async (paymentIntent) => {
+  const handlePaymentSuccess = async (paymentIntent, guestToken) => {
     try {
       setLoading(true);
-      // Confirm payment on backend
-      await paymentService.confirmCoursePayment(paymentIntent.id);
+      if (guestToken) {
+        await paymentService.confirmGuestCoursePayment(paymentIntent.id, guestToken);
+      } else {
+        await paymentService.confirmCoursePayment(paymentIntent.id);
+      }
       setCheckoutModalOpen(false);
       toast.success(t("courseDetail.coursePurchased"));
-      // Refresh course data
+      if (guestToken) {
+        toast.success(t("courseDetail.checkEmailToSetPassword"), { duration: 6000 });
+      }
       const data = await courseService.getCourseById(id);
       setCourse(data.course);
     } catch (err) {
@@ -755,7 +757,7 @@ export default function CourseDetailPage({ params }) {
       </div>
 
       {/* Stripe Checkout Modal */}
-      {clientSecret && (
+      {(clientSecret || !isAuthenticated) && (
         <StripeCheckoutModal
           isOpen={checkoutModalOpen}
           onClose={() => setCheckoutModalOpen(false)}
@@ -765,9 +767,19 @@ export default function CourseDetailPage({ params }) {
           originalPrice={discountInfo.originalPrice}
           discountPercentage={discountInfo.discountPercentage}
           appliedCoupon={appliedCoupon}
-          onApplyCoupon={handleApplyCoupon}
+          onApplyCoupon={isAuthenticated ? handleApplyCoupon : undefined}
           onSuccess={handlePaymentSuccess}
           onError={handlePaymentError}
+          isGuest={!isAuthenticated}
+          onGuestCreateIntent={(email, firstName, lastName) =>
+            paymentService.createGuestCoursePaymentIntent(
+              course.id,
+              email,
+              firstName,
+              lastName,
+              appliedCoupon,
+            )
+          }
         />
       )}
     </motion.div>

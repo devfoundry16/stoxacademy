@@ -342,7 +342,8 @@
     "couponRemoved": "تمت إزالة القسيمة",
     "failedToRemoveCoupon": "فشل إزالة القسيمة",
     "invalidCoupon": "رمز قسيمة غير صالح",
-    "off": "خصم"
+    "off": "خصم",
+    "checkEmailToSetPassword": "تحقق من بريدك الإلكتروني لتعيين كلمة مرور والوصول إلى دورتك."
   },
   "signup": {
     "createAccount": "سجّل تفاصيلك",
@@ -368,6 +369,21 @@
     "authenticationFailed": "فشلت المصادقة",
     "failedToSetSession": "تعذر إنشاء الجلسة أو جلب بيانات المستخدم",
     "noAuthorizationCode": "لم يُعثر على رمز التفويض أو الرموز المطلوبة"
+  },
+  "setPassword": {
+    "title": "تعيين كلمة المرور",
+    "subtitle": "أنشئ كلمة مرور للوصول إلى حسابك ومشترياتك في أي وقت.",
+    "newPassword": "كلمة المرور الجديدة",
+    "confirmPassword": "تأكيد كلمة المرور",
+    "passwordPlaceholder": "6 أحرف على الأقل",
+    "confirmPlaceholder": "أعد كتابة كلمة المرور",
+    "submit": "تعيين كلمة المرور",
+    "saving": "جاري الحفظ…",
+    "minLength": "يجب أن تتكون كلمة المرور من 6 أحرف على الأقل",
+    "mismatch": "كلمتا المرور غير متطابقتين",
+    "failed": "فشل تعيين كلمة المرور. يرجى المحاولة مرة أخرى.",
+    "successTitle": "تم تعيين كلمة المرور!",
+    "successMessage": "يمكنك الآن تسجيل الدخول بالبريد الإلكتروني وكلمة المرور. جاري التوجيه…"
   },
   "myCourses": {
     "loadingCourses": "جاري تحميل دوراتك...",
@@ -428,6 +444,7 @@
       "signInToEnroll": "يرجى تسجيل الدخول للتسجيل في هذه الجلسة المباشرة",
       "failedToInitializePayment": "فشل تهيئة الدفع. يرجى المحاولة مرة أخرى.",
       "successfullyEnrolled": "تم التسجيل في الجلسة المباشرة بنجاح!",
+      "checkEmailToSetPassword": "تحقق من بريدك الإلكتروني لتعيين كلمة مرور والوصول إلى جلستك.",
       "paymentConfirmationFailed": "فشل تأكيد الدفع. يرجى الاتصال بالدعم.",
       "paymentFailed": "فشل الدفع. يرجى المحاولة مرة أخرى.",
       "meetingLinkNotAvailable": "رابط الاجتماع غير متاح بعد. يرجى التحقق مرة أخرى قرب وقت الجلسة.",
@@ -571,7 +588,21 @@
     "processing": "جارٍ المعالجة...",
     "pay": "ادفع ${amount}",
     "paymentProcessing": "جارٍ معالجة الدفع. يرجى الانتظار...",
-    "securedByStripe": "مؤمَّن بواسطة Stripe. معلومات الدفع الخاصة بك مشفرة وآمنة."
+    "securedByStripe": "مؤمَّن بواسطة Stripe. معلومات الدفع الخاصة بك مشفرة وآمنة.",
+    "guestCheckoutInfo": "لا تحتاج إلى حساب — أدخل بريدك الإلكتروني وسنقوم بإنشاء حساب لك تلقائيًا بعد الشراء.",
+    "emailAddress": "البريد الإلكتروني",
+    "emailPlaceholder": "example@email.com",
+    "emailRequired": "الرجاء إدخال بريدك الإلكتروني",
+    "firstName": "الاسم الأول",
+    "firstNamePlaceholder": "الاسم الأول",
+    "lastName": "اسم العائلة",
+    "lastNamePlaceholder": "اسم العائلة",
+    "preparing": "جارٍ تجهيز الدفع...",
+    "continueToPayment": "المتابعة إلى الدفع",
+    "alreadyHaveAccount": "هل لديك حساب بالفعل؟",
+    "signIn": "تسجيل الدخول",
+    "failedToInitialize": "فشل في تهيئة الدفع. يرجى المحاولة مرة أخرى.",
+    "checkEmailToSetPassword": "تحقق من بريدك الإلكتروني لتعيين كلمة مرور والوصول إلى مشترياتك."
   },
   "courseCard": {
     "studentsEnrolled": "طالب مسجل",

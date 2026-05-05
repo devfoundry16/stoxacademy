@@ -21,6 +21,9 @@ const section2Colors = [
   { bgGradient: "from-indigo-50 to-blue-50", badgeColor: "bg-indigo-600", buttonColor: "bg-indigo-600 hover:bg-indigo-700", accentColor: "text-indigo-600" },
 ]
 
+// Map course card index to program_type used in backend
+const PROGRAM_TYPES = ["stock_market", "gold_forex", "crypto"]
+
 // Map session index to category key used in backend
 const SESSION_CATEGORIES = ["gold_forex", "crypto"]
 
@@ -33,7 +36,7 @@ export function CoursesSection() {
   const section2 = t.raw('courses.section2')
 
   // Subscription + package state
-  const [subscription, setSubscription] = useState(null)
+  const [subscriptions, setSubscriptions] = useState([])
   const [sessionPackages, setSessionPackages] = useState([])
   const [statusLoading, setStatusLoading] = useState(false)
 
@@ -44,9 +47,11 @@ export function CoursesSection() {
     amount: null,
     itemName: "",
     paymentIntentId: null,
-    type: null,       // "subscription" | "session_package"
+    type: null,        // "subscription" | "session_package"
     packageType: null,
     category: null,
+    programType: null, // "stock_market" | "gold_forex" | "crypto"
+    isGuest: false,
   })
   const [isCreatingIntent, setIsCreatingIntent] = useState(false)
 
@@ -55,7 +60,7 @@ export function CoursesSection() {
     setStatusLoading(true)
     try {
       const data = await paymentService.getSubscriptionStatus()
-      setSubscription(data.subscription)
+      setSubscriptions(data.subscriptions || [])
       setSessionPackages(data.sessionPackages || [])
     } catch {
       // silent — status is non-critical on initial load
@@ -69,35 +74,59 @@ export function CoursesSection() {
   }, [fetchStatus])
 
   // ----- 90 Circle -----
-  const handleSubscribeClick = async () => {
-    if (!isAuthenticated) {
-      router.push('/signup')
-      return
-    }
-    setIsCreatingIntent(true)
-    try {
-      const data = await paymentService.createSubscriptionPaymentIntent()
+  const handleSubscribeClick = async (programIdx) => {
+    const programType = PROGRAM_TYPES[programIdx]
+    const courseName = section1.courses[programIdx]?.title || section1.title
+    const itemName = `${section1.title} — ${courseName}`
+
+    if (isAuthenticated) {
+      setIsCreatingIntent(true)
+      try {
+        const data = await paymentService.createSubscriptionPaymentIntent(programType)
+        setCheckoutModal({
+          open: true,
+          clientSecret: data.clientSecret,
+          amount: parseFloat(data.finalPrice),
+          itemName,
+          paymentIntentId: data.paymentIntentId,
+          type: "subscription",
+          packageType: null,
+          category: null,
+          programType,
+          isGuest: false,
+        })
+      } catch (err) {
+        toast.error(err?.response?.data?.error || "Failed to start checkout")
+      } finally {
+        setIsCreatingIntent(false)
+      }
+    } else {
+      // Guest flow: open modal directly — Step 1 (email form) will be shown
       setCheckoutModal({
         open: true,
-        clientSecret: data.clientSecret,
-        amount: parseFloat(data.finalPrice),
-        itemName: t('courses.section1.title') + " — 90 Circle Subscription",
-        paymentIntentId: data.paymentIntentId,
+        clientSecret: null,
+        amount: null,
+        itemName,
+        paymentIntentId: null,
         type: "subscription",
         packageType: null,
         category: null,
+        programType,
+        isGuest: true,
       })
-    } catch (err) {
-      toast.error(err?.response?.data?.error || "Failed to start checkout")
-    } finally {
-      setIsCreatingIntent(false)
     }
   }
 
-  const handleSubscriptionSuccess = async () => {
+  const handleSubscriptionSuccess = async (paymentIntentId, guestToken) => {
     try {
-      await paymentService.confirmSubscriptionPayment(checkoutModal.paymentIntentId)
-      toast.success(t('courses.section1.subscribeSuccess'))
+      if (guestToken) {
+        await paymentService.confirmGuestSubscriptionPayment(paymentIntentId, guestToken)
+        toast.success(t('courses.section1.subscribeSuccess'))
+        toast.success(t('checkout.checkEmailToSetPassword'), { duration: 6000 })
+      } else {
+        await paymentService.confirmSubscriptionPayment(paymentIntentId)
+        toast.success(t('courses.section1.subscribeSuccess'))
+      }
       setCheckoutModal(m => ({ ...m, open: false }))
       fetchStatus()
     } catch (err) {
@@ -107,35 +136,55 @@ export function CoursesSection() {
 
   // ----- Session Packages -----
   const handleBuyPackageClick = async (packageType, category) => {
-    if (!isAuthenticated) {
-      router.push('/signup')
-      return
-    }
-    setIsCreatingIntent(true)
-    try {
-      const data = await paymentService.createSessionPackagePaymentIntent(packageType, category)
-      const sessions = packageType === "3_sessions" ? 3 : 6
+    const sessions = packageType === "3_sessions" ? 3 : 6
+    const itemName = `${sessions} ${t('courses.section2.sectionLabel')} (${category === 'gold_forex' ? 'Gold & Forex' : 'Crypto'})`
+
+    if (isAuthenticated) {
+      setIsCreatingIntent(true)
+      try {
+        const data = await paymentService.createSessionPackagePaymentIntent(packageType, category)
+        setCheckoutModal({
+          open: true,
+          clientSecret: data.clientSecret,
+          amount: parseFloat(data.finalPrice),
+          itemName,
+          paymentIntentId: data.paymentIntentId,
+          type: "session_package",
+          packageType,
+          category,
+          isGuest: false,
+        })
+      } catch (err) {
+        toast.error(err?.response?.data?.error || "Failed to start checkout")
+      } finally {
+        setIsCreatingIntent(false)
+      }
+    } else {
+      // Guest flow: open modal directly — Step 1 (email form) will be shown
       setCheckoutModal({
         open: true,
-        clientSecret: data.clientSecret,
-        amount: parseFloat(data.finalPrice),
-        itemName: `${sessions} ${t('courses.section2.sectionLabel')} (${category === 'gold_forex' ? 'Gold & Forex' : 'Crypto'})`,
-        paymentIntentId: data.paymentIntentId,
+        clientSecret: null,
+        amount: null,
+        itemName,
+        paymentIntentId: null,
         type: "session_package",
         packageType,
         category,
+        isGuest: true,
       })
-    } catch (err) {
-      toast.error(err?.response?.data?.error || "Failed to start checkout")
-    } finally {
-      setIsCreatingIntent(false)
     }
   }
 
-  const handleSessionPackageSuccess = async () => {
+  const handleSessionPackageSuccess = async (paymentIntentId, guestToken) => {
     try {
-      await paymentService.confirmSessionPackagePayment(checkoutModal.paymentIntentId)
-      toast.success(t('courses.section2.buySuccess'))
+      if (guestToken) {
+        await paymentService.confirmGuestSessionPackagePayment(paymentIntentId, guestToken)
+        toast.success(t('courses.section2.buySuccess'))
+        toast.success(t('checkout.checkEmailToSetPassword'), { duration: 6000 })
+      } else {
+        await paymentService.confirmSessionPackagePayment(paymentIntentId)
+        toast.success(t('courses.section2.buySuccess'))
+      }
       setCheckoutModal(m => ({ ...m, open: false }))
       fetchStatus()
     } catch (err) {
@@ -143,18 +192,20 @@ export function CoursesSection() {
     }
   }
 
-  const handleCheckoutSuccess = () => {
+  const handleCheckoutSuccess = (paymentIntent, guestToken) => {
+    const paymentIntentId = paymentIntent?.id || checkoutModal.paymentIntentId
     if (checkoutModal.type === "subscription") {
-      handleSubscriptionSuccess()
+      handleSubscriptionSuccess(paymentIntentId, guestToken)
     } else {
-      handleSessionPackageSuccess()
+      handleSessionPackageSuccess(paymentIntentId, guestToken)
     }
   }
 
   const closeModal = () => setCheckoutModal(m => ({ ...m, open: false }))
 
   // Helpers
-  const activeSubscription = subscription && subscription.status === 'active'
+  const getSubscriptionForProgram = (programType) =>
+    subscriptions.find(s => s.program_type === programType) || null
 
   const getPackageForCategory = (category) =>
     sessionPackages.find(p => p.category === category && p.sessions_remaining > 0) || null
@@ -218,6 +269,8 @@ export function CoursesSection() {
           >
             {section1.courses.map((course, idx) => {
               const colors = section1Colors[idx] || section1Colors[0]
+              const programType = PROGRAM_TYPES[idx]
+              const activeSub = getSubscriptionForProgram(programType)
               return (
                 <motion.div
                   key={idx}
@@ -246,7 +299,7 @@ export function CoursesSection() {
                     </div>
 
                     {/* CTA area */}
-                    {activeSubscription ? (
+                    {activeSub ? (
                       <div className="space-y-2">
                         <div className="flex items-center gap-2 text-green-700 font-semibold">
                           <CheckCircle className="w-5 h-5" />
@@ -254,32 +307,23 @@ export function CoursesSection() {
                         </div>
                         <div className="text-xs text-gray-500 flex items-center gap-1">
                           <Clock className="w-3.5 h-3.5" />
-                          {t('courses.section1.subscriptionExpires')}: {formatExpiry(subscription.expires_at)}
+                          {t('courses.section1.subscriptionExpires')}: {formatExpiry(activeSub.expires_at)}
                         </div>
                         <div className="text-xs text-gray-600">
-                          {subscription.group_sessions_remaining} {t('courses.section1.groupSessionsRemaining')} &middot; {subscription.individual_sessions_remaining} {t('courses.section1.individualSessionsRemaining')}
+                          {activeSub.group_sessions_remaining} {t('courses.section1.groupSessionsRemaining')} &middot; {activeSub.individual_sessions_remaining} {t('courses.section1.individualSessionsRemaining')}
                         </div>
                       </div>
-                    ) : isAuthenticated ? (
+                    ) : (
                       <motion.button
                         whileHover={{ y: -2 }}
                         whileTap={{ y: 0 }}
                         disabled={isCreatingIntent || statusLoading}
                         className={`w-full px-6 py-3.5 ${colors.buttonColor} text-white font-semibold rounded-xl transition-colors disabled:opacity-60 disabled:cursor-not-allowed`}
-                        onClick={handleSubscribeClick}
+                        onClick={() => handleSubscribeClick(idx)}
                       >
                         {isCreatingIntent
                           ? t('courses.section1.subscribing')
                           : t('courses.section1.subscribeButton')}
-                      </motion.button>
-                    ) : (
-                      <motion.button
-                        whileHover={{ y: -2 }}
-                        whileTap={{ y: 0 }}
-                        className={`w-full px-6 py-3.5 ${colors.buttonColor} text-white font-semibold rounded-xl transition-colors`}
-                        onClick={() => router.push('/signup')}
-                      >
-                        {t('common.registerNow')}
                       </motion.button>
                     )}
                   </div>
@@ -362,7 +406,7 @@ export function CoursesSection() {
                           {existingPackage.sessions_remaining} {t('courses.section2.sessionsRemaining')}
                         </p>
                       </div>
-                    ) : isAuthenticated ? (
+                    ) : (
                       <div className="flex flex-col sm:flex-row gap-3">
                         <motion.button
                           whileHover={{ y: -2 }}
@@ -383,15 +427,6 @@ export function CoursesSection() {
                           {t('courses.section2.buy6Button')}
                         </motion.button>
                       </div>
-                    ) : (
-                      <motion.button
-                        whileHover={{ y: -2 }}
-                        whileTap={{ y: 0 }}
-                        className={`w-full px-6 py-3.5 ${colors.buttonColor} text-white font-semibold rounded-xl transition-colors`}
-                        onClick={() => router.push('/signup')}
-                      >
-                        {t('common.registerNow')}
-                      </motion.button>
                     )}
                   </div>
                 </motion.div>
@@ -411,6 +446,24 @@ export function CoursesSection() {
         itemName={checkoutModal.itemName}
         onSuccess={handleCheckoutSuccess}
         onError={(err) => toast.error(err || "Payment failed")}
+        isGuest={checkoutModal.isGuest}
+        onGuestCreateIntent={
+          checkoutModal.isGuest
+            ? (email, firstName, lastName) => {
+                if (checkoutModal.type === "subscription") {
+                  return paymentService.createGuestSubscriptionPaymentIntent(email, firstName, lastName, checkoutModal.programType)
+                } else {
+                  return paymentService.createGuestSessionPackagePaymentIntent(
+                    checkoutModal.packageType,
+                    checkoutModal.category,
+                    email,
+                    firstName,
+                    lastName,
+                  )
+                }
+              }
+            : undefined
+        }
       />
     </section>
   )

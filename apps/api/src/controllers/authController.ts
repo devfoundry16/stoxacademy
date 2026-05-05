@@ -350,9 +350,11 @@ export const updatePassword = async (req: Request, res: Response) => {
     const identities = authData.user.identities || [];
     const isGoogleUser = identities.some((identity: any) => identity.provider === "google");
     const hasPassword = identities.some((identity: any) => identity.provider === "email");
+    // Guest users created via guest checkout have no password set yet — flagged explicitly
+    const isPasswordNotSet = authData.user.user_metadata?.password_set === false;
 
-    // If user has a password (email sign-in), require current password
-    if (hasPassword) {
+    // If user has a password (email sign-in) AND has already set one, require current password
+    if (hasPassword && !isPasswordNotSet) {
       if (!currentPassword) {
         return res.status(400).json({
           error: "Current password is required to change your password",
@@ -369,20 +371,24 @@ export const updatePassword = async (req: Request, res: Response) => {
         return res.status(401).json({ error: "Current password is incorrect" });
       }
     }
-    // If user is Google-only (no password), allow setting password without current password
+    // Google-only users and guest users (no password set yet) can set password without current password
 
     // Update password
     const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
       authData.user.id,
-      { password: newPassword }
+      {
+        password: newPassword,
+        // Mark password as set so future updates require the current password
+        user_metadata: { ...authData.user.user_metadata, password_set: true },
+      }
     );
 
     if (updateError) {
       return res.status(400).json({ error: updateError.message });
     }
 
-    const message = hasPassword 
-      ? "Password updated successfully" 
+    const message = hasPassword && !isPasswordNotSet
+      ? "Password updated successfully"
       : "Password set successfully. You can now sign in with email and password.";
 
     return res.status(200).json({ message });

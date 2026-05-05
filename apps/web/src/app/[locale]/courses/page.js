@@ -45,10 +45,6 @@ export default function CoursesPage() {
   }, [selectedLevel, sortBy]);
 
   const handleCourseClick = (course) => {
-    if (!isAuthenticated) {
-      router.push("/login");
-      return;
-    }
     router.push(`/courses/${course.id}`);
   };
 

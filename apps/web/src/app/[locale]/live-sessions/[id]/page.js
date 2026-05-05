@@ -54,28 +54,27 @@ export default function LiveSessionDetailPage({ params }) {
     };
 
     const handleEnroll = async () => {
-        if (!isAuthenticated) {
-            toast.error(t('signInToEnroll'));
-            router.push('/login');
-            return;
-        }
-
-        try {
-            setEnrolling(true);
-            // Create payment intent without coupon initially
-            const response = await paymentService.createLiveSessionPaymentIntent(session.id);
-            setClientSecret(response.clientSecret);
-            setPaymentIntentId(response.paymentIntentId);
-            setDiscountInfo({
-                originalPrice: parseFloat(session.price || 0),
-                finalPrice: parseFloat(session.price || 0),
-                discountPercentage: 0,
-            });
+        if (isAuthenticated) {
+            // Authenticated flow: create intent immediately
+            try {
+                setEnrolling(true);
+                const response = await paymentService.createLiveSessionPaymentIntent(session.id);
+                setClientSecret(response.clientSecret);
+                setPaymentIntentId(response.paymentIntentId);
+                setDiscountInfo({
+                    originalPrice: parseFloat(session.price || 0),
+                    finalPrice: parseFloat(session.price || 0),
+                    discountPercentage: 0,
+                });
+                setCheckoutModalOpen(true);
+            } catch (err) {
+                toast.error(err.response?.data?.error || t('failedToInitializePayment'));
+            } finally {
+                setEnrolling(false);
+            }
+        } else {
+            // Guest flow: open modal immediately — Step 1 (email form) will be shown
             setCheckoutModalOpen(true);
-        } catch (err) {
-            toast.error(err.response?.data?.error || t('failedToInitializePayment'));
-        } finally {
-            setEnrolling(false);
         }
     };
 
@@ -122,14 +121,18 @@ export default function LiveSessionDetailPage({ params }) {
         }
     };
 
-    const handlePaymentSuccess = async (paymentIntent) => {
+    const handlePaymentSuccess = async (paymentIntent, guestToken) => {
         try {
             setEnrolling(true);
-            // Confirm payment on backend
-            await paymentService.confirmLiveSessionPayment(paymentIntent.id);
+            if (guestToken) {
+                await paymentService.confirmGuestLiveSessionPayment(paymentIntent.id, guestToken);
+                toast.success(t('successfullyEnrolled'));
+                toast.success(t('checkEmailToSetPassword'), { duration: 6000 });
+            } else {
+                await paymentService.confirmLiveSessionPayment(paymentIntent.id);
+                toast.success(t('successfullyEnrolled'));
+            }
             setCheckoutModalOpen(false);
-            toast.success(t('successfullyEnrolled'));
-            // Refresh session data
             await fetchSession();
         } catch (err) {
             toast.error(err.response?.data?.error || t('paymentConfirmationFailed'));
@@ -479,7 +482,7 @@ export default function LiveSessionDetailPage({ params }) {
             </motion.div>
 
             {/* Stripe Checkout Modal */}
-            {clientSecret && (
+            {(clientSecret || !isAuthenticated) && (
                 <StripeCheckoutModal
                     isOpen={checkoutModalOpen}
                     onClose={() => setCheckoutModalOpen(false)}
@@ -489,9 +492,18 @@ export default function LiveSessionDetailPage({ params }) {
                     originalPrice={discountInfo.originalPrice}
                     discountPercentage={discountInfo.discountPercentage}
                     appliedCoupon={appliedCoupon}
-                    onApplyCoupon={handleApplyCoupon}
+                    onApplyCoupon={isAuthenticated ? handleApplyCoupon : undefined}
                     onSuccess={handlePaymentSuccess}
                     onError={handlePaymentError}
+                    isGuest={!isAuthenticated}
+                    onGuestCreateIntent={(email, firstName, lastName) =>
+                        paymentService.createGuestLiveSessionPaymentIntent(
+                            session.id,
+                            email,
+                            firstName,
+                            lastName,
+                        )
+                    }
                 />
             )}
         </motion.div>

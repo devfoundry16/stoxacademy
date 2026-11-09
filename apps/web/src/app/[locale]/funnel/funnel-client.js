@@ -213,18 +213,18 @@ export default function FunnelClient() {
 
   return (
     <div ref={root} dir="rtl" className="min-h-screen overflow-x-clip bg-[#07090d] text-white">
-      <div className="fixed inset-x-0 top-16 z-40 h-0.5 origin-right bg-[#f5c451] [animation:grow_linear_both] [animation-timeline:scroll()]" style={{ transformOrigin: "right" }} />
+      <div className="fixed inset-x-0 top-0 z-40 h-0.5 origin-right bg-[#f5c451] [animation:grow_linear_both] [animation-timeline:scroll()]" style={{ transformOrigin: "right" }} />
       <style>{`@keyframes grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
         .tl-item .tl-dot{transition:all .4s}
         .tl-item.is-active .tl-dot{background:${GOLD};box-shadow:0 0 0 6px #f5c45133,0 0 24px ${GOLD};color:#000}
         .tl-item.is-active .tl-card{border-color:#f5c45155;background:#ffffff0d}`}</style>
 
       {/* 1. HERO */}
-      <section className="hero relative isolate overflow-hidden px-4 pb-20 pt-32 text-center sm:px-6 sm:pt-40">
+      <section className="hero relative isolate overflow-hidden px-4 pb-20 pt-16 text-center sm:px-6 sm:pt-24">
         <div className="absolute inset-0 -z-10 opacity-50 [mask-image:linear-gradient(to_bottom,black_40%,transparent)]">
           <Aurora colorStops={["#8a4b08", GOLD, "#5c3205"]} amplitude={0.9} blend={0.6} height={0.45} speed={0.6} glow={0.5} brightness={0.7} />
         </div>
-        <div className="hero-chart absolute inset-x-0 top-40 -z-10 mx-auto h-[26rem] max-w-5xl opacity-20 [mask-image:linear-gradient(to_bottom,black,transparent)]">
+        <div className="hero-chart absolute inset-x-0 top-24 -z-10 mx-auto h-[26rem] max-w-5xl opacity-20 [mask-image:linear-gradient(to_bottom,black,transparent)]">
           <HeroChart />
         </div>
 

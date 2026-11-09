@@ -1,6 +1,4 @@
 import { redirect } from "next/navigation";
-import { Header } from "@/components/header";
-import { Footer } from "@/components/footer";
 import FunnelClient from "./funnel-client";
 
 export const metadata = {
@@ -8,17 +6,9 @@ export const metadata = {
 };
 
 export default async function FunnelPage({ params }) {
-  // Arabic-only page: send any other locale to /ar/funnel so the header matches.
+  // Arabic-only page: send any other locale to /ar/funnel.
   const { locale } = await params;
   if (locale !== "ar") redirect("/ar/funnel");
 
-  return (
-    <div dir="rtl">
-      <Header />
-      <div className="pt-16">
-        <FunnelClient />
-      </div>
-      <Footer />
-    </div>
-  );
+  return <FunnelClient />;
 }

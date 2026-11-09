@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/refs -- vendored from reactbits.dev */
 'use client';
 
 import { useEffect, useRef } from 'react';

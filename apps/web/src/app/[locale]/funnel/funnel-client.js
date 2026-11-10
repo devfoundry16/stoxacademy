@@ -6,7 +6,6 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import { Check, ArrowLeft, Plus, Gift, ShieldCheck } from "lucide-react";
 import { Link } from "@/i18n/routing";
-import { VideoPlayer } from "@/components/video-player";
 import Aurora from "./rb/Aurora";
 import ShinyText from "./rb/ShinyText";
 import SpotlightCard from "./rb/SpotlightCard";
@@ -50,16 +49,19 @@ function Btn({ href, children, secondary, full }) {
   );
 }
 
-function Video({ url, label, className = "" }) {
+// Vimeo embed at the video's own aspect ratio (the shared VideoPlayer is fixed 16:9, which letterboxes these).
+function Video({ url, label, ratio = "16 / 9", className = "" }) {
+  const m = url && url.match(/vimeo\.com\/(\d+)(?:\/([a-f0-9]+))?/i);
+  const src = m && `https://player.vimeo.com/video/${m[1]}?title=0&byline=0&portrait=0&dnt=1${m[2] ? `&h=${m[2]}` : ""}`;
   return (
     <div className={`overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-1.5 shadow-2xl ${className}`}>
-      {url ? (
-        <VideoPlayer videoUrl={url} className="rounded-2xl" />
-      ) : (
-        <div className="flex aspect-video items-center justify-center rounded-2xl bg-gradient-to-br from-white/10 to-white/0 p-4 text-center text-sm text-white/40">
-          {label}
-        </div>
-      )}
+      <div className="overflow-hidden rounded-2xl bg-black" style={{ aspectRatio: ratio }}>
+        {src ? (
+          <iframe src={src} title={label} allow="autoplay; fullscreen; picture-in-picture" allowFullScreen className="h-full w-full" />
+        ) : (
+          <div className="flex h-full items-center justify-center p-4 text-center text-sm text-white/40">{label}</div>
+        )}
+      </div>
     </div>
   );
 }
@@ -70,7 +72,6 @@ function Spot({ className = "", children }) {
       spotlightColor={GOLD}
       intensity={0.18}
       borderGlow={0.8}
-      ambient
       style={{ padding: 0 }}
       className={`h-full ${className}`}
     >
@@ -240,8 +241,8 @@ export default function FunnelClient() {
             ))}
           </h1>
           <p className="hero-fade mb-10 text-lg text-white/60">{c.hero.instructor}</p>
-          <div className="hero-fade mx-auto mb-10 max-w-3xl">
-            <Video url={VIDEOS.vsl} label="VSL" />
+          <div className="hero-fade mx-auto mb-10 max-w-2xl">
+            <Video url={VIDEOS.vsl} label="VSL" ratio="5 / 4" />
           </div>
           <p className="hero-fade mx-auto mb-8 max-w-2xl leading-relaxed text-white/70">{c.hero.intro}</p>
           <div className="hero-fade">
@@ -356,20 +357,15 @@ export default function FunnelClient() {
       {/* 7. Instructor */}
       <Section title={c.instructor.title} kicker="المدرب">
         <p className="mx-auto mb-10 max-w-3xl text-center text-lg leading-loose text-white/70">{c.instructor.text}</p>
-        <div className="mx-auto max-w-2xl"><Video url={VIDEOS.instructor} label={c.instructor.videoLabel} /></div>
+        <div className="mx-auto max-w-xs"><Video url={VIDEOS.instructor} label={c.instructor.videoLabel} ratio="9 / 16" /></div>
       </Section>
 
       {/* 8. Testimonials */}
       <Section title={c.testimonials.title} kicker={c.testimonials.subtitle}>
-        <div className="grid gap-6 lg:grid-cols-3">
-          <div className="lg:col-span-2">
-            <Video url={VIDEOS.testimonials[0]} label={`${c.testimonials.videoLabel} 1`} />
-          </div>
-          <div className="flex flex-col gap-6">
-            {VIDEOS.testimonials.slice(1).map((url, i) => (
-              <div key={i}><Video url={url} label={`${c.testimonials.videoLabel} ${i + 2}`} /></div>
-            ))}
-          </div>
+        <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
+          {VIDEOS.testimonials.map((url, i) => (
+            <Video key={i} url={url} label={`${c.testimonials.videoLabel} ${i + 1}`} ratio="9 / 16" />
+          ))}
         </div>
       </Section>
 

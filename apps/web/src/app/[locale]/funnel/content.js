@@ -10,9 +10,14 @@ export const LINKS = {
 };
 
 export const VIDEOS = {
-  vsl: null,
-  instructor: null,
-  testimonials: [null, null, null, null],
+  vsl: "https://vimeo.com/1245444496/ba835f5ee6",
+  instructor: "https://vimeo.com/1245444593/4672ef0ad3",
+  testimonials: [
+    "https://vimeo.com/1245444616/20807afb59",
+    "https://vimeo.com/1245444543/c8a5918d06",
+    "https://vimeo.com/1245444541/10af69757b",
+    "https://vimeo.com/1245444492/c0b202cdcc",
+  ],
 };
 
 export const content = {

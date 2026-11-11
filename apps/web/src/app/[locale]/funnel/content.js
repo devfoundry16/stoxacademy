@@ -6,7 +6,6 @@ const SESSION_MINUTES = 90;
 export const LINKS = {
   enroll: "/courses", // TODO: point to the Gold & Forex course page (/courses/<id>) or checkout
   webinar: "#",
-  consultation: "#",
 };
 
 export const VIDEOS = {
@@ -39,9 +38,6 @@ export const content = {
     webinarText:
       "تريد التعرف على البرنامج أولاً؟ انضم إلى ويبينار مجاني عن أساسيات تداول الذهب والفوركس وتعرّف إلى طريقة التدريب قبل التسجيل.",
     webinarBtn: "سجّل في الويبينار المجاني",
-    consultationText:
-      "لديك أسئلة قبل أن تقرر؟ اطلب استشارة تعريفية مجانية واسأل فريقنا عن محتوى الدورة ومواعيدها وطريقة التسجيل.",
-    consultationBtn: "اطلب استشارة مجانية",
   },
   understand: {
     title: "هل تريد فهم السوق قبل أن تبدأ؟",
@@ -161,7 +157,7 @@ export const content = {
       },
       {
         q: "هل يمكنني التعرف على الدورة قبل التسجيل؟",
-        a: "نعم. يمكنك التسجيل في الويبينار المجاني أو طلب استشارة تعريفية مجانية من فريقنا.",
+        a: "نعم. يمكنك التسجيل في الويبينار المجاني.",
       },
       {
         q: "ما سياسة الاعتذار والاسترداد؟",

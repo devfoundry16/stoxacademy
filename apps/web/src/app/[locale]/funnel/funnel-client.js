@@ -276,11 +276,10 @@ export default function FunnelClient() {
 
       {/* 2. Next step */}
       <Section title={c.nextStep.title} kicker="ابدأ من هنا">
-        <div className="grid gap-5 md:grid-cols-3">
+        <div className="grid gap-5 md:grid-cols-2">
           {[
             [c.nextStep.enrollText, c.nextStep.enrollBtn, LINKS.enroll, false],
             [c.nextStep.webinarText, c.nextStep.webinarBtn, LINKS.webinar, true],
-            [c.nextStep.consultationText, c.nextStep.consultationBtn, LINKS.consultation, true],
           ].map(([text, label, href, secondary], i) => (
             <div
               key={label}
@@ -418,7 +417,6 @@ export default function FunnelClient() {
           <div className="mb-12 flex flex-wrap justify-center gap-4">
             <Btn href={LINKS.enroll}>{c.hero.enroll}</Btn>
             <Btn href={LINKS.webinar} secondary>{c.nextStep.webinarBtn}</Btn>
-            <Btn href={LINKS.consultation} secondary>{c.nextStep.consultationBtn}</Btn>
           </div>
           <p className="text-sm text-white/40">{c.final.disclaimer}</p>
         </div>

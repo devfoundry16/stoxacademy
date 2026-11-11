@@ -276,7 +276,7 @@ export default function FunnelClient() {
 
       {/* 2. Next step */}
       <Section title={c.nextStep.title} kicker="ابدأ من هنا">
-        <div className="grid gap-5 md:grid-cols-2">
+        <div className="mx-auto grid max-w-4xl gap-5 md:grid-cols-2">
           {[
             [c.nextStep.enrollText, c.nextStep.enrollBtn, LINKS.enroll, false],
             [c.nextStep.webinarText, c.nextStep.webinarBtn, LINKS.webinar, true],

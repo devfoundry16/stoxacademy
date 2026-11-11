@@ -1,5 +1,5 @@
 // Arabic-only copy for the /funnel landing page (source: "Gold & Forex Course Landing Page" doc).
-// Session length is defined once here: the doc says 90 min but the task says 7-8 PM Jerusalem time (unconfirmed).
+// Session length is defined once here: confirmed 1h30 (90 min) per session.
 const SESSION_MINUTES = 90;
 
 // TODO: replace with real links once provided. null renders a placeholder box / "#" link.

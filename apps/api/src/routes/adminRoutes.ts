@@ -27,6 +27,9 @@ const router = Router();
 // All routes require admin authentication
 router.use(requireAdmin);
 
+// Cheap admin check for the frontend gate (requireAdmin already did the work)
+router.get("/check", (_req, res) => res.status(200).json({ ok: true }));
+
 // Dashboard statistics
 router.get("/stats", getDashboardStats);
 router.get("/recent-activity", getRecentActivity);

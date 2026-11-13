@@ -719,7 +719,7 @@ export const createLiveSession = async (req: Request, res: Response) => {
         if (!token) {
             return res.status(401).json({ error: "No token provided" });
         }
-        if (!course_id || !title || !scheduled_at) {
+        if (!title || !scheduled_at) {
             return res.status(400).json({ error: "Missing required fields" });
         }
 
@@ -739,7 +739,7 @@ export const createLiveSession = async (req: Request, res: Response) => {
         const { data: session, error } = await supabaseAdmin
             .from("live_sessions")
             .insert({
-                course_id,
+                course_id: course_id || null,
                 title,
                 description: description || null,
                 scheduled_at,

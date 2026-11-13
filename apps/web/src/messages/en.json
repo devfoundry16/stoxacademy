@@ -652,7 +652,8 @@
       "liveSessions": "Live Sessions",
       "checklist": "Checklist",
       "profile": "Profile",
-      "user": "User"
+      "user": "User",
+      "webinars": "Webinars"
     },
     "layout": {
       "loading": "Loading...",
@@ -805,11 +806,12 @@
       "completedCount": "Completed",
       "cancel": "Cancel",
       "descriptionLabel": "Description",
-      "sessionType": "Type",
-      "typeLive": "Live session",
-      "typeWebinar": "Webinar",
-      "typeColumn": "Type",
-      "webinarHint": "Only the host is on camera. Guests listen, chat and can request to speak (audio only)."
+      "webinarHint": "Only the host is on camera. Guests listen, chat and can request to speak (audio only).",
+      "webinarsTitle": "Webinars",
+      "webinarsDescription": "Schedule and manage webinars",
+      "scheduleWebinar": "Schedule Webinar",
+      "editWebinar": "Edit Webinar",
+      "scheduleNewWebinar": "Schedule New Webinar"
     },
     "checklist": {
       "title": "Checklist Submissions",

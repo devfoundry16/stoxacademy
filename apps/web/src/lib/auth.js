@@ -89,9 +89,12 @@ export const authService = {
       const response = await apiClient.get("/api/auth/me");
       return response.data.user;
     } catch (error) {
-      // If token is invalid, sign out from Supabase
-      await supabase.auth.signOut();
-      localStorage.removeItem("user");
+      // Only a 401 means the session is dead. Network errors / aborted requests (e.g. a page reload
+      // mid-request) must not log out, and 'local' scope avoids revoking the session on other tabs/devices.
+      if (error.response?.status === 401) {
+        await supabase.auth.signOut({ scope: "local" });
+        localStorage.removeItem("user");
+      }
       throw error;
     }
   },

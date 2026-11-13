@@ -16,7 +16,9 @@ export const useAuthStore = create((set, get) => ({
         const userData = await authService.getCurrentUser();
         set({ user: userData, isAuthenticated: true, loading: false });
       } catch (error) {
-        set({ user: null, isAuthenticated: false, loading: false });
+        // Transient failure (network, 5xx): session is still valid, keep the cached user
+        const stillValid = error.response?.status !== 401;
+        set({ user: stillValid ? storedUser : null, isAuthenticated: stillValid, loading: false });
       }
     } else {
       set({ loading: false });

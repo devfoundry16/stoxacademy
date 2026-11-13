@@ -2,10 +2,35 @@
 // Session length is defined once here: confirmed 1h30 (90 min) per session.
 const SESSION_MINUTES = 90;
 
-// TODO: replace with real links once provided. null renders a placeholder box / "#" link.
+// CTA targets: both open an in-funnel details form (paid course / free webinar).
 export const LINKS = {
-  enroll: "/courses", // TODO: point to the Gold & Forex course page (/courses/<id>) or checkout
-  webinar: "#",
+  enroll: "/funnel/register",
+  webinar: "/funnel/webinar",
+};
+
+// Field labels from the amendments doc (Arabic).
+export const FIELDS = {
+  fullName: "الاسم الكامل",
+  email: "البريد الإلكتروني",
+  phone: "رقم الهاتف",
+  country: "البلد",
+};
+
+export const forms = {
+  register: {
+    title: "سجّل في دورة الذهب والفوركس",
+    subtitle: "أدخل بياناتك ثم أكمل الدفع — رسوم الدورة 950 دولاراً.",
+    submit: "المتابعة إلى الدفع — 950 دولاراً",
+    success: "تم الدفع بنجاح! أرسلنا إلى بريدك الإلكتروني رابطاً لتعيين كلمة المرور والدخول إلى حسابك.",
+  },
+  webinar: {
+    title: "سجّل في الويبينار المجاني",
+    subtitle: "أدخل بياناتك وسنرسل لك تفاصيل الحضور.",
+    submit: "سجّل في الويبينار",
+    success: "تم تسجيلك في الويبينار المجاني بنجاح. سنرسل لك التفاصيل قريباً.",
+  },
+  back: "العودة إلى الصفحة الرئيسية",
+  error: "حدث خطأ، يرجى المحاولة مرة أخرى.",
 };
 
 export const VIDEOS = {

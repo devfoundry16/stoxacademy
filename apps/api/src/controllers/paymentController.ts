@@ -18,7 +18,8 @@ interface GuestTokenPayload {
 async function findOrCreateGuestUser(
     email: string,
     firstName?: string,
-    lastName?: string
+    lastName?: string,
+    phoneNumber?: string
 ): Promise<{ userId: string; isNewUser: boolean; userEmail: string }> {
     // Try to find an existing user by email in public.users
     const { data: existingProfile } = await supabaseAdmin
@@ -57,6 +58,7 @@ async function findOrCreateGuestUser(
         email: normalizedEmail,
         first_name: firstName || "",
         last_name: lastName || "",
+        phone_number: phoneNumber || null,
         role: "student",
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -884,13 +886,13 @@ export const getSubscriptionStatus = async (req: Request, res: Response) => {
 
 export const createGuestCoursePaymentIntent = async (req: Request, res: Response) => {
     try {
-        const { courseId, couponCode, email, firstName, lastName } = req.body;
+        const { courseId, couponCode, email, firstName, lastName, phoneNumber } = req.body;
 
         if (!email || !courseId) {
             return res.status(400).json({ error: "email and courseId are required" });
         }
 
-        const { userId, isNewUser, userEmail } = await findOrCreateGuestUser(email, firstName, lastName);
+        const { userId, isNewUser, userEmail } = await findOrCreateGuestUser(email, firstName, lastName, phoneNumber);
 
         const { data: course, error: courseError } = await supabaseAdmin
             .from("courses")

@@ -67,13 +67,14 @@ export const paymentService = {
   },
 
   // Guest course payments (no auth required)
-  createGuestCoursePaymentIntent: async (courseId, email, firstName, lastName, couponCode = null) => {
+  createGuestCoursePaymentIntent: async (courseId, email, firstName, lastName, couponCode = null, phoneNumber = null) => {
     const response = await apiClient.post("/api/payments/course/guest-create-intent", {
       courseId,
       email,
       firstName,
       lastName,
       couponCode,
+      phoneNumber,
     });
     return response.data;
   },

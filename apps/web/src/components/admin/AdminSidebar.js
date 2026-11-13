@@ -13,7 +13,8 @@ import {
     X,
     User,
     Settings,
-    Tag
+    Tag,
+    Presentation
 } from 'lucide-react';
 import { useState } from 'react';
 import { useAuthStore } from '@/store/authStore';
@@ -34,6 +35,7 @@ export default function AdminSidebar() {
         { name: t('users'), href: '/admin/users', icon: Users },
         { name: t('courses'), href: '/admin/courses', icon: BookOpen },
         { name: t('liveSessions'), href: '/admin/live-sessions', icon: Video },
+        { name: t('webinars'), href: '/admin/webinars', icon: Presentation },
         { name: 'Coupons', href: '/admin/coupons', icon: Tag },
         { name: t('checklist'), href: '/admin/checklist', icon: FileText },
         { name: t('profile'), href: '/admin/profile', icon: Settings },

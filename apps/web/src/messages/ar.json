@@ -652,7 +652,8 @@
       "liveSessions": "الجلسات المباشرة",
       "checklist": "قائمة المراجعة",
       "profile": "الملف الشخصي",
-      "user": "مستخدم"
+      "user": "مستخدم",
+      "webinars": "الندوات"
     },
     "layout": {
       "loading": "جاري التحميل...",
@@ -805,11 +806,12 @@
       "completedCount": "مكتملة",
       "cancel": "إلغاء",
       "descriptionLabel": "الوصف",
-      "sessionType": "النوع",
-      "typeLive": "جلسة مباشرة",
-      "typeWebinar": "ندوة عبر الإنترنت",
-      "typeColumn": "النوع",
-      "webinarHint": "المضيف فقط يظهر بالكاميرا. يستمع الضيوف ويدردشون ويمكنهم طلب التحدث (صوت فقط)."
+      "webinarHint": "المضيف فقط يظهر بالكاميرا. يستمع الضيوف ويدردشون ويمكنهم طلب التحدث (صوت فقط).",
+      "webinarsTitle": "الندوات عبر الإنترنت",
+      "webinarsDescription": "جدولة الندوات وإدارتها",
+      "scheduleWebinar": "جدولة ندوة",
+      "editWebinar": "تعديل الندوة",
+      "scheduleNewWebinar": "جدولة ندوة جديدة"
     },
     "checklist": {
       "title": "تقديمات قائمة المراجعة",

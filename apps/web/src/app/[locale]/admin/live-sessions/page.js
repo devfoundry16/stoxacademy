@@ -17,7 +17,9 @@ import {
     deleteLiveSession,
 } from '@/lib/api/adminApi';
 
-export default function LiveSessionsPage() {
+// Also rendered by /admin/webinars with sessionType="webinar"; each page lists only its own type
+export default function LiveSessionsPage({ sessionType = 'live' }) {
+    const isWebinar = sessionType === 'webinar';
     const t = useTranslations('admin.liveSessions');
     const tStatus = useTranslations('liveSessions.status');
     const locale = useLocale();
@@ -38,7 +40,7 @@ export default function LiveSessionsPage() {
         duration: 60,
         max_participants: '',
         price: 0,
-        session_type: 'live',
+        session_type: sessionType,
     });
 
     useEffect(() => {
@@ -66,8 +68,9 @@ export default function LiveSessionsPage() {
         try {
             setLoading(true);
             const data = await getLiveSessions();
-            setSessions(data.sessions);
-            setFilteredSessions(data.sessions);
+            const ofType = data.sessions.filter((s) => (s.session_type || 'live') === sessionType);
+            setSessions(ofType);
+            setFilteredSessions(ofType);
         } catch (error) {
             console.error('Failed to fetch sessions:', error);
         } finally {
@@ -123,7 +126,7 @@ export default function LiveSessionsPage() {
             duration: 60,
             max_participants: '',
             price: 0,
-            session_type: 'live',
+            session_type: sessionType,
         });
         setIsModalOpen(true);
     };
@@ -213,13 +216,6 @@ export default function LiveSessionsPage() {
         {
             header: t('titleColumn'),
             accessor: 'title',
-        },
-        {
-            header: t('typeColumn'),
-            accessor: 'session_type',
-            render: (row) => row.session_type === 'webinar' ? (
-                <span className="px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">{t('typeWebinar')}</span>
-            ) : t('typeLive'),
         },
         {
             header: t('courseColumn'),
@@ -334,15 +330,15 @@ export default function LiveSessionsPage() {
             {/* Header */}
             <div className="mb-8 flex items-center justify-between">
                 <div>
-                    <h1 className="text-4xl font-bold text-gray-900 mb-2">{t('title')}</h1>
-                    <p className="text-gray-600">{t('pageDescription')}</p>
+                    <h1 className="text-4xl font-bold text-gray-900 mb-2">{t(isWebinar ? 'webinarsTitle' : 'title')}</h1>
+                    <p className="text-gray-600">{t(isWebinar ? 'webinarsDescription' : 'pageDescription')}</p>
                 </div>
                 <button
                     onClick={handleCreateNew}
                     className="flex items-center gap-2 px-6 py-3 bg-linear-to-r from-blue-500 to-purple-500 text-white rounded-lg hover:shadow-lg transition-shadow"
                 >
                     <Plus size={20} />
-                    {t('scheduleSession')}
+                    {t(isWebinar ? 'scheduleWebinar' : 'scheduleSession')}
                 </button>
             </div>
 
@@ -403,26 +399,11 @@ export default function LiveSessionsPage() {
             <Modal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
-                title={selectedSession ? t('editLiveSession') : t('scheduleNewLiveSession')}
+                title={selectedSession ? t(isWebinar ? 'editWebinar' : 'editLiveSession') : t(isWebinar ? 'scheduleNewWebinar' : 'scheduleNewLiveSession')}
                 size="lg"
             >
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            {t('sessionType')}
-                        </label>
-                        <select
-                            value={formData.session_type}
-                            onChange={(e) => setFormData({ ...formData, session_type: e.target.value })}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                            <option value="live">{t('typeLive')}</option>
-                            <option value="webinar">{t('typeWebinar')}</option>
-                        </select>
-                        {formData.session_type === 'webinar' && (
-                            <p className="mt-1 text-xs text-gray-500">{t('webinarHint')}</p>
-                        )}
-                    </div>
+                    {isWebinar && <p className="text-sm text-gray-500">{t('webinarHint')}</p>}
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -545,7 +526,7 @@ export default function LiveSessionsPage() {
                             type="submit"
                             className="px-6 py-2 bg-linear-to-r from-blue-500 to-purple-500 text-white rounded-lg hover:shadow-lg transition-shadow"
                         >
-                            {selectedSession ? t('updateSession') : t('scheduleSession')}
+                            {selectedSession ? t('updateSession') : t(isWebinar ? 'scheduleWebinar' : 'scheduleSession')}
                         </button>
                     </div>
                 </form>

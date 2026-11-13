@@ -19,7 +19,7 @@ export const getDashboardStats = async (req: Request, res: Response) => {
             { count: totalEnrollments },
             { count: activeSessions },
             { count: newUsers },
-            { data: purchases },
+            { data: revenue, error: revenueError },
         ] = await Promise.all([
             supabaseAdmin.from("users").select("*", { count: "exact", head: true }),
             supabaseAdmin.from("courses").select("*", { count: "exact", head: true }),
@@ -32,13 +32,14 @@ export const getDashboardStats = async (req: Request, res: Response) => {
                 .from("users")
                 .select("*", { count: "exact", head: true })
                 .gte("created_at", sevenDaysAgo.toISOString()),
-            // Total revenue: sum of all course purchases
-            supabaseAdmin.from("user_courses").select("courses(price)"),
+            // Total revenue summed in SQL (see migrations/add_admin_stats_functions.sql)
+            supabaseAdmin.rpc("admin_total_revenue"),
         ]);
 
-        const totalRevenue = purchases?.reduce((sum, purchase: any) => {
-            return sum + (purchase.courses?.price || 0);
-        }, 0) || 0;
+        if (revenueError) {
+            return res.status(500).json({ error: revenueError.message });
+        }
+        const totalRevenue = Number(revenue) || 0;
 
         return res.status(200).json({
             totalUsers: totalUsers || 0,
@@ -722,13 +723,8 @@ export const createLiveSession = async (req: Request, res: Response) => {
         const initialStatus = "scheduled";
         const durationMinutes = duration || 60;
 
-        //current user id
-        
-        const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
-        if (userError || !userData.user) {
-            return res.status(401).json({ error: "Invalid token" });
-        }
-        const currentUserId = userData.user.id;
+        // Set by requireAdmin; no need to re-verify the token
+        const currentUserId = (req as any).user.id;
 
         // Insert session first (without video room; we get id then create room)
         const { data: session, error } = await supabaseAdmin
@@ -877,35 +873,15 @@ export const getChecklistSubmissions = async (req: Request, res: Response) => {
         query = query.range(offset, offset + Number(limit) - 1);
 
         // Page query and overall statistics (without filters) are independent: run in parallel
-        const [{ data: submissions, error, count }, { data: allSubmissions }] = await Promise.all([
+        const [{ data: submissions, error, count }, { data: stats, error: statsError }] = await Promise.all([
             query,
-            supabaseAdmin.from("checklist_responses").select("stage, score"),
+            // Aggregated in SQL (see migrations/add_admin_stats_functions.sql)
+            supabaseAdmin.rpc("admin_checklist_stats"),
         ]);
 
-        if (error) {
-            console.log(error);
-            return res.status(400).json({ error: error.message });
-        }
-
-        const stats = {
-            total: allSubmissions?.length || 0,
-            byStage: {
-                awareness: allSubmissions?.filter((s) => s.stage === "awareness").length || 0,
-                builder: allSubmissions?.filter((s) => s.stage === "builder").length || 0,
-                professional: allSubmissions?.filter((s) => s.stage === "professional").length || 0,
-                investor: allSubmissions?.filter((s) => s.stage === "investor").length || 0,
-            },
-            avgScore: 0,
-        };
-
-        // Calculate average score
-        if (allSubmissions && allSubmissions.length > 0) {
-            const validScores = allSubmissions
-                .map((s) => parseFloat(s.score))
-                .filter((score) => !isNaN(score));
-            if (validScores.length > 0) {
-                stats.avgScore = validScores.reduce((sum, score) => sum + score, 0) / validScores.length;
-            }
+        if (error || statsError) {
+            console.log(error || statsError);
+            return res.status(400).json({ error: (error || statsError)!.message });
         }
 
         return res.status(200).json({

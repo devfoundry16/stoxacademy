@@ -1,112 +1,56 @@
 import { Request, Response, NextFunction } from "express";
+import { isAuthRetryableFetchError } from "@supabase/supabase-js";
 import { supabaseAdmin } from "../config/supabase";
 
 /**
- * Middleware to verify that the authenticated user has admin role
- * Must be used after authentication middleware
+ * Builds a middleware that verifies the bearer token and checks the user's role in the database.
  */
-export const requireAdmin = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-) => {
-    try {
-        const authHeader = req.headers.authorization;
-        const token = authHeader && authHeader.split(" ")[1];
+const requireRole = (roles: string[], deniedMessage: string) =>
+    async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const token = req.headers.authorization?.split(" ")[1];
+            if (!token) {
+                return res.status(401).json({ error: "No token provided" });
+            }
 
-        if (!token) {
-            return res.status(401).json({ error: "No token provided" });
+            // getClaims verifies the JWT locally against the project's cached JWKS (no network
+            // round trip) when asymmetric signing keys are enabled; with a legacy HS256 secret it
+            // falls back to getUser() on the Auth server.
+            const { data: claimsData, error: claimsError } = await supabaseAdmin.auth.getClaims(token);
+            if (claimsError || !claimsData) {
+                // Auth server unreachable is not an invalid token: a 401 here would log the user out
+                if (isAuthRetryableFetchError(claimsError)) {
+                    return res.status(503).json({ error: "Auth service unavailable" });
+                }
+                return res.status(401).json({ error: "Invalid token" });
+            }
+            const { sub: userId, email } = claimsData.claims;
+
+            // Role from database (source of truth) so role changes take effect immediately
+            const { data: dbUser, error: dbError } = await supabaseAdmin
+                .from("users")
+                .select("role")
+                .eq("id", userId)
+                .single();
+
+            if (dbError || !dbUser) {
+                return res.status(401).json({ error: "User not found in database" });
+            }
+
+            if (!roles.includes(dbUser.role)) {
+                return res.status(403).json({ error: deniedMessage });
+            }
+
+            (req as any).user = { id: userId, email, role: dbUser.role };
+            next();
+        } catch (error: any) {
+            return res.status(500).json({ error: error.message });
         }
+    };
 
-        // Verify the token and get user
-        const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
+export const requireAdmin = requireRole(["admin"], "Access denied. Admin privileges required.");
 
-        if (userError || !userData.user) {
-            return res.status(401).json({ error: "Invalid token" });
-        }
-
-        // Check role from database (source of truth) instead of user_metadata
-        // This ensures role changes in the database are immediately effective
-        const { data: dbUser, error: dbError } = await supabaseAdmin
-            .from("users")
-            .select("role")
-            .eq("id", userData.user.id)
-            .single();
-
-        if (dbError || !dbUser) {
-            return res.status(401).json({ error: "User not found in database" });
-        }
-
-        // Check if user has admin role
-        if (dbUser.role !== "admin") {
-            return res.status(403).json({
-                error: "Access denied. Admin privileges required."
-            });
-        }
-
-        // Attach user info to request for use in controllers
-        (req as any).user = {
-            id: userData.user.id,
-            email: userData.user.email,
-            role: dbUser.role,
-        };
-
-        next();
-    } catch (error: any) {
-        return res.status(500).json({ error: error.message });
-    }
-};
-
-/**
- * Middleware to verify that the authenticated user has admin or instructor role
- */
-export const requireAdminOrInstructor = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-) => {
-    try {
-        const authHeader = req.headers.authorization;
-        const token = authHeader && authHeader.split(" ")[1];
-
-        if (!token) {
-            return res.status(401).json({ error: "No token provided" });
-        }
-
-        const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(token);
-
-        if (userError || !userData.user) {
-            return res.status(401).json({ error: "Invalid token" });
-        }
-
-        // Check role from database (source of truth) instead of user_metadata
-        const { data: dbUser, error: dbError } = await supabaseAdmin
-            .from("users")
-            .select("role")
-            .eq("id", userData.user.id)
-            .single();
-
-        if (dbError || !dbUser) {
-            return res.status(401).json({ error: "User not found in database" });
-        }
-
-        const userRole = dbUser.role;
-
-        if (userRole !== "admin" && userRole !== "instructor") {
-            return res.status(403).json({
-                error: "Access denied. Admin or instructor privileges required."
-            });
-        }
-
-        (req as any).user = {
-            id: userData.user.id,
-            email: userData.user.email,
-            role: userRole,
-        };
-
-        next();
-    } catch (error: any) {
-        return res.status(500).json({ error: error.message });
-    }
-};
-
+export const requireAdminOrInstructor = requireRole(
+    ["admin", "instructor"],
+    "Access denied. Admin or instructor privileges required."
+);

@@ -709,6 +709,7 @@ export const createLiveSession = async (req: Request, res: Response) => {
             instructor_id,
             max_participants,
             price,
+            session_type,
         } = req.body;
         const authHeader = req.headers.authorization;
         const token = authHeader && authHeader.split(" ")[1];
@@ -739,6 +740,7 @@ export const createLiveSession = async (req: Request, res: Response) => {
                 instructor_id: currentUserId || null,
                 max_participants: max_participants || null,
                 price: price || 0,
+                session_type: session_type === "webinar" ? "webinar" : "live",
                 status: initialStatus,
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString(),

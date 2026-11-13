@@ -530,6 +530,31 @@
       "scheduledFor": "مجدولة لـ",
       "enrolled": "مسجل",
       "autoJoinHint": "سيتم تحديث هذه الصفحة تلقائياً عندما تبدأ الجلسة"
+    },
+    "webinar": {
+      "badge": "ندوة",
+      "chat": "الدردشة",
+      "typeMessage": "اكتب تعليقك...",
+      "send": "إرسال",
+      "noMessages": "لا توجد رسائل بعد. قل مرحبًا!",
+      "participants": "{count} يشاهدون",
+      "requestToSpeak": "طلب التحدث",
+      "cancelRequest": "إلغاء الطلب",
+      "youAreSpeaker": "يمكنك التحدث الآن",
+      "stopSpeaking": "التوقف عن التحدث",
+      "mute": "كتم",
+      "unmute": "إلغاء الكتم",
+      "startCamera": "تشغيل الكاميرا",
+      "stopCamera": "إيقاف الكاميرا",
+      "shareScreen": "مشاركة الشاشة",
+      "stopShare": "إيقاف المشاركة",
+      "speakRequests": "طلبات التحدث",
+      "allow": "سماح",
+      "deny": "رفض",
+      "removeSpeaker": "إزالة المتحدث",
+      "micDenied": "تم رفض الوصول إلى الميكروفون",
+      "host": "المضيف",
+      "you": "أنت"
     }
   },
   "profile": {
@@ -779,7 +804,12 @@
       "liveNow": "مباشرة الآن",
       "completedCount": "مكتملة",
       "cancel": "إلغاء",
-      "descriptionLabel": "الوصف"
+      "descriptionLabel": "الوصف",
+      "sessionType": "النوع",
+      "typeLive": "جلسة مباشرة",
+      "typeWebinar": "ندوة عبر الإنترنت",
+      "typeColumn": "النوع",
+      "webinarHint": "المضيف فقط يظهر بالكاميرا. يستمع الضيوف ويدردشون ويمكنهم طلب التحدث (صوت فقط)."
     },
     "checklist": {
       "title": "تقديمات قائمة المراجعة",

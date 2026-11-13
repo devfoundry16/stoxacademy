@@ -38,6 +38,7 @@ export default function LiveSessionsPage() {
         duration: 60,
         max_participants: '',
         price: 0,
+        session_type: 'live',
     });
 
     useEffect(() => {
@@ -122,6 +123,7 @@ export default function LiveSessionsPage() {
             duration: 60,
             max_participants: '',
             price: 0,
+            session_type: 'live',
         });
         setIsModalOpen(true);
     };
@@ -136,6 +138,7 @@ export default function LiveSessionsPage() {
             duration: session.duration,
             max_participants: session.max_participants || '',
             price: session.price || 0,
+            session_type: session.session_type || 'live',
         });
         setIsModalOpen(true);
     };
@@ -210,6 +213,13 @@ export default function LiveSessionsPage() {
         {
             header: t('titleColumn'),
             accessor: 'title',
+        },
+        {
+            header: t('typeColumn'),
+            accessor: 'session_type',
+            render: (row) => row.session_type === 'webinar' ? (
+                <span className="px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">{t('typeWebinar')}</span>
+            ) : t('typeLive'),
         },
         {
             header: t('courseColumn'),
@@ -397,6 +407,23 @@ export default function LiveSessionsPage() {
                 size="lg"
             >
                 <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            {t('sessionType')}
+                        </label>
+                        <select
+                            value={formData.session_type}
+                            onChange={(e) => setFormData({ ...formData, session_type: e.target.value })}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                            <option value="live">{t('typeLive')}</option>
+                            <option value="webinar">{t('typeWebinar')}</option>
+                        </select>
+                        {formData.session_type === 'webinar' && (
+                            <p className="mt-1 text-xs text-gray-500">{t('webinarHint')}</p>
+                        )}
+                    </div>
+
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                             {t('course')}

@@ -16,6 +16,7 @@ import { fadeInUp, staggerContainer, staggerItem, defaultTransition } from '@/li
 export default function LiveSessionDetailPage({ params }) {
     const t = useTranslations('liveSessions.detail');
     const tStatus = useTranslations('liveSessions.status');
+    const tWebinar = useTranslations('liveSessions.webinar');
     const router = useRouter();
     const [session, setSession] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -282,7 +283,12 @@ export default function LiveSessionDetailPage({ params }) {
                         className="bg-linear-to-r from-blue-600 to-purple-600 text-white p-8"
                     >
                         <div className="flex items-start justify-between mb-4">
-                            <h1 className="text-3xl font-bold flex-1">{session.title}</h1>
+                            <h1 className="text-3xl font-bold flex-1">
+                                {session.title}
+                                {session.session_type === 'webinar' && (
+                                    <span className="ms-3 align-middle px-2 py-0.5 rounded-full text-xs font-medium bg-white/20">{tWebinar('badge')}</span>
+                                )}
+                            </h1>
                             <span className={`px-4 py-2 rounded-full text-sm font-semibold uppercase ${getStatusColor(session.status)}`}>
                                 {getStatusLabel(session.status)}
                             </span>

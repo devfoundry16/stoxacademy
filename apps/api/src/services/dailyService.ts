@@ -21,6 +21,8 @@ export interface CreateMeetingTokenOptions {
     nbf: number; // Unix timestamp (seconds)
     userId?: string;
     userName?: string;
+    isOwner?: boolean;
+    permissions?: Record<string, unknown>;
 }
 
 async function dailyFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
@@ -101,7 +103,7 @@ export async function createRoom(options: CreateRoomOptions): Promise<CreateRoom
  * Daily API expects all token params under a "properties" object.
  */
 export async function createMeetingToken(options: CreateMeetingTokenOptions): Promise<string> {
-    const { roomName, exp, nbf, userId, userName } = options;
+    const { roomName, exp, nbf, userId, userName, isOwner, permissions } = options;
     const properties: Record<string, unknown> = {
         room_name: roomName,
         exp,
@@ -109,6 +111,8 @@ export async function createMeetingToken(options: CreateMeetingTokenOptions): Pr
     };
     if (userId) properties.user_id = userId;
     if (userName) properties.user_name = userName;
+    if (isOwner) properties.is_owner = true;
+    if (permissions) properties.permissions = permissions;
 
     const result = await dailyFetch<{ token: string }>("/meeting-tokens", {
         method: "POST",

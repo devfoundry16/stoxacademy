@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic';
 
 import { useEffect, useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { Edit, Trash2, Plus, Calendar, Clock, Users as UsersIcon, Video } from 'lucide-react';
+import { Edit, Trash2, Plus, Calendar, Clock, Users as UsersIcon, Video, Link as LinkIcon } from 'lucide-react';
 import toast from 'react-hot-toast';
 import DataTable from '@/components/admin/DataTable';
 import Modal from '@/components/admin/Modal';
@@ -129,7 +129,7 @@ export default function LiveSessionsPage() {
     const handleEdit = (session) => {
         setSelectedSession(session);
         setFormData({
-            course_id: session.course_id,
+            course_id: session.course_id || '',
             title: session.title,
             description: session.description || '',
             scheduled_at: toLocalDateTimeString(session.scheduled_at),
@@ -145,6 +145,7 @@ export default function LiveSessionsPage() {
         try {
             const submitData = {
                 ...formData,
+                course_id: formData.course_id || null,
                 scheduled_at: new Date(formData.scheduled_at).toISOString(),
                 max_participants: formData.max_participants ? parseInt(formData.max_participants) : null,
             };
@@ -261,8 +262,31 @@ export default function LiveSessionsPage() {
         }
     };
 
+    const joinUrl = (row) =>
+        row.video_provider === 'daily' && row.video_room_name
+            ? `${window.location.origin}/${locale}/live-sessions/${row.id}/room`
+            : row.meeting_url;
+
+    const handleCopyLink = async (row) => {
+        try {
+            await navigator.clipboard.writeText(joinUrl(row));
+            toast.success(t('linkCopied'));
+        } catch {
+            toast.error(t('failedToCopyLink'));
+        }
+    };
+
     const actions = (row) => (
         <>
+            {canJoinSession(row) && (
+                <button
+                    onClick={() => handleCopyLink(row)}
+                    className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                    title={t('copyLink')}
+                >
+                    <LinkIcon size={18} />
+                </button>
+            )}
             {canJoinSession(row) && (
                 <button
                     onClick={() => handleJoinSession(row)}
@@ -375,10 +399,9 @@ export default function LiveSessionsPage() {
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                            {t('course')} *
+                            {t('course')}
                         </label>
                         <select
-                            required
                             value={formData.course_id}
                             onChange={(e) => setFormData({ ...formData, course_id: e.target.value })}
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ChevronDown } from "lucide-react";
 import apiClient from "@/lib/api";
 import { countries } from "@/lib/countries";
 import { FIELDS, forms } from "../content";
@@ -39,12 +40,15 @@ export default function WebinarClient() {
           <Field label={FIELDS.phone} name="phone" type="tel" autoComplete="tel" dir="ltr" />
           <label className="block">
             <span className="mb-1.5 block text-sm font-medium text-white/80">{FIELDS.country}</span>
-            <select required name="country" defaultValue="" className="w-full rounded-xl border border-white/15 bg-[#0d1017] px-4 py-3 text-white outline-none focus:border-[#f5c451]">
-              <option value="" disabled />
+            <div className="relative">
+            <select required name="country" defaultValue="" className="w-full appearance-none rounded-xl border border-white/15 bg-[#0d1017] py-3 pe-4 ps-12 text-white outline-none focus:border-[#f5c451]">
+              <option value="" />
               {countries.map((c) => (
                 <option key={c} value={c}>{c}</option>
               ))}
             </select>
+            <ChevronDown className="pointer-events-none absolute end-4 top-1/2 size-5 -translate-y-1/2 text-white/60" />
+            </div>
           </label>
           {error && <Notice tone="error">{error}</Notice>}
           <SubmitButton busy={busy}>{f.submit}</SubmitButton>

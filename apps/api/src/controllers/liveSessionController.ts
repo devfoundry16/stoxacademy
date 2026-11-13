@@ -299,7 +299,7 @@ export const getMeetingToken = async (req: Request, res: Response) => {
 
         const { data: session, error: sessionError } = await supabaseAdmin
             .from("live_sessions")
-            .select("id, video_room_name, video_provider, scheduled_at, duration, meeting_url, instructor_id")
+            .select("id, video_room_name, video_provider, scheduled_at, duration, meeting_url, instructor_id, session_type")
             .eq("id", sessionId)
             .single();
 
@@ -323,7 +323,8 @@ export const getMeetingToken = async (req: Request, res: Response) => {
             .single();
 
         // User can join if they are: instructor, admin, or enrolled
-        const canJoin = userData.user.id === session.instructor_id || isAdmin || !!enrollment;
+        const isHost = userData.user.id === session.instructor_id || isAdmin;
+        const canJoin = isHost || !!enrollment;
         
         if (!canJoin) {
             return res.status(403).json({ error: "You must be enrolled in this session to join the meeting." });
@@ -351,6 +352,9 @@ export const getMeetingToken = async (req: Request, res: Response) => {
             nbf: nbfSec,
             userId: userData.user.id,
             userName: String(userName).slice(0, 128),
+            // Webinar: host owns the room (can promote guests to speak); guests join hidden, listen-only
+            ...(session.session_type === "webinar" &&
+                (isHost ? { isOwner: true } : { permissions: { hasPresence: false, canSend: false } })),
         });
 
         const roomUrl = (session as any).meeting_url || `https://${process.env.DAILY_DOMAIN || "your-domain"}.daily.co/${session.video_room_name}`;
@@ -360,6 +364,8 @@ export const getMeetingToken = async (req: Request, res: Response) => {
             roomUrl,
             roomName: session.video_room_name,
             hostUserId: session.instructor_id ?? null,
+            sessionType: session.session_type ?? "live",
+            isHost,
         });
     } catch (error: any) {
         console.error("getMeetingToken error:", error);

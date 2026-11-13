@@ -8,6 +8,7 @@ import { liveSessionService } from '@/lib/liveSessionService';
 import toast from 'react-hot-toast';
 import { ArrowLeft, PhoneOff } from 'lucide-react';
 import Daily from '@daily-co/daily-js';
+import WebinarRoom from '@/components/WebinarRoom';
 
 const HOST_JOINED_MESSAGE_TYPE = 'host-joined';
 
@@ -19,6 +20,7 @@ export default function LiveSessionRoomPage({ params }) {
     const [waitingForHost, setWaitingForHost] = useState(false);
     const [isHost, setIsHost] = useState(false);
     const [endingMeeting, setEndingMeeting] = useState(false);
+    const [webinar, setWebinar] = useState(null);
     const callRef = useRef(null);
     const containerRef = useRef(null);
     const hostUserIdRef = useRef(null);
@@ -44,6 +46,12 @@ export default function LiveSessionRoomPage({ params }) {
                 const { token, roomUrl, hostUserId } = data;
                 hostUserIdRef.current = hostUserId ?? null;
                 if (cancelled || !container) return;
+                if (data.sessionType === 'webinar') {
+                    setWebinar({ token, roomUrl });
+                    setIsHost(!!data.isHost);
+                    setLoading(false);
+                    return;
+                }
                 const call = Daily.createFrame(container, {
                     showLeaveButton: true,
                     iframeStyle: {
@@ -256,9 +264,19 @@ export default function LiveSessionRoomPage({ params }) {
                         </div>
                     )}
 
+                    {webinar && !error && (
+                        <WebinarRoom
+                            token={webinar.token}
+                            roomUrl={webinar.roomUrl}
+                            isHost={isHost}
+                            onLeave={() => router.push(`/live-sessions/${id}`)}
+                            onError={(msg) => { setError(msg); toast.error(msg); }}
+                        />
+                    )}
+
                     <div
                         className="relative w-full rounded-lg overflow-hidden"
-                        style={{ display: loading || error ? 'none' : 'block', minHeight: '70vh' }}
+                        style={{ display: loading || error || webinar ? 'none' : 'block', minHeight: '70vh' }}
                     >
                         <div
                             ref={containerRef}

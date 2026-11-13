@@ -530,6 +530,31 @@
       "scheduledFor": "Scheduled for",
       "enrolled": "enrolled",
       "autoJoinHint": "This page will automatically update when the session begins"
+    },
+    "webinar": {
+      "badge": "Webinar",
+      "chat": "Chat",
+      "typeMessage": "Type your comment...",
+      "send": "Send",
+      "noMessages": "No messages yet. Say hello!",
+      "participants": "{count} watching",
+      "requestToSpeak": "Request to speak",
+      "cancelRequest": "Cancel request",
+      "youAreSpeaker": "You can speak now",
+      "stopSpeaking": "Stop speaking",
+      "mute": "Mute",
+      "unmute": "Unmute",
+      "startCamera": "Start camera",
+      "stopCamera": "Stop camera",
+      "shareScreen": "Share screen",
+      "stopShare": "Stop sharing",
+      "speakRequests": "Requests to speak",
+      "allow": "Allow",
+      "deny": "Deny",
+      "removeSpeaker": "Remove speaker",
+      "micDenied": "Microphone access was denied",
+      "host": "Host",
+      "you": "You"
     }
   },
   "profile": {
@@ -779,7 +804,12 @@
       "liveNow": "Live Now",
       "completedCount": "Completed",
       "cancel": "Cancel",
-      "descriptionLabel": "Description"
+      "descriptionLabel": "Description",
+      "sessionType": "Type",
+      "typeLive": "Live session",
+      "typeWebinar": "Webinar",
+      "typeColumn": "Type",
+      "webinarHint": "Only the host is on camera. Guests listen, chat and can request to speak (audio only)."
     },
     "checklist": {
       "title": "Checklist Submissions",

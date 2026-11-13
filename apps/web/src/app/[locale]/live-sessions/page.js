@@ -92,6 +92,9 @@ function LiveSessionCard({ session, isAuthenticated }) {
                 {/* Header with status badge */}
                 <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
+                        {session.session_type === 'webinar' && (
+                            <span className="inline-block mb-2 px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">{t('webinar.badge')}</span>
+                        )}
                         <h3 className="text-xl font-bold text-gray-900 mb-2">{session.title}</h3>
                         {session.courses && (
                             <p className="text-sm text-blue-600 font-medium">

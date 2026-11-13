@@ -1,5 +1,10 @@
 import apiClient from '../api';
 
+export const checkAdmin = async () => {
+    const response = await apiClient.get(`/api/admin/check`);
+    return response.data;
+};
+
 // ==================== Dashboard Stats ====================
 
 export const getDashboardStats = async () => {

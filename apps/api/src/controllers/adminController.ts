@@ -9,39 +9,32 @@ import multer from "multer";
 
 export const getDashboardStats = async (req: Request, res: Response) => {
     try {
-        // Get total users count
-        const { count: totalUsers } = await supabaseAdmin
-            .from("users")
-            .select("*", { count: "exact", head: true });
-
-        // Get total courses count
-        const { count: totalCourses } = await supabaseAdmin
-            .from("courses")
-            .select("*", { count: "exact", head: true });
-
-        // Get total enrollments
-        const { count: totalEnrollments } = await supabaseAdmin
-            .from("user_courses")
-            .select("*", { count: "exact", head: true });
-
-        // Get active live sessions count
-        const { count: activeSessions } = await supabaseAdmin
-            .from("live_sessions")
-            .select("*", { count: "exact", head: true })
-            .in("status", ["scheduled", "live"]);
-
-        // Get recent users (last 7 days)
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-        const { count: newUsers } = await supabaseAdmin
-            .from("users")
-            .select("*", { count: "exact", head: true })
-            .gte("created_at", sevenDaysAgo.toISOString());
 
-        // Calculate total revenue (sum of all course purchases)
-        const { data: purchases } = await supabaseAdmin
-            .from("user_courses")
-            .select("courses(price)");
+        // Independent queries run in parallel: one round trip instead of six
+        const [
+            { count: totalUsers },
+            { count: totalCourses },
+            { count: totalEnrollments },
+            { count: activeSessions },
+            { count: newUsers },
+            { data: purchases },
+        ] = await Promise.all([
+            supabaseAdmin.from("users").select("*", { count: "exact", head: true }),
+            supabaseAdmin.from("courses").select("*", { count: "exact", head: true }),
+            supabaseAdmin.from("user_courses").select("*", { count: "exact", head: true }),
+            supabaseAdmin
+                .from("live_sessions")
+                .select("*", { count: "exact", head: true })
+                .in("status", ["scheduled", "live"]),
+            supabaseAdmin
+                .from("users")
+                .select("*", { count: "exact", head: true })
+                .gte("created_at", sevenDaysAgo.toISOString()),
+            // Total revenue: sum of all course purchases
+            supabaseAdmin.from("user_courses").select("courses(price)"),
+        ]);
 
         const totalRevenue = purchases?.reduce((sum, purchase: any) => {
             return sum + (purchase.courses?.price || 0);
@@ -65,12 +58,42 @@ export const getRecentActivity = async (req: Request, res: Response) => {
         const { limit = 10 } = req.query;
         const activities: any[] = [];
 
-        // Get recent user registrations
-        const { data: recentUsers } = await supabaseAdmin
-            .from("users")
-            .select("id, email, first_name, last_name, created_at")
-            .order("created_at", { ascending: false })
-            .limit(Number(limit));
+        // The three queries are independent: run them in parallel
+        const [
+            { data: recentUsers },
+            { data: recentPurchases },
+            { data: recentSessions },
+        ] = await Promise.all([
+            supabaseAdmin
+                .from("users")
+                .select("id, email, first_name, last_name, created_at")
+                .order("created_at", { ascending: false })
+                .limit(Number(limit)),
+            supabaseAdmin
+                .from("user_courses")
+                .select(`
+                id,
+                created_at,
+                user_id,
+                course_id,
+                users:user_id(first_name, last_name, email),
+                courses:course_id(title, price)
+            `)
+                .order("created_at", { ascending: false })
+                .limit(Number(limit)),
+            supabaseAdmin
+                .from("live_sessions")
+                .select(`
+                id,
+                title,
+                scheduled_at,
+                created_at,
+                course_id,
+                courses:course_id(title)
+            `)
+                .order("created_at", { ascending: false })
+                .limit(Number(limit)),
+        ]);
 
         if (recentUsers) {
             recentUsers.forEach((user) => {
@@ -87,20 +110,6 @@ export const getRecentActivity = async (req: Request, res: Response) => {
                 });
             });
         }
-
-        // Get recent course purchases
-        const { data: recentPurchases } = await supabaseAdmin
-            .from("user_courses")
-            .select(`
-                id,
-                created_at,
-                user_id,
-                course_id,
-                users:user_id(first_name, last_name, email),
-                courses:course_id(title, price)
-            `)
-            .order("created_at", { ascending: false })
-            .limit(Number(limit));
 
         if (recentPurchases) {
             recentPurchases.forEach((purchase: any) => {
@@ -125,20 +134,6 @@ export const getRecentActivity = async (req: Request, res: Response) => {
                 });
             });
         }
-
-        // Get recent live session schedules
-        const { data: recentSessions } = await supabaseAdmin
-            .from("live_sessions")
-            .select(`
-                id,
-                title,
-                scheduled_at,
-                created_at,
-                course_id,
-                courses:course_id(title)
-            `)
-            .order("created_at", { ascending: false })
-            .limit(Number(limit));
 
         if (recentSessions) {
             recentSessions.forEach((session: any) => {
@@ -881,17 +876,16 @@ export const getChecklistSubmissions = async (req: Request, res: Response) => {
         // Apply pagination
         query = query.range(offset, offset + Number(limit) - 1);
 
-        const { data: submissions, error, count } = await query;
+        // Page query and overall statistics (without filters) are independent: run in parallel
+        const [{ data: submissions, error, count }, { data: allSubmissions }] = await Promise.all([
+            query,
+            supabaseAdmin.from("checklist_responses").select("stage, score"),
+        ]);
 
         if (error) {
             console.log(error);
             return res.status(400).json({ error: error.message });
         }
-
-        // Get overall statistics (without filters)
-        const { data: allSubmissions } = await supabaseAdmin
-            .from("checklist_responses")
-            .select("stage, score");
 
         const stats = {
             total: allSubmissions?.length || 0,

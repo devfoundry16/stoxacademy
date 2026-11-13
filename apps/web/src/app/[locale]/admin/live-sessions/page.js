@@ -268,14 +268,12 @@ export default function LiveSessionsPage({ sessionType = 'live' }) {
         }
     };
 
-    const joinUrl = (row) =>
-        row.video_provider === 'daily' && row.video_room_name
-            ? `${window.location.origin}/${locale}/live-sessions/${row.id}/room`
-            : row.meeting_url;
+    // Share the public detail page, not the room/meeting link.
+    const detailUrl = (row) => `${window.location.origin}/${locale}/live-sessions/${row.id}`;
 
     const handleCopyLink = async (row) => {
         try {
-            await navigator.clipboard.writeText(joinUrl(row));
+            await navigator.clipboard.writeText(detailUrl(row));
             toast.success(t('linkCopied'));
         } catch {
             toast.error(t('failedToCopyLink'));
@@ -284,15 +282,13 @@ export default function LiveSessionsPage({ sessionType = 'live' }) {
 
     const actions = (row) => (
         <>
-            {canJoinSession(row) && (
-                <button
-                    onClick={() => handleCopyLink(row)}
-                    className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                    title={t('copyLink')}
-                >
-                    <LinkIcon size={18} />
-                </button>
-            )}
+            <button
+                onClick={() => handleCopyLink(row)}
+                className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                title={t('copyLink')}
+            >
+                <LinkIcon size={18} />
+            </button>
             {canJoinSession(row) && (
                 <button
                     onClick={() => handleJoinSession(row)}

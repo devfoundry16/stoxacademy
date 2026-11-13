@@ -23,7 +23,7 @@ export function Field({ label, ...props }) {
       <input
         required
         {...props}
-        className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-white outline-none transition focus:border-[#f5c451]"
+        className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-3 !text-white outline-none transition focus:border-[#f5c451]"
       />
     </label>
   );

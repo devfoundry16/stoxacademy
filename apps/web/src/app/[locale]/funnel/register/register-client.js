@@ -8,7 +8,7 @@ import CheckoutForm from "@/components/CheckoutForm";
 import { FIELDS, forms } from "../content";
 import { FormShell, Field, SubmitButton, Notice } from "../form-shell";
 
-// Id of the Gold & Forex course row (price 950) in the `courses` table.
+// Id of the Gold & Forex course row in the `courses` table; the funnel price ($950) is fixed server-side.
 const COURSE_ID = process.env.NEXT_PUBLIC_FUNNEL_COURSE_ID;
 
 export default function RegisterClient() {
@@ -26,7 +26,7 @@ export default function RegisterClient() {
     setError(null);
     try {
       setIntent(
-        await paymentService.createGuestCoursePaymentIntent(COURSE_ID, d.get("email").trim(), firstName, rest.join(" "), null, d.get("phone").trim()),
+        await paymentService.createGuestCoursePaymentIntent(COURSE_ID, d.get("email").trim(), firstName, rest.join(" "), null, d.get("phone").trim(), true),
       );
     } catch (err) {
       setError(err?.response?.data?.error || forms.error);

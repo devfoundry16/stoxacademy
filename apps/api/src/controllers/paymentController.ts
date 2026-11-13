@@ -884,9 +884,12 @@ export const getSubscriptionStatus = async (req: Request, res: Response) => {
 
 // ==================== Guest Course Payment ====================
 
+// The /funnel landing page sells the course at a fixed price, independent of the catalog price.
+const FUNNEL_COURSE_PRICE = 950;
+
 export const createGuestCoursePaymentIntent = async (req: Request, res: Response) => {
     try {
-        const { courseId, couponCode, email, firstName, lastName, phoneNumber } = req.body;
+        const { courseId, couponCode, email, firstName, lastName, phoneNumber, funnel } = req.body;
 
         if (!email || !courseId) {
             return res.status(400).json({ error: "email and courseId are required" });
@@ -915,7 +918,8 @@ export const createGuestCoursePaymentIntent = async (req: Request, res: Response
             return res.status(400).json({ error: "Course already purchased" });
         }
 
-        let finalPrice = parseFloat(course.price);
+        const basePrice = funnel ? FUNNEL_COURSE_PRICE : parseFloat(course.price);
+        let finalPrice = basePrice;
         let discountPercentage = 0;
         let validCouponCode = null;
 
@@ -948,7 +952,7 @@ export const createGuestCoursePaymentIntent = async (req: Request, res: Response
                 type: "course",
                 couponCode: validCouponCode || "",
                 discountPercentage: discountPercentage.toString(),
-                originalPrice: course.price,
+                originalPrice: basePrice.toString(),
             },
             automatic_payment_methods: { enabled: true },
         });
@@ -961,7 +965,7 @@ export const createGuestCoursePaymentIntent = async (req: Request, res: Response
             guestToken,
             isNewUser,
             discountPercentage,
-            originalPrice: course.price,
+            originalPrice: basePrice,
             finalPrice: finalPrice.toFixed(2),
         });
     } catch (error: any) {
@@ -1025,10 +1029,8 @@ export const confirmGuestCoursePayment = async (req: Request, res: Response) => 
             ? parseFloat(paymentIntent.metadata.originalPrice)
             : null;
 
-        let pricePaid = parseFloat(course?.price);
-        if (discountPercentage && discountPercentage > 0) {
-            pricePaid = pricePaid * (1 - discountPercentage / 100);
-        }
+        // Record what Stripe actually charged (funnel price may differ from the catalog price).
+        const pricePaid = paymentIntent.amount / 100;
 
         const { data: purchase, error: purchaseError } = await supabaseAdmin
             .from("user_courses")

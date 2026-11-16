@@ -84,10 +84,10 @@ function Section({ title, kicker, children, className = "" }) {
   return (
     <section className={`relative px-4 py-20 sm:px-6 lg:px-8 sm:py-28 ${className}`}>
       <div className="mx-auto max-w-5xl">
-        {title && (
+        {(title || kicker) && (
           <div className="mb-14 text-center" data-reveal>
             {kicker && <span className="mb-3 block text-sm font-semibold tracking-widest text-[#f5c451]">{kicker}</span>}
-            <h2 className="text-3xl font-extrabold leading-tight text-white sm:text-5xl">{title}</h2>
+            {title && <h2 className="text-3xl font-extrabold leading-tight text-white sm:text-5xl">{title}</h2>}
           </div>
         )}
         {children}
@@ -272,7 +272,7 @@ export default function FunnelClient() {
       </section>
 
       {/* 2. Next step */}
-      <Section title={c.nextStep.title} kicker="ابدأ من هنا">
+      <Section kicker="ابدأ من هنا">
         <div className="group relative mx-auto flex max-w-xl flex-col overflow-hidden rounded-3xl border border-[#f5c451]/50 bg-white/[0.03] p-7 transition-all duration-300 hover:-translate-y-1.5 hover:bg-white/[0.06] hover:shadow-[0_24px_50px_-24px_#f5c451]">
           {/* gold line draws across the top on hover */}
           <span className="absolute inset-x-0 top-0 h-0.5 origin-right scale-x-0 bg-[#f5c451] transition-transform duration-500 group-hover:scale-x-100" />

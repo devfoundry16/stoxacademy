@@ -244,10 +244,7 @@ export default function FunnelClient() {
           <div className="hero-fade mx-auto mb-10 max-w-2xl">
             <Video url={VIDEOS.vsl} label="VSL" ratio="5 / 4" />
           </div>
-          <p className="hero-fade mx-auto mb-8 max-w-2xl leading-relaxed text-white/70">{c.hero.intro}</p>
-          <div className="hero-fade">
-            <Btn href={LINKS.enroll}>{c.hero.enroll}</Btn>
-          </div>
+          <p className="hero-fade mx-auto max-w-2xl leading-relaxed text-white/70">{c.hero.intro}</p>
         </div>
       </section>
 
@@ -275,27 +272,15 @@ export default function FunnelClient() {
       </section>
 
       {/* 2. Next step */}
-      <Section title={c.nextStep.title} kicker="ابدأ من هنا">
-        <div className="mx-auto grid max-w-4xl gap-5 md:grid-cols-2">
-          {[
-            [c.nextStep.enrollText, c.nextStep.enrollBtn, LINKS.enroll, false],
-            [c.nextStep.webinarText, c.nextStep.webinarBtn, LINKS.webinar, true],
-          ].map(([text, label, href, secondary], i) => (
-            <div
-              key={label}
-              className={`group relative flex flex-col overflow-hidden rounded-3xl border bg-white/[0.03] p-7 transition-all duration-300 hover:-translate-y-1.5 hover:bg-white/[0.06] hover:shadow-[0_24px_50px_-24px_#f5c451] ${
-                secondary ? "border-white/10 hover:border-[#f5c451]/50" : "border-[#f5c451]/50"
-              }`}
-            >
-              {/* gold line draws across the top on hover */}
-              <span className="absolute inset-x-0 top-0 h-0.5 origin-right scale-x-0 bg-[#f5c451] transition-transform duration-500 group-hover:scale-x-100" />
-              <span className="mb-5 text-5xl font-black text-white/15 transition-colors duration-300 group-hover:text-[#f5c451]" dir="ltr">
-                0{i + 1}
-              </span>
-              <p className="mb-8 flex-1 leading-loose text-white/70">{text}</p>
-              <Btn href={href} secondary={secondary} full>{label}</Btn>
-            </div>
-          ))}
+      <Section>
+        <div className="group relative mx-auto flex max-w-xl flex-col overflow-hidden rounded-3xl border border-[#f5c451]/50 bg-white/[0.03] p-7 transition-all duration-300 hover:-translate-y-1.5 hover:bg-white/[0.06] hover:shadow-[0_24px_50px_-24px_#f5c451]">
+          {/* gold line draws across the top on hover */}
+          <span className="absolute inset-x-0 top-0 h-0.5 origin-right scale-x-0 bg-[#f5c451] transition-transform duration-500 group-hover:scale-x-100" />
+          <span className="mb-5 text-5xl font-black text-white/15 transition-colors duration-300 group-hover:text-[#f5c451]" dir="ltr">
+            01
+          </span>
+          <p className="mb-8 flex-1 leading-loose text-white/70">{c.nextStep.webinarText}</p>
+          <Btn href={LINKS.webinar} full>{c.nextStep.webinarBtn}</Btn>
         </div>
       </Section>
 
@@ -375,7 +360,7 @@ export default function FunnelClient() {
             <Gift className="mx-auto mb-5 size-12 text-[#f5c451]" />
             <div className="mb-4 text-6xl font-black" dir="ltr"><ShinyText color="#f5c451" shineColor="#fff7dc" speed={3}>$500</ShinyText></div>
             <p className="mb-8 text-lg leading-loose text-white/80">{c.bonus.text}</p>
-            <Btn href={LINKS.enroll}>{c.bonus.btn}</Btn>
+            <Btn href={LINKS.webinar}>{c.bonus.btn}</Btn>
           </div>
         </div>
       </Section>
@@ -415,8 +400,7 @@ export default function FunnelClient() {
           <p className="mb-4 text-lg leading-loose text-white/70">{c.final.text}</p>
           <p className="mb-10 font-semibold text-[#f5c451]">{c.final.fee}</p>
           <div className="mb-12 flex flex-wrap justify-center gap-4">
-            <Btn href={LINKS.enroll}>{c.hero.enroll}</Btn>
-            <Btn href={LINKS.webinar} secondary>{c.nextStep.webinarBtn}</Btn>
+            <Btn href={LINKS.webinar}>{c.nextStep.webinarBtn}</Btn>
           </div>
           <p className="text-sm text-white/40">{c.final.disclaimer}</p>
         </div>
@@ -424,7 +408,7 @@ export default function FunnelClient() {
 
       {/* Sticky mobile/desktop CTA */}
       <div className="sticky-cta fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-[#07090d]/90 p-3 backdrop-blur sm:hidden">
-        <Link href={LINKS.enroll} className="block rounded-full bg-[#f5c451] py-3 text-center font-bold text-black">{c.nextStep.enrollBtn}</Link>
+        <Link href={LINKS.webinar} className="block rounded-full bg-[#f5c451] py-3 text-center font-bold text-black">{c.nextStep.webinarBtn}</Link>
       </div>
     </div>
   );

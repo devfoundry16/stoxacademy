@@ -2,7 +2,8 @@
 // Session length is defined once here: confirmed 1h30 (90 min) per session.
 const SESSION_MINUTES = 90;
 
-// CTA targets: both open an in-funnel details form (paid course / free webinar).
+// CTA targets: in-funnel details forms. The paid course form is no longer linked from the landing page;
+// its link is shared privately with buyers.
 export const LINKS = {
   enroll: "/funnel/register",
   webinar: "/funnel/webinar",
@@ -20,7 +21,7 @@ export const forms = {
   register: {
     title: "سجّل في دورة الذهب والفوركس",
     subtitle: "أدخل بياناتك ثم أكمل الدفع — رسوم الدورة 950 دولاراً.",
-    submit: "المتابعة إلى الدفع — 950 دولاراً",
+    submit: "المتابعة",
     success: "تم الدفع بنجاح! أرسلنا إلى بريدك الإلكتروني رابطاً لتعيين كلمة المرور والدخول إلى حسابك.",
   },
   webinar: {
@@ -53,13 +54,8 @@ export const content = {
       "تعرّف إلى أساسيات الأسواق المالية، وتعلّم قراءة الشارت وفهم حركة الأسعار، واستكشف أدوات التحليل وإدارة المخاطر من خلال برنامج تدريبي مباشر من 8 جلسات.",
     facts: `8 جلسات مباشرة | جلستان أسبوعياً | ${SESSION_MINUTES} دقيقة للجلسة | مدة البرنامج 4 أسابيع`,
     fee: "رسوم الدورة: 950 دولاراً",
-    enroll: "اشترك في الدورة الآن — 950 دولاراً",
   },
   nextStep: {
-    title: "اختر الخطوة المناسبة لك",
-    enrollText:
-      "جاهز لتبدأ؟ سجّل في دورة الذهب والفوركس الآن واحصل على برنامج تدريبي مباشر من 8 جلسات.",
-    enrollBtn: "اشترك في الدورة الآن",
     webinarText:
       "تريد التعرف على البرنامج أولاً؟ انضم إلى ويبينار مجاني عن أساسيات تداول الذهب والفوركس وتعرّف إلى طريقة التدريب قبل التسجيل.",
     webinarBtn: "سجّل في الويبينار المجاني",
@@ -146,7 +142,7 @@ export const content = {
   bonus: {
     title: "هدية التسجيل",
     text: "سجّل في الدورة واحصل على 500 دولار كهدية تشجيعية. بعد إتمام التسجيل، سنساعدك على فتح حساب لدى شريكنا Supreme FX ونضيف 500 دولار إلى حسابك. بعد إكمال الدورة، يمكنك سحب المبلغ أو استخدامه للتداول، وفق الشروط المعتمدة لدى الشركة.",
-    btn: "أريد التسجيل والحصول على الهدية",
+    btn: "سجّل لمعرفة المزيد",
   },
   details: {
     title: "تفاصيل الدورة",

@@ -272,7 +272,7 @@ export default function FunnelClient() {
       </section>
 
       {/* 2. Next step */}
-      <Section title={c.nextStep.title}>
+      <Section>
         <div className="group relative mx-auto flex max-w-xl flex-col overflow-hidden rounded-3xl border border-[#f5c451]/50 bg-white/[0.03] p-7 transition-all duration-300 hover:-translate-y-1.5 hover:bg-white/[0.06] hover:shadow-[0_24px_50px_-24px_#f5c451]">
           {/* gold line draws across the top on hover */}
           <span className="absolute inset-x-0 top-0 h-0.5 origin-right scale-x-0 bg-[#f5c451] transition-transform duration-500 group-hover:scale-x-100" />

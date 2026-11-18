@@ -122,3 +122,48 @@ export async function sendEmail(options: EmailOptions): Promise<{ success: boole
     return emailProvider.send(options);
 }
 
+
+const escapeHtml = (s: string) =>
+    s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
+
+/**
+ * Confirmation email after a logged-in user buys or books something.
+ * Never throws: a failed email must not fail a paid booking.
+ */
+export async function sendBookingConfirmation(
+    to: string | undefined,
+    item: string,
+    details: string[] = [],
+    // Guest buyers get "Set your password" here instead of "Go to My Courses"
+    action?: { label: string; url: string; note?: string },
+): Promise<void> {
+    if (!to) return;
+    try {
+        const button = action || { label: 'Go to My Courses', url: `${process.env.FRONTEND_URL || 'https://stoxacademy.org'}/en/my-courses` };
+        const detailRows = details.map((d) => `<li style="margin-bottom:6px;">${escapeHtml(d)}</li>`).join('');
+        const result = await sendEmail({
+            to,
+            subject: `Booking confirmed: ${item}`,
+            html: `
+                <div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:32px;background:#f9fafb;border-radius:12px;">
+                    <h2 style="color:#1e3a5f;margin-bottom:8px;">Your booking is confirmed</h2>
+                    <p style="color:#374151;margin-bottom:16px;">
+                        Thank you! You're booked in for <strong>${escapeHtml(item)}</strong>.
+                    </p>
+                    ${detailRows ? `<ul style="color:#374151;padding-left:20px;margin-bottom:24px;">${detailRows}</ul>` : ''}
+                    ${button.note ? `<p style="color:#374151;margin-bottom:16px;">${escapeHtml(button.note)}</p>` : ''}
+                    <a href="${button.url}"
+                       style="display:inline-block;padding:14px 28px;background:#2563eb;color:#ffffff;text-decoration:none;border-radius:8px;font-weight:600;font-size:16px;">
+                        ${escapeHtml(button.label)}
+                    </a>
+                    <p style="color:#6b7280;font-size:13px;margin-top:24px;">
+                        ${action ? 'This link expires in 24 hours. If it has expired, use "Forgot password" on the login page with this email address. ' : ''}Questions? Just reply to this email.
+                    </p>
+                </div>
+            `,
+        });
+        if (!result.success) console.error('Booking confirmation email failed:', to, result.error);
+    } catch (err: any) {
+        console.error('Booking confirmation email error:', to, err?.message);
+    }
+}

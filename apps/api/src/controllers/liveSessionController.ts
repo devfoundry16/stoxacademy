@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { supabaseAdmin } from "../config/supabase";
 import { createMeetingToken, deleteRoom, getRoomMeetingStatus, isDailyConfigured } from "../services/dailyService";
+import { sendBookingConfirmation } from "../services/emailService";
 
 // ==================== Helper Functions ====================
 
@@ -206,7 +207,7 @@ export const enrollInLiveSession = async (req: Request, res: Response) => {
         // Get session price
         const { data: session, error: sessionError } = await supabaseAdmin
             .from("live_sessions")
-            .select("price, max_participants, participants_count")
+            .select("title, price, max_participants, participants_count")
             .eq("id", sessionId)
             .single();
 
@@ -272,6 +273,8 @@ export const enrollInLiveSession = async (req: Request, res: Response) => {
                 })
                 .eq("id", sessionId);
         }
+
+        await sendBookingConfirmation(userData.user.email, session.title || "your live session");
 
         return res.status(201).json({
             message: "Successfully enrolled in live session",

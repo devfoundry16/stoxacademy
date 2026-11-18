@@ -35,7 +35,7 @@ Add these to your `.env` file:
 # Email Service Configuration
 EMAIL_API_KEY=your_email_api_key_here
 EMAIL_API_URL=https://api.resend.com/emails  # or your email provider URL
-EMAIL_FROM=noreply@stoxacademy.com
+EMAIL_FROM=admin@stoxacademy.org
 EMAIL_FROM_NAME=STOX Academy
 
 # Frontend URL (for email links)

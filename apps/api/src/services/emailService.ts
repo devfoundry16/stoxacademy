@@ -29,7 +29,7 @@ class HttpEmailProvider implements EmailProvider {
     constructor() {
         this.apiKey = process.env.EMAIL_API_KEY || '';
         this.apiUrl = process.env.EMAIL_API_URL || 'https://api.resend.com/emails';
-        this.fromEmail = process.env.EMAIL_FROM || 'noreply@stoxacademy.com';
+        this.fromEmail = process.env.EMAIL_FROM || 'admin@stoxacademy.org';
         this.fromName = process.env.EMAIL_FROM_NAME || 'STOX Academy';
     }
 
@@ -94,7 +94,7 @@ class ConsoleEmailProvider implements EmailProvider {
         console.log('\n========== EMAIL ==========');
         console.log('To:', options.to);
         console.log('Subject:', options.subject);
-        console.log('From:', options.from || 'noreply@stoxacademy.com');
+        console.log('From:', options.from || 'admin@stoxacademy.org');
         console.log('HTML:', options.html);
         console.log('==========================\n');
         

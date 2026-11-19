@@ -56,7 +56,7 @@ export const signUpWithEmail = async (req: Request, res: Response) => {
       });
     }
 
-    void syncLeadToHubSpot({
+    await syncLeadToHubSpot({
       email,
       firstName,
       lastName,
@@ -182,7 +182,7 @@ export const handleOAuthCallback = async (req: Request, res: Response) => {
       }
 
       if (data.user.email) {
-        void syncLeadToHubSpot({ email: data.user.email, firstName, lastName, source: "signup" });
+        await syncLeadToHubSpot({ email: data.user.email, firstName, lastName, source: "signup" });
       }
     }
 

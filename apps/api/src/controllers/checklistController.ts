@@ -59,7 +59,7 @@ export const submitChecklistResponse = async (req: Request, res: Response) => {
             return res.status(500).json({ error: "Failed to save response" });
         }
 
-        void syncLeadToHubSpot({
+        await syncLeadToHubSpot({
             email,
             fullName: full_name,
             phone: phone_number,

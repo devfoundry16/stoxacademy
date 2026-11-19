@@ -26,7 +26,7 @@ export const submitWebinarRegistration = async (req: Request, res: Response) => 
             return res.status(500).json({ error: "Failed to save registration" });
         }
 
-        void syncLeadToHubSpot({ email, fullName, phone, country, source: "webinar" });
+        await syncLeadToHubSpot({ email, fullName, phone, country, source: "webinar" });
 
         return res.status(201).json({ success: true });
     } catch (error: any) {

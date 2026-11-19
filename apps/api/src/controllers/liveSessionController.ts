@@ -276,7 +276,7 @@ export const enrollInLiveSession = async (req: Request, res: Response) => {
         }
 
         if (userData.user.email) {
-            void syncLeadToHubSpot({ email: userData.user.email, source: "live_session", lastPurchase: session.title || "Live session" });
+            await syncLeadToHubSpot({ email: userData.user.email, source: "live_session", lastPurchase: session.title || "Live session" });
         }
         await sendBookingConfirmation(userData.user.email, session.title || "your live session");
 

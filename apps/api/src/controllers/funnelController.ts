@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { supabaseAdmin } from "../config/supabase";
+import { syncLeadToHubSpot } from "../services/hubspotService";
 
 export const submitWebinarRegistration = async (req: Request, res: Response) => {
     try {
@@ -24,6 +25,8 @@ export const submitWebinarRegistration = async (req: Request, res: Response) => 
             console.error("Webinar registration error:", error);
             return res.status(500).json({ error: "Failed to save registration" });
         }
+
+        void syncLeadToHubSpot({ email, fullName, phone, country, source: "webinar" });
 
         return res.status(201).json({ success: true });
     } catch (error: any) {

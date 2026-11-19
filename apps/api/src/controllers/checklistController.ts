@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { supabaseAdmin } from "../config/supabase";
 import { calculateChecklistScore } from "../utils/checklistScoring";
 import { sendEmailImmediately, scheduleAllEmails } from "../services/emailQueueService";
+import { syncLeadToHubSpot } from "../services/hubspotService";
 import fs from "fs";
 import path from "path";
 
@@ -57,6 +58,16 @@ export const submitChecklistResponse = async (req: Request, res: Response) => {
             console.error("Supabase error:", error);
             return res.status(500).json({ error: "Failed to save response" });
         }
+
+        void syncLeadToHubSpot({
+            email,
+            fullName: full_name,
+            phone: phone_number,
+            country,
+            source: "checklist",
+            checklistScore: score,
+            checklistStage: stage,
+        });
 
         const checklistResponseId = data[0].id;
         const submittedAt = new Date(data[0].created_at || new Date());

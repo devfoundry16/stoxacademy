@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { supabaseAdmin, supabaseClient } from "../config/supabase";
 import { jwtDecode } from "jwt-decode";
+import { syncLeadToHubSpot } from "../services/hubspotService";
 
 export const signUpWithEmail = async (req: Request, res: Response) => {
   try {
@@ -54,6 +55,15 @@ export const signUpWithEmail = async (req: Request, res: Response) => {
         error: `Failed to create user profile: ${dbError.message}`
       });
     }
+
+    void syncLeadToHubSpot({
+      email,
+      firstName,
+      lastName,
+      phone: phoneNumber,
+      country,
+      source: "signup",
+    });
 
     // Sign in the user to get session tokens
     const { data: signInData, error: signInError } =
@@ -169,6 +179,10 @@ export const handleOAuthCallback = async (req: Request, res: Response) => {
       if (dbError) {
         console.error("Failed to create user profile:", dbError);
         // Continue anyway - user is authenticated but profile creation failed
+      }
+
+      if (data.user.email) {
+        void syncLeadToHubSpot({ email: data.user.email, firstName, lastName, source: "signup" });
       }
     }
 

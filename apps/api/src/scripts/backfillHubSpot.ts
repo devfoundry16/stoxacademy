@@ -27,7 +27,7 @@ type Row = Record<string, any>;
 const fetchAll = async (table: string, columns: string, onlyStudents = false): Promise<Row[]> => {
     const rows: Row[] = [];
     for (let from = 0; ; from += PAGE) {
-        let query = supabaseAdmin.from(table).select(columns).order("created_at").range(from, from + PAGE - 1);
+        let query = supabaseAdmin.from(table).select(columns).order("id").range(from, from + PAGE - 1);
         if (onlyStudents) query = query.eq("role", "student");
         const { data, error } = await query;
         if (error) throw new Error(`read ${table}: ${error.message}`);
@@ -52,20 +52,37 @@ const main = async () => {
     const token = process.env.HUBSPOT_ACCESS_TOKEN;
     if (APPLY && !token) throw new Error("HUBSPOT_ACCESS_TOKEN is not set");
 
-    const [webinar, checklist, users] = await Promise.all([
-        fetchAll("webinar_registrations", "email, full_name, phone_number, country, created_at"),
-        fetchAll("checklist_responses", "email, full_name, phone_number, country, score, stage, created_at"),
-        fetchAll("users", "email, first_name, last_name, phone_number, country, created_at", true),
-    ]);
+    const [webinar, checklist, users, courses, sessions, coursePurchases, sessionBookings, subscriptions, packages] =
+        await Promise.all([
+            fetchAll("webinar_registrations", "email, full_name, phone_number, country, created_at"),
+            fetchAll("checklist_responses", "email, full_name, phone_number, country, score, stage, created_at"),
+            fetchAll("users", "id, email, first_name, last_name, phone_number, country, created_at", true),
+            fetchAll("courses", "id, title"),
+            fetchAll("live_sessions", "id, title"),
+            fetchAll("user_courses", "user_id, course_id, purchased_at"),
+            fetchAll("user_live_sessions", "user_id, session_id, purchased_at"),
+            fetchAll("user_subscriptions", "user_id, created_at"),
+            fetchAll("user_session_packages", "user_id, sessions_total, purchased_at"),
+        ]);
 
-    const at = (r: Row) => r.created_at ?? "";
+    const at = (r: Row) => r.created_at ?? r.purchased_at ?? "";
+    const emailOf = new Map(users.map((u) => [u.id, u.email]));
+    const courseTitle = new Map(courses.map((c) => [c.id, c.title]));
+    const sessionTitle = new Map(sessions.map((s) => [s.id, s.title]));
+    const bought = (rows: Row[], source: "purchase" | "live_session", item: (r: Row) => string) =>
+        rows.map((r) => ({ at: at(r), lead: { email: emailOf.get(r.user_id) ?? "", source, lastPurchase: item(r) } }));
     const contacts = mergeLeads([
         ...webinar.map((r) => ({ at: at(r), lead: { email: r.email, fullName: r.full_name, phone: r.phone_number, country: r.country, source: "webinar" as const } })),
         ...checklist.map((r) => ({ at: at(r), lead: { email: r.email, fullName: r.full_name, phone: r.phone_number, country: r.country, checklistScore: r.score, checklistStage: r.stage, source: "checklist" as const } })),
         ...users.map((r) => ({ at: at(r), lead: { email: r.email, firstName: r.first_name, lastName: r.last_name, phone: r.phone_number, country: r.country, source: "signup" as const } })),
+        ...bought(coursePurchases, "purchase", (r) => courseTitle.get(r.course_id) || "Course"),
+        ...bought(subscriptions, "purchase", () => "The 90 Circle"),
+        ...bought(packages, "purchase", (r) => `${r.sessions_total} individual sessions`),
+        ...bought(sessionBookings, "live_session", (r) => sessionTitle.get(r.session_id) || "Live session"),
     ]);
 
     console.log(`Read ${webinar.length} webinar, ${checklist.length} checklist, ${users.length} student rows`);
+    console.log(`Read ${coursePurchases.length + subscriptions.length + packages.length} purchases, ${sessionBookings.length} live session bookings`);
     console.log(`→ ${contacts.length} unique contacts to upsert`);
 
     if (!APPLY) {

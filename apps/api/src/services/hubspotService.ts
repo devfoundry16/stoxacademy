@@ -8,7 +8,7 @@
 
 const HUBSPOT_API = "https://api.hubapi.com";
 
-export type LeadSource = "webinar" | "checklist" | "signup";
+export type LeadSource = "webinar" | "checklist" | "signup" | "purchase" | "live_session";
 export type ContactProperties = Record<string, string>;
 
 export interface Lead {
@@ -21,6 +21,7 @@ export interface Lead {
     country?: string | null;
     checklistScore?: number | null;
     checklistStage?: string | null;
+    lastPurchase?: string | null;
 }
 
 const yesNo = [
@@ -35,6 +36,9 @@ const CUSTOM_PROPERTIES = [
     { name: "stox_webinar_lead", label: "Stox webinar registrant", type: "bool", fieldType: "booleancheckbox", options: yesNo },
     { name: "stox_checklist_lead", label: "Stox checklist taker", type: "bool", fieldType: "booleancheckbox", options: yesNo },
     { name: "stox_signup_lead", label: "Stox account signup", type: "bool", fieldType: "booleancheckbox", options: yesNo },
+    { name: "stox_purchase_lead", label: "Stox paying customer", type: "bool", fieldType: "booleancheckbox", options: yesNo },
+    { name: "stox_live_session_lead", label: "Stox live session booker", type: "bool", fieldType: "booleancheckbox", options: yesNo },
+    { name: "stox_last_purchase", label: "Stox latest purchase/booking", type: "string", fieldType: "text" },
     { name: "stox_checklist_score", label: "Stox checklist score", type: "number", fieldType: "number" },
     { name: "stox_checklist_stage", label: "Stox checklist stage", type: "string", fieldType: "text" },
 ];
@@ -87,6 +91,7 @@ export const toContactProperties = (lead: Lead): ContactProperties => {
         [`stox_${lead.source}_lead`]: true,
         stox_checklist_score: lead.checklistScore,
         stox_checklist_stage: lead.checklistStage,
+        stox_last_purchase: lead.lastPurchase,
     };
     // Drop empty values so an upsert never blanks out data HubSpot already has.
     return Object.fromEntries(

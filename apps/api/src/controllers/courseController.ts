@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { supabaseAdmin } from "../config/supabase";
+import { syncLeadToHubSpot } from "../services/hubspotService";
 
 async function hasActiveSubscription(userId: string): Promise<boolean> {
     const now = new Date().toISOString();
@@ -220,7 +221,7 @@ export const purchaseCourse = async (req: Request, res: Response) => {
     // Get course price
     const { data: course, error: courseError } = await supabaseAdmin
       .from("courses")
-      .select("price")
+      .select("price, title")
       .eq("id", courseId)
       .single();
 
@@ -262,6 +263,10 @@ export const purchaseCourse = async (req: Request, res: Response) => {
 
     if (purchaseError) {
       return res.status(400).json({ error: purchaseError.message });
+    }
+
+    if (userData.user.email) {
+      void syncLeadToHubSpot({ email: userData.user.email, source: "purchase", lastPurchase: course.title || "Course" });
     }
 
     // Increment the students count for the course

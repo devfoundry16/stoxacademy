@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { supabaseAdmin } from "../config/supabase";
 import { createMeetingToken, deleteRoom, getRoomMeetingStatus, isDailyConfigured } from "../services/dailyService";
 import { sendBookingConfirmation } from "../services/emailService";
+import { syncLeadToHubSpot } from "../services/hubspotService";
 
 // ==================== Helper Functions ====================
 
@@ -274,6 +275,9 @@ export const enrollInLiveSession = async (req: Request, res: Response) => {
                 .eq("id", sessionId);
         }
 
+        if (userData.user.email) {
+            void syncLeadToHubSpot({ email: userData.user.email, source: "live_session", lastPurchase: session.title || "Live session" });
+        }
         await sendBookingConfirmation(userData.user.email, session.title || "your live session");
 
         return res.status(201).json({

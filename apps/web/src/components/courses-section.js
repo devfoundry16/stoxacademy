@@ -195,9 +195,9 @@ export function CoursesSection() {
   const handleCheckoutSuccess = (paymentIntent, guestToken) => {
     const paymentIntentId = paymentIntent?.id || checkoutModal.paymentIntentId
     if (checkoutModal.type === "subscription") {
-      handleSubscriptionSuccess(paymentIntentId, guestToken)
+      return handleSubscriptionSuccess(paymentIntentId, guestToken)
     } else {
-      handleSessionPackageSuccess(paymentIntentId, guestToken)
+      return handleSessionPackageSuccess(paymentIntentId, guestToken)
     }
   }
 
@@ -445,7 +445,7 @@ export function CoursesSection() {
         amount={checkoutModal.amount}
         itemName={checkoutModal.itemName}
         onSuccess={handleCheckoutSuccess}
-        onError={(err) => toast.error(err || "Payment failed")}
+        onError={(err) => toast.error(err?.message || "Payment failed")}
         isGuest={checkoutModal.isGuest}
         onGuestCreateIntent={
           checkoutModal.isGuest

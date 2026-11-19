@@ -112,7 +112,7 @@ export default function StripeCheckoutModal({
 
   // Intercept CheckoutForm onSuccess to inject guestToken before calling parent
   const handleCheckoutSuccess = (paymentIntent) => {
-    if (onSuccess) onSuccess(paymentIntent, isGuest ? guestToken : null);
+    return onSuccess?.(paymentIntent, isGuest ? guestToken : null);
   };
 
   const handleClose = () => {

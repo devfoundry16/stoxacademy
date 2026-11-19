@@ -71,13 +71,13 @@ async function findOrCreateGuestUser(
         throw new Error(`Failed to create user profile: ${dbError.message}`);
     }
 
-    void syncLeadToHubSpot({ email: normalizedEmail, firstName, lastName, phone: phoneNumber, source: "signup" });
+    await syncLeadToHubSpot({ email: normalizedEmail, firstName, lastName, phone: phoneNumber, source: "signup" });
 
     return { userId: authData.user.id, isNewUser: true, userEmail: normalizedEmail };
 }
 
-const recordPurchase = (email: string | undefined, item: string, source: LeadSource = "purchase") => {
-    if (email) void syncLeadToHubSpot({ email, source, lastPurchase: item });
+const recordPurchase = async (email: string | undefined, item: string, source: LeadSource = "purchase") => {
+    if (email) await syncLeadToHubSpot({ email, source, lastPurchase: item });
 };
 
 function signGuestToken(userId: string, paymentIntentId: string, email: string): string {
@@ -328,7 +328,7 @@ export const confirmCoursePayment = async (req: Request, res: Response) => {
                 .eq("id", courseId);
         }
 
-        recordPurchase(userData.user.email, course?.title || "your course");
+        await recordPurchase(userData.user.email, course?.title || "your course");
         await sendBookingConfirmation(userData.user.email, course?.title || "your course", [
             `Amount paid: $${pricePaid.toFixed(2)}`,
         ]);
@@ -558,7 +558,7 @@ export const confirmLiveSessionPayment = async (req: Request, res: Response) => 
                 .eq("id", sessionId);
         }
 
-        recordPurchase(userData.user.email, paymentIntent.metadata.sessionTitle || "your live session", "live_session");
+        await recordPurchase(userData.user.email, paymentIntent.metadata.sessionTitle || "your live session", "live_session");
         await sendBookingConfirmation(userData.user.email, paymentIntent.metadata.sessionTitle || "your live session", [
             `Amount paid: $${pricePaid.toFixed(2)}`,
         ]);
@@ -707,7 +707,7 @@ export const confirmSubscriptionPayment = async (req: Request, res: Response) =>
             return res.status(400).json({ error: subError.message });
         }
 
-        recordPurchase(userData.user.email, `The 90 Circle — ${PROGRAM_LABELS[programType]}`);
+        await recordPurchase(userData.user.email, `The 90 Circle — ${PROGRAM_LABELS[programType]}`);
         await sendBookingConfirmation(userData.user.email, `The 90 Circle — ${PROGRAM_LABELS[programType]}`, [
             `Amount paid: $${SUBSCRIPTION_PRICE_USD.toFixed(2)}`,
             "12 group sessions and 8 individual sessions",
@@ -844,7 +844,7 @@ export const confirmSessionPackagePayment = async (req: Request, res: Response) 
             return res.status(400).json({ error: pkgError.message });
         }
 
-        recordPurchase(userData.user.email, `${sessionsTotal} individual sessions — ${PROGRAM_LABELS[category] || category}`);
+        await recordPurchase(userData.user.email, `${sessionsTotal} individual sessions — ${PROGRAM_LABELS[category] || category}`);
         await sendBookingConfirmation(userData.user.email, `${sessionsTotal} individual sessions — ${PROGRAM_LABELS[category] || category}`, [
             `Amount paid: $${price.toFixed(2)}`,
         ]);
@@ -1077,7 +1077,7 @@ export const confirmGuestCoursePayment = async (req: Request, res: Response) => 
             .update({ students: newStudentCount, updated_at: new Date().toISOString() })
             .eq("id", courseId);
 
-        recordPurchase(payload.email, course?.title || "your course");
+        await recordPurchase(payload.email, course?.title || "your course");
         await sendGuestBookingEmail(payload.email, course?.title || "your course", [
             `Amount paid: $${pricePaid.toFixed(2)}`,
         ]);
@@ -1270,7 +1270,7 @@ export const confirmGuestLiveSessionPayment = async (req: Request, res: Response
             .update({ participants_count: newCount, updated_at: new Date().toISOString() })
             .eq("id", sessionId);
 
-        recordPurchase(payload.email, paymentIntent.metadata.sessionTitle || "your live session", "live_session");
+        await recordPurchase(payload.email, paymentIntent.metadata.sessionTitle || "your live session", "live_session");
         await sendGuestBookingEmail(payload.email, paymentIntent.metadata.sessionTitle || "your live session", [
             `Amount paid: $${pricePaid.toFixed(2)}`,
         ]);
@@ -1404,7 +1404,7 @@ export const confirmGuestSubscriptionPayment = async (req: Request, res: Respons
             return res.status(400).json({ error: subError.message });
         }
 
-        recordPurchase(payload.email, `The 90 Circle — ${PROGRAM_LABELS[guestProgramType]}`);
+        await recordPurchase(payload.email, `The 90 Circle — ${PROGRAM_LABELS[guestProgramType]}`);
         await sendGuestBookingEmail(payload.email, `The 90 Circle — ${PROGRAM_LABELS[guestProgramType]}`, [
             `Amount paid: $${SUBSCRIPTION_PRICE_USD.toFixed(2)}`,
             "12 group sessions and 8 individual sessions",
@@ -1527,7 +1527,7 @@ export const confirmGuestSessionPackagePayment = async (req: Request, res: Respo
             return res.status(400).json({ error: pkgError.message });
         }
 
-        recordPurchase(payload.email, `${sessionsTotal} individual sessions — ${PROGRAM_LABELS[category] || category}`);
+        await recordPurchase(payload.email, `${sessionsTotal} individual sessions — ${PROGRAM_LABELS[category] || category}`);
         await sendGuestBookingEmail(payload.email, `${sessionsTotal} individual sessions — ${PROGRAM_LABELS[category] || category}`, [
             `Amount paid: $${price.toFixed(2)}`,
         ]);

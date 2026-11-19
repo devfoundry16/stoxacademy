@@ -266,7 +266,7 @@ export const purchaseCourse = async (req: Request, res: Response) => {
     }
 
     if (userData.user.email) {
-      void syncLeadToHubSpot({ email: userData.user.email, source: "purchase", lastPurchase: course.title || "Course" });
+      await syncLeadToHubSpot({ email: userData.user.email, source: "purchase", lastPurchase: course.title || "Course" });
     }
 
     // Increment the students count for the course

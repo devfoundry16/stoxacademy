@@ -4,6 +4,8 @@
  * Upserts website leads into HubSpot as contacts (matched by email).
  * No-op until HUBSPOT_ACCESS_TOKEN (a HubSpot service key) is set.
  * syncLeadToHubSpot never throws: a HubSpot failure must not break registration.
+ * Always await it: on Vercel the function is frozen once the response is sent,
+ * so a fire-and-forget call never reaches HubSpot.
  */
 
 const HUBSPOT_API = "https://api.hubapi.com";
@@ -54,6 +56,7 @@ const hubspotPost = async (token: string, path: string, body: unknown, attempt =
         method: "POST",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
         body: JSON.stringify(body),
+        signal: AbortSignal.timeout(8000), // a slow HubSpot must not hang the user's request
     });
     if (res.status === 429 && attempt < 5) {
         await sleep(1000 * 2 ** attempt);
@@ -65,15 +68,18 @@ const hubspotPost = async (token: string, path: string, body: unknown, attempt =
 // Creates the custom properties once per process; 409 means it already exists.
 export const ensureProperties = (token: string) =>
     (propertiesReady ??= (async () => {
-        for (const p of CUSTOM_PROPERTIES) {
-            const res = await hubspotPost(token, "/crm/v3/properties/contacts", {
-                ...p,
-                groupName: "contactinformation",
-            });
-            if (!res.ok && res.status !== 409) {
-                throw new Error(`create property ${p.name}: ${res.status} ${await res.text()}`);
-            }
-        }
+        // Parallel: this runs on every cold start, inside the user's request.
+        await Promise.all(
+            CUSTOM_PROPERTIES.map(async (p) => {
+                const res = await hubspotPost(token, "/crm/v3/properties/contacts", {
+                    ...p,
+                    groupName: "contactinformation",
+                });
+                if (!res.ok && res.status !== 409) {
+                    throw new Error(`create property ${p.name}: ${res.status} ${await res.text()}`);
+                }
+            })
+        );
     })().catch((err) => {
         propertiesReady = null; // retry on the next lead
         throw err;

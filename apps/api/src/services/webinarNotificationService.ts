@@ -46,7 +46,7 @@ const daysBetween = (from: string, to: string) => Math.round((Date.parse(to) - D
 export async function getUpcomingWebinar(): Promise<Webinar | null> {
     const { data, error } = await supabaseAdmin
         .from("live_sessions")
-        .select("id, scheduled_at")
+        .select("id, scheduled_at, duration")
         .eq("session_type", "webinar")
         .in("status", ["scheduled", "live"])
         .gt("scheduled_at", new Date().toISOString())
@@ -54,10 +54,12 @@ export async function getUpcomingWebinar(): Promise<Webinar | null> {
         .limit(1)
         .maybeSingle();
     if (error) console.error("Error loading upcoming webinar:", error);
-    return data ? { id: data.id, startsAt: new Date(data.scheduled_at) } : null;
+    return data
+        ? { id: data.id, startsAt: new Date(data.scheduled_at), durationMinutes: data.duration || 60 }
+        : null;
 }
 
-export function planWebinarNotifications(registeredAt: Date, start: Date): PlannedNotification[] {
+export function planWebinarNotifications(registeredAt: Date, start: Date, durationMinutes = 60): PlannedNotification[] {
     if (registeredAt >= start) return [];
     const webinarDay = jerusalemDate(start);
 
@@ -89,12 +91,24 @@ export function planWebinarNotifications(registeredAt: Date, start: Date): Plann
         plan.push({ channel: "whatsapp", templateKey: "reminder_1h", scheduledFor: oneHourBefore });
     }
 
+    // Course invitation one hour after the webinar ends.
+    plan.push({
+        channel: "email",
+        templateKey: "post_webinar",
+        scheduledFor: new Date(start.getTime() + durationMinutes * 60 * 1000 + HOUR_MS),
+    });
+
     return plan;
 }
 
 // shortcut: the plan is fixed at registration; if a webinar is rescheduled, its pending rows must be re-planned.
-export async function scheduleWebinarNotifications(registrationId: string, registeredAt: Date, start: Date): Promise<void> {
-    const rows = planWebinarNotifications(registeredAt, start).map((n) => ({
+export async function scheduleWebinarNotifications(
+    registrationId: string,
+    registeredAt: Date,
+    start: Date,
+    durationMinutes?: number
+): Promise<void> {
+    const rows = planWebinarNotifications(registeredAt, start, durationMinutes).map((n) => ({
         registration_id: registrationId,
         channel: n.channel,
         template_key: n.templateKey,
@@ -157,14 +171,20 @@ export async function processWebinarNotifications(registrationId?: string): Prom
         const webinar: Webinar = { id: session.id, startsAt: new Date(session.scheduled_at) };
 
         const late = now.getTime() - new Date(item.scheduled_for).getTime();
-        if (now >= webinar.startsAt || (item.template_key !== "confirmation" && late > MAX_LATE_MS)) {
+        const afterWebinar = item.template_key === "post_webinar"; // the only message meant for after the start
+        if ((!afterWebinar && now >= webinar.startsAt) || (item.template_key !== "confirmation" && late > MAX_LATE_MS)) {
             await finish(item.id, "skipped", "Out of date");
             continue;
         }
 
         try {
             if (item.channel === "email") {
-                const { subject, html } = renderWebinarEmail(item.template_key, reg.full_name, webinar);
+                const rendered = renderWebinarEmail(item.template_key, reg.full_name, webinar);
+                if (!rendered) {
+                    await finish(item.id, "skipped", "Email copy not added yet");
+                    continue;
+                }
+                const { subject, html } = rendered;
                 const result = await sendEmail({ to: reg.email, subject, html });
                 await finish(item.id, result.success ? "sent" : "failed", result.error);
                 if (result.success) sent++;

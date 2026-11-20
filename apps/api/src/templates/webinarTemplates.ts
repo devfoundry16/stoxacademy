@@ -3,7 +3,7 @@
  * Tokens: {name} {left} {date} {time} {link} {support}. A line that is exactly "{link}" renders as a link.
  */
 
-import { jerusalemParts, SUPPORT_NUMBER, Webinar, webinarLink } from "../config/webinar";
+import { courseLink, jerusalemParts, SUPPORT_NUMBER, Webinar, webinarLink } from "../config/webinar";
 
 const DETAILS = ["إليك تفاصيل لقائنا:", "📅 التاريخ: {date}", "⏰ الساعة: {time}", "🔗 رابط حضورك المباشر:", "{link}"];
 const DETAILS_SHORT = ["📅 تاريخ اللقاء: {date}", "⏰ الساعة: {time}", "🔗 رابط حضورك المباشر:", "{link}"];
@@ -234,6 +234,13 @@ export const COUNTDOWN_EMAILS: WebinarEmail[] = [
     },
 ];
 
+/**
+ * Course invitation, sent 1 hour after the webinar ends. Waiting for the PM's Arabic copy:
+ * while this is null, these emails are marked "skipped" instead of sent. To add it, set
+ * { subject, lines } like the emails above; a line that is exactly "{course}" renders as the course link.
+ */
+export const POST_WEBINAR_EMAIL: WebinarEmail | null = null;
+
 export const ONE_HOUR_EMAIL: WebinarEmail = {
     subject: "ساعة واحدة ونلتقي! رابط اللقاء المجاني عن الذهب والفوركس ⏳",
     lines: [
@@ -370,7 +377,7 @@ export function arabicDaysLeft(n: number): string {
     return `${n} يومًا`;
 }
 
-const TOKENS = ["name", "left", "date", "time", "link", "support"] as const;
+const TOKENS = ["name", "left", "date", "time", "link", "support", "course"] as const;
 type TokenValues = Partial<Record<(typeof TOKENS)[number], string>>;
 
 const fill = (text: string, v: TokenValues) => text.replace(/\{(\w+)\}/g, (m, k) => (v as any)[k] ?? m);
@@ -392,15 +399,20 @@ export function webinarLabels(startsAt: Date): { date: string; time: string } {
 
 function baseValues(name: string, webinar: Webinar): TokenValues {
     // LRM marks keep "+" before the digits in Arabic text, even where clients strip dir attributes.
-    return { name, ...webinarLabels(webinar.startsAt), link: webinarLink(webinar.id), support: `\u200E${SUPPORT_NUMBER}\u200E` };
+    return { name, ...webinarLabels(webinar.startsAt), link: webinarLink(webinar.id), course: courseLink(), support: `\u200E${SUPPORT_NUMBER}\u200E` };
 }
 
 /** Renders a webinar email. key: "confirmation" | "countdown_<1-14>" | "reminder_1h". */
-export function renderWebinarEmail(key: string, fullName: string, webinar: Webinar): { subject: string; html: string } {
+/** Renders a webinar email; null when its copy isn't written yet (post_webinar until the PM sends it). */
+export function renderWebinarEmail(key: string, fullName: string, webinar: Webinar): { subject: string; html: string } | null {
     let email: WebinarEmail | undefined;
     const values = baseValues(escapeHtml(fullName), webinar);
     if (key === "confirmation") email = CONFIRMATION_EMAIL;
     else if (key === "reminder_1h") email = ONE_HOUR_EMAIL;
+    else if (key === "post_webinar") {
+        if (!POST_WEBINAR_EMAIL) return null;
+        email = POST_WEBINAR_EMAIL;
+    }
     else if (key.startsWith("countdown_")) {
         const n = Number(key.slice("countdown_".length));
         email = COUNTDOWN_EMAILS[n - 1];
@@ -410,8 +422,8 @@ export function renderWebinarEmail(key: string, fullName: string, webinar: Webin
 
     const body = email.lines
         .map((line) =>
-            line === "{link}"
-                ? `<p dir="ltr" style="margin:0 0 12px;text-align:right;word-break:break-all;"><a href="${values.link}" style="color:#667eea;">${values.link}</a></p>`
+            line === "{link}" || line === "{course}"
+                ? `<p dir="ltr" style="margin:0 0 12px;text-align:right;word-break:break-all;"><a href="${values[line === "{link}" ? "link" : "course"]}" style="color:#667eea;">${values[line === "{link}" ? "link" : "course"]}</a></p>`
                 : `<p dir="rtl" style="margin:0 0 12px;text-align:right;">${fill(line, values)}</p>`
         )
         .join("\n");

@@ -14,6 +14,10 @@ export const submitWebinarRegistration = async (req: Request, res: Response) => 
         if (!fullName || !email || !phone || !country) {
             return res.status(400).json({ error: "Missing required fields" });
         }
+        // The form sends the full international number (E.164), e.g. +972528268954.
+        if (!/^\+[1-9]\d{7,14}$/.test(String(phone))) {
+            return res.status(400).json({ error: "Invalid phone number" });
+        }
 
         // Still save the lead when no webinar is scheduled; they just get no messages.
         const webinar = await getUpcomingWebinar();
@@ -41,11 +45,14 @@ export const submitWebinarRegistration = async (req: Request, res: Response) => 
         }
 
         await syncLeadToHubSpot({ email, fullName, phone, country, source: "webinar" });
-        // Confirmation goes out right away; the rest is picked up by the email worker.
+        // Awaited: on Vercel, work left running after the response is cut off. The rest is sent by the scheduled job.
         if (webinar) {
-            void scheduleWebinarNotifications(registration.id, new Date(registration.created_at), webinar.startsAt)
-                .then(() => processWebinarNotifications())
-                .catch((err) => console.error("Webinar notification error:", err));
+            try {
+                await scheduleWebinarNotifications(registration.id, new Date(registration.created_at), webinar.startsAt);
+                await processWebinarNotifications();
+            } catch (err) {
+                console.error("Webinar notification error:", err);
+            }
         }
 
         return res.status(201).json({ success: true });

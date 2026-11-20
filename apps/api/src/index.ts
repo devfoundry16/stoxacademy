@@ -9,7 +9,7 @@ import liveSessionRoutes from "./routes/liveSessionRoutes";
 import paymentRoutes from "./routes/paymentRoutes";
 import couponRoutes from "./routes/couponRoutes";
 import funnelRoutes from "./routes/funnelRoutes";
-import { startEmailWorker } from "./jobs/emailWorker";
+import { runEmailWorkerOnce, startEmailWorker } from "./jobs/emailWorker";
 
 dotenv.config();
 
@@ -24,6 +24,20 @@ const PORT = process.env.PORT || 4000;
 
 app.get("/health", (_req, res) => {
   res.json({ status: "ok" });
+});
+
+// Called by Vercel Cron (see vercel.json); Vercel sends "Authorization: Bearer <CRON_SECRET>".
+app.get("/api/cron/send-notifications", async (req, res) => {
+  const secret = process.env.CRON_SECRET;
+  if (!secret || req.headers.authorization !== `Bearer ${secret}`) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  try {
+    res.json({ sent: await runEmailWorkerOnce() });
+  } catch (error: any) {
+    console.error("Cron send-notifications error:", error);
+    res.status(500).json({ error: error.message });
+  }
 });
 
 app.use("/api/auth", authRoutes);

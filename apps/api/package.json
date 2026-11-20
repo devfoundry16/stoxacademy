@@ -12,7 +12,8 @@
     "seed:reset": "node scripts/seed-reset.js",
     "generate:course": "node scripts/generate-course-template.js",
     "create:admin": "node scripts/create-admin.js",
-    "backfill:hubspot": "ts-node-dev --transpile-only src/scripts/backfillHubSpot.ts"
+    "backfill:hubspot": "ts-node-dev --transpile-only src/scripts/backfillHubSpot.ts",
+    "check:webinar": "ts-node-dev --transpile-only src/scripts/checkWebinarSchedule.ts"
   },
   "keywords": [],
   "author": "",

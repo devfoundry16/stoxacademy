@@ -1,6 +1,11 @@
 import { Request, Response } from "express";
 import { supabaseAdmin } from "../config/supabase";
 import { syncLeadToHubSpot } from "../services/hubspotService";
+import {
+    getUpcomingWebinar,
+    processWebinarNotifications,
+    scheduleWebinarNotifications,
+} from "../services/webinarNotificationService";
 
 export const submitWebinarRegistration = async (req: Request, res: Response) => {
     try {
@@ -10,14 +15,23 @@ export const submitWebinarRegistration = async (req: Request, res: Response) => 
             return res.status(400).json({ error: "Missing required fields" });
         }
 
-        const { error } = await supabaseAdmin.from("webinar_registrations").insert({
-            full_name: fullName,
-            email: String(email).toLowerCase().trim(),
-            phone_number: phone,
-            country,
-        });
+        // Still save the lead when no webinar is scheduled; they just get no messages.
+        const webinar = await getUpcomingWebinar();
+        if (!webinar) console.warn("Webinar registration without an upcoming webinar session:", email);
 
-        // 23505 = unique violation: this email is already registered.
+        const { data: registration, error } = await supabaseAdmin
+            .from("webinar_registrations")
+            .insert({
+                full_name: fullName,
+                email: String(email).toLowerCase().trim(),
+                phone_number: phone,
+                country,
+                live_session_id: webinar?.id ?? null,
+            })
+            .select("id, created_at")
+            .single();
+
+        // 23505 = unique violation: this email is already registered for this webinar.
         if (error?.code === "23505") {
             return res.status(409).json({ error: "This email is already registered" });
         }
@@ -27,6 +41,12 @@ export const submitWebinarRegistration = async (req: Request, res: Response) => 
         }
 
         await syncLeadToHubSpot({ email, fullName, phone, country, source: "webinar" });
+        // Confirmation goes out right away; the rest is picked up by the email worker.
+        if (webinar) {
+            void scheduleWebinarNotifications(registration.id, new Date(registration.created_at), webinar.startsAt)
+                .then(() => processWebinarNotifications())
+                .catch((err) => console.error("Webinar notification error:", err));
+        }
 
         return res.status(201).json({ success: true });
     } catch (error: any) {

@@ -24,6 +24,7 @@ export default function StripeCheckoutModal({
   // Guest checkout props
   isGuest,
   onGuestCreateIntent,
+  onFreeEnrolled,
 }) {
   const t = useTranslations();
   const [couponCode, setCouponCode] = useState('');
@@ -96,6 +97,12 @@ export default function StripeCheckoutModal({
     setIsCreatingGuestIntent(true);
     try {
       const data = await onGuestCreateIntent(guestEmail.trim(), guestFirstName.trim(), guestLastName.trim());
+      if (data.free) {
+        // Nothing to pay: the API enrolled them already.
+        handleClose();
+        onFreeEnrolled?.(data);
+        return;
+      }
       setGuestClientSecret(data.clientSecret);
       setGuestToken(data.guestToken);
       setIsNewAccount(data.isNewUser ?? true);

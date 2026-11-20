@@ -61,6 +61,13 @@ assert.ok(email3.html.includes("2 ديسمبر 2026"));
 
 assert.ok(render("confirmation", "A").html.includes("\u200E+972528268954\u200E")); // "+" stays before digits in RTL
 
+// Sign-in hint always; set-password link only when given (new accounts).
+const plain = render("confirmation", "A");
+assert.ok(plain.html.includes("سجّل الدخول إلى حسابك") && !plain.html.includes("setPassword") && !plain.html.includes("أنشئ كلمة المرور"));
+const withLink = renderWebinarEmail("confirmation", "A", webinar, "https://x.supabase.co/verify?token=t&type=recovery");
+assert.ok(withLink.html.includes('href="https://x.supabase.co/verify?token=t&amp;type=recovery"') && withLink.html.includes("أنشئ كلمة المرور"));
+assert.ok(render("reminder_1h", "A").html.includes("سجّل الدخول إلى حسابك"));
+
 // WhatsApp params follow token order; numbers need a country code.
 assert.deepEqual(whatsappParams("reminder_4d", "Ali", webinar).params.length, 3); // no name in message 4
 assert.equal(whatsappParams("reminder_2d", "Ali", webinar).params[0], "Ali");

@@ -9,6 +9,10 @@ const DETAILS = ["إليك تفاصيل لقائنا:", "📅 التاريخ: {d
 const DETAILS_SHORT = ["📅 تاريخ اللقاء: {date}", "⏰ الساعة: {time}", "🔗 رابط حضورك المباشر:", "{link}"];
 const DETAILS_TODAY = ["📅 اليوم: {date}", "⏰ نبدأ الساعة: {time}", "🔗 هذا رابط حضورك:", "{link}"];
 const SIGN = "فريق أكاديمية ستوكس";
+// Joining needs a site account: registrants get one automatically, under the email they registered with.
+const LOGIN_HINT = "🔐 لحضور اللقاء، سجّل الدخول إلى حسابك في أكاديمية ستوكس بهذا البريد الإلكتروني ثم افتح الرابط.";
+// Shown only to new accounts (no password yet); expands to the lines below when a link is available.
+const SET_PASSWORD_LINES = ["أنشئ كلمة المرور لحسابك من هنا (إذا انتهت صلاحية الرابط، استخدم «نسيت كلمة المرور» في صفحة تسجيل الدخول):", "{setPasswordLink}"];
 
 interface WebinarEmail {
     subject: string;
@@ -23,6 +27,8 @@ export const CONFIRMATION_EMAIL: WebinarEmail = {
         "تتابع أخبار الذهب وتتساءل كيف تفهم حركته؟ تسمع عن الفوركس، لكن لا تعرف من أين تبدأ؟",
         "خطوتك التالية أصبحت لها موعد! انضمّ إلينا لتتعرّف إلى أساسيات المجال وطريقة التدريب في الأكاديمية، قبل أن تقرّر التسجيل في الدورة.",
         ...DETAILS,
+        LOGIN_HINT,
+        "{setPasswordBlock}",
         "احفظ الموعد الآن، واحتفظ بهذا البريد لتصل إلى الرابط بسهولة يوم اللقاء.",
         "وحتى نلتقي، سنشاركك عبر البريد أفكارًا قصيرة ومفيدة عن الذهب والفوركس، إلى جانب تذكيرات بالموعد.",
         "ما السؤال الذي دفعك إلى التسجيل؟ دوّنه وأحضره معك؛ البداية تكون بالفضول والرغبة في الفهم.",
@@ -227,6 +233,7 @@ export const COUNTDOWN_EMAILS: WebinarEmail[] = [
             "نلتقي في اللقاء المجاني: أساسيات تداول الذهب والفوركس من أكاديمية ستوكس، للتعرّف إلى الأساسيات وطريقة التدريب قبل التسجيل بالدورة.",
             "قبل البداية، اختر السؤال الذي يهمّك أكثر واكتبه. معرفة ما تريد فهمه تساعدك على متابعة الشرح والتقاط الملاحظات المفيدة لك.",
             ...DETAILS_TODAY,
+            LOGIN_HINT,
             "ضع تذكيرًا الآن، وجهّز مكانًا هادئًا ودفتر ملاحظاتك. سنرسل إليك تذكيرًا آخر قبل البداية بساعة.",
             "ننتظرك اليوم!",
             SIGN,
@@ -242,6 +249,7 @@ export const ONE_HOUR_EMAIL: WebinarEmail = {
         "نلتقي في اللقاء المجاني: أساسيات تداول الذهب والفوركس من أكاديمية ستوكس.",
         "إذا كنت تتساءل من أين تبدأ، فهذا موعدك للتعرّف إلى أساسيات المجال وطريقة التدريب قبل اتخاذ خطوتك التالية.",
         ...DETAILS_TODAY,
+        LOGIN_HINT,
         "جهّز مكانًا هادئًا، وتأكّد من اتصالك بالإنترنت، وضع دفتر ملاحظاتك بجانبك. ننصحك بالدخول قبل البداية بخمس دقائق لتكون معنا منذ اللحظة الأولى.",
         "لا تحتاج إلى خبرة سابقة؛ حضّر أسئلتك واستعدّ للقاء.",
         "ننتظرك بعد قليل!",
@@ -396,7 +404,12 @@ function baseValues(name: string, webinar: Webinar): TokenValues {
 }
 
 /** Renders a webinar email. key: "confirmation" | "countdown_<1-14>" | "reminder_1h". */
-export function renderWebinarEmail(key: string, fullName: string, webinar: Webinar): { subject: string; html: string } {
+export function renderWebinarEmail(
+    key: string,
+    fullName: string,
+    webinar: Webinar,
+    setPasswordLink?: string | null
+): { subject: string; html: string } {
     let email: WebinarEmail | undefined;
     const values = baseValues(escapeHtml(fullName), webinar);
     if (key === "confirmation") email = CONFIRMATION_EMAIL;
@@ -408,10 +421,15 @@ export function renderWebinarEmail(key: string, fullName: string, webinar: Webin
     }
     if (!email) throw new Error(`Unknown webinar email: ${key}`);
 
+    const linkLine = (url: string) =>
+        `<p dir="ltr" style="margin:0 0 12px;text-align:right;word-break:break-all;"><a href="${url}" style="color:#667eea;">${url}</a></p>`;
     const body = email.lines
+        .flatMap((line) => (line === "{setPasswordBlock}" ? (setPasswordLink ? SET_PASSWORD_LINES : []) : [line]))
         .map((line) =>
             line === "{link}"
-                ? `<p dir="ltr" style="margin:0 0 12px;text-align:right;word-break:break-all;"><a href="${values.link}" style="color:#667eea;">${values.link}</a></p>`
+                ? linkLine(values.link!)
+                : line === "{setPasswordLink}"
+                ? linkLine(escapeHtml(setPasswordLink!))
                 : `<p dir="rtl" style="margin:0 0 12px;text-align:right;">${fill(line, values)}</p>`
         )
         .join("\n");

@@ -1,6 +1,7 @@
 "use client";
 
 import { Link } from "@/i18n/routing";
+import { Loader2 } from "lucide-react";
 import { forms } from "./content";
 
 export function FormShell({ title, subtitle, children }) {
@@ -34,8 +35,10 @@ export function SubmitButton({ busy, children }) {
     <button
       type="submit"
       disabled={busy}
-      className="w-full rounded-full bg-[#f5c451] px-8 py-4 text-lg font-bold text-black shadow-[0_0_40px_-8px_#f5c451] transition hover:-translate-y-0.5 disabled:opacity-60"
+      aria-busy={busy}
+      className="flex w-full items-center justify-center gap-2 rounded-full bg-[#f5c451] px-8 py-4 text-lg font-bold text-black shadow-[0_0_40px_-8px_#f5c451] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
     >
+      {busy && <Loader2 className="size-5 animate-spin" aria-hidden="true" />}
       {children}
     </button>
   );

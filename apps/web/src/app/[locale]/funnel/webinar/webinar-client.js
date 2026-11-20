@@ -6,6 +6,7 @@ import apiClient from "@/lib/api";
 import { countries } from "@/lib/countries";
 import { FIELDS, forms } from "../content";
 import { FormShell, Field, SubmitButton, Notice } from "../form-shell";
+import { PhoneField } from "../phone-field";
 
 // TODO: WhatsApp number verification (OTP) once the sender number is provided.
 export default function WebinarClient() {
@@ -17,6 +18,7 @@ export default function WebinarClient() {
   const submit = async (e) => {
     e.preventDefault();
     const d = Object.fromEntries(new FormData(e.target));
+    if (!d.phone) return; // PhoneField shows the error
     setBusy(true);
     setError(null);
     try {
@@ -37,7 +39,7 @@ export default function WebinarClient() {
         <form onSubmit={submit} className="space-y-5">
           <Field label={FIELDS.fullName} name="fullName" autoComplete="name" />
           <Field label={FIELDS.email} name="email" type="email" autoComplete="email" dir="ltr" />
-          <Field label={FIELDS.phone} name="phone" type="tel" autoComplete="tel" dir="ltr" />
+          <PhoneField label={FIELDS.phone} name="phone" invalidMessage={FIELDS.phoneInvalid} />
           <label className="block">
             <span className="mb-1.5 block text-sm font-medium text-white/80">{FIELDS.country}</span>
             <div className="relative">

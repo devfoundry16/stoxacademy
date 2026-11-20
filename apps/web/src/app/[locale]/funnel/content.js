@@ -15,6 +15,7 @@ export const FIELDS = {
   email: "البريد الإلكتروني",
   phone: "رقم الهاتف",
   country: "البلد",
+  phoneInvalid: "يرجى إدخال رقم هاتف صحيح مع اختيار رمز الدولة.",
 };
 
 export const forms = {

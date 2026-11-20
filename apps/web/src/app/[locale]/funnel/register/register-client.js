@@ -7,6 +7,7 @@ import { paymentService } from "@/lib/paymentService";
 import CheckoutForm from "@/components/CheckoutForm";
 import { FIELDS, forms } from "../content";
 import { FormShell, Field, SubmitButton, Notice } from "../form-shell";
+import { PhoneField } from "../phone-field";
 
 // Id of the Gold & Forex course row in the `courses` table; the funnel price ($950) is fixed server-side.
 const COURSE_ID = process.env.NEXT_PUBLIC_FUNNEL_COURSE_ID;
@@ -21,6 +22,7 @@ export default function RegisterClient() {
   const startPayment = async (e) => {
     e.preventDefault();
     const d = new FormData(e.target);
+    if (!d.get("phone")) return; // PhoneField shows the error
     const [firstName, ...rest] = d.get("fullName").trim().split(/\s+/);
     setBusy(true);
     setError(null);
@@ -59,7 +61,7 @@ export default function RegisterClient() {
         <form onSubmit={startPayment} className="space-y-5">
           <Field label={FIELDS.fullName} name="fullName" autoComplete="name" />
           <Field label={FIELDS.email} name="email" type="email" autoComplete="email" dir="ltr" />
-          <Field label={FIELDS.phone} name="phone" type="tel" autoComplete="tel" dir="ltr" />
+          <PhoneField label={FIELDS.phone} name="phone" invalidMessage={FIELDS.phoneInvalid} />
           {error && <Notice tone="error">{error}</Notice>}
           <SubmitButton busy={busy}>{f.submit}</SubmitButton>
         </form>

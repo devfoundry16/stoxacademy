@@ -6,7 +6,6 @@ export const SUPPORT_NUMBER = "+972528268954";
 export interface Webinar {
     id: string;
     startsAt: Date;
-    price?: number;
 }
 
 export function webinarLink(id: string): string {

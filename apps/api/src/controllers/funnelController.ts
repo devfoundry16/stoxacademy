@@ -1,35 +1,12 @@
 import { Request, Response } from "express";
 import { waitUntil } from "@vercel/functions";
 import { supabaseAdmin } from "../config/supabase";
-import { Webinar } from "../config/webinar";
 import { syncLeadToHubSpot } from "../services/hubspotService";
-import { enrollWithoutPayment, findOrCreateGuestUser } from "./paymentController";
 import {
     getUpcomingWebinar,
     processWebinarNotifications,
     scheduleWebinarNotifications,
 } from "../services/webinarNotificationService";
-
-/**
- * Gives the registrant a site account and enrolls them in the (free) webinar session, so the
- * session link in their emails works once they sign in. Never throws: messages still go out.
- */
-async function enrollRegistrant(
-    registrationId: string,
-    webinar: Webinar,
-    person: { email: string; fullName: string; phone: string }
-): Promise<void> {
-    try {
-        const [firstName, ...rest] = String(person.fullName).trim().split(/\s+/);
-        const { userId } = await findOrCreateGuestUser(String(person.email).trim(), firstName, rest.join(" "), person.phone);
-        await supabaseAdmin.from("webinar_registrations").update({ user_id: userId }).eq("id", registrationId);
-        // Never hand out a paid session for free.
-        if (webinar.price === 0) await enrollWithoutPayment(userId, webinar.id);
-        else console.warn("Webinar session is not free; registrant not auto-enrolled:", webinar.id);
-    } catch (err) {
-        console.error("Webinar auto-enroll error:", err);
-    }
-}
 
 export const submitWebinarRegistration = async (req: Request, res: Response) => {
     try {
@@ -73,8 +50,7 @@ export const submitWebinarRegistration = async (req: Request, res: Response) => 
             Promise.all([
                 syncLeadToHubSpot({ email, fullName, phone, country, source: "webinar" }),
                 webinar &&
-                    enrollRegistrant(registration.id, webinar, { email, fullName, phone })
-                        .then(() => scheduleWebinarNotifications(registration.id, new Date(registration.created_at), webinar.startsAt))
+                    scheduleWebinarNotifications(registration.id, new Date(registration.created_at), webinar.startsAt)
                         .then(() => processWebinarNotifications(registration.id))
                         .catch((err) => console.error("Webinar notification error:", err)),
             ])

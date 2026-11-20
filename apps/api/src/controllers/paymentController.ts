@@ -16,7 +16,7 @@ interface GuestTokenPayload {
     email: string;
 }
 
-export async function findOrCreateGuestUser(
+async function findOrCreateGuestUser(
     email: string,
     firstName?: string,
     lastName?: string,
@@ -91,7 +91,7 @@ function verifyGuestToken(token: string): GuestTokenPayload {
 }
 
 /** One-time "set your password" link for a passwordless guest account. Null if it can't be generated. */
-export async function generateSetPasswordLink(email: string): Promise<string | null> {
+async function generateSetPasswordLink(email: string): Promise<string | null> {
     const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
     try {
         const { data, error } = await supabaseAdmin.auth.admin.generateLink({
@@ -128,7 +128,7 @@ async function sendGuestBookingEmail(email: string, item: string, details: strin
  * Enrolls a user in a live session without payment (free session or 100% coupon).
  * Returns false when they were already enrolled.
  */
-export async function enrollWithoutPayment(
+async function enrollWithoutPayment(
     userId: string,
     sessionId: string,
     coupon?: { code: string | null; discountPercentage: number; originalPrice: number }

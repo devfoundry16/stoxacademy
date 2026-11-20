@@ -410,8 +410,8 @@ export function renderWebinarEmail(key: string, fullName: string, webinar: Webin
     const body = email.lines
         .map((line) =>
             line === "{link}"
-                ? `<p dir="ltr" style="text-align:right;"><a href="${values.link}" style="color:#667eea;">${values.link}</a></p>`
-                : `<p>${fill(line, { ...values, support: `<span dir="ltr">${SUPPORT_NUMBER}</span>` })}</p>`
+                ? `<p dir="ltr" style="margin:0 0 12px;text-align:right;word-break:break-all;"><a href="${values.link}" style="color:#667eea;">${values.link}</a></p>`
+                : `<p dir="rtl" style="margin:0 0 12px;text-align:right;">${fill(line, { ...values, support: `<span dir="ltr">${SUPPORT_NUMBER}</span>` })}</p>`
         )
         .join("\n");
 
@@ -419,7 +419,7 @@ export function renderWebinarEmail(key: string, fullName: string, webinar: Webin
 <html lang="ar" dir="rtl">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>${email.subject}</title></head>
 <body dir="rtl" style="font-family: Tahoma, Arial, sans-serif; line-height: 1.8; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; text-align: right;">
-<div style="background: #f9f9f9; padding: 30px; border-radius: 10px;">
+<div dir="rtl" style="direction: rtl; text-align: right; font-family: Tahoma, Arial, sans-serif; line-height: 1.8; color: #333; max-width: 600px; margin: 0 auto; background: #f9f9f9; padding: 30px; border-radius: 10px;">
 ${body}
 </div>
 </body>

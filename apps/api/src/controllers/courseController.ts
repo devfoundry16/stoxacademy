@@ -203,7 +203,7 @@ export const getCourseById = async (req: Request, res: Response) => {
 
 export const purchaseCourse = async (req: Request, res: Response) => {
   try {
-    const { courseId, couponCode, discountPercentage, originalPrice } = req.body;
+    const { courseId } = req.body;
     const authHeader = req.headers.authorization;
     const token = authHeader && authHeader.split(" ")[1];
 
@@ -229,6 +229,11 @@ export const purchaseCourse = async (req: Request, res: Response) => {
       return res.status(404).json({ error: "Course not found" });
     }
 
+    // Enrolling without payment is only for free courses; paid ones go through Stripe checkout.
+    if (parseFloat(course.price) > 0) {
+      return res.status(402).json({ error: "Payment required for this course" });
+    }
+
     // Check if already purchased
     const { data: existingPurchase } = await supabaseAdmin
       .from("user_courses")
@@ -241,22 +246,14 @@ export const purchaseCourse = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Course already purchased" });
     }
 
-    // Calculate actual price paid (with discount if applicable)
-    let pricePaid = parseFloat(course.price);
-    if (discountPercentage && discountPercentage > 0) {
-      pricePaid = pricePaid * (1 - discountPercentage / 100);
-    }
-
-    // Create purchase record
+    // Create purchase record (only free courses reach this point)
     const { data: purchase, error: purchaseError } = await supabaseAdmin
       .from("user_courses")
       .insert({
         user_id: userData.user.id,
         course_id: courseId,
-        price_paid: pricePaid,
-        coupon_code: couponCode || null,
-        discount_percentage: discountPercentage || null,
-        original_price: originalPrice || parseFloat(course.price),
+        price_paid: 0,
+        original_price: 0,
       })
       .select()
       .single();

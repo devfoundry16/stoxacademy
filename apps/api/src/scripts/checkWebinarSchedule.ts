@@ -37,6 +37,22 @@ assert.equal(planFor(nov20, start, 90).slice(-1)[0].scheduledFor.toISOString(), 
 assert.equal(renderWebinarEmail("post_webinar", "A", webinar), null);
 assert.deepEqual(keys(nov20, "whatsapp"), ["confirmation", "reminder_10d", "reminder_8d", "reminder_6d", "reminder_4d", "reminder_2d", "reminder_1h"]);
 
+// PM's question: registering 4 days before (28 Nov) → only emails 11–14, one per day, then the 1-hour reminder.
+const nov28 = planWebinarNotifications(atJerusalemTime("2026-11-28", 14)).filter((n) => n.channel === "email");
+assert.deepEqual(
+    nov28.map((n) => [n.templateKey, n.scheduledFor.toISOString()]),
+    [
+        ["confirmation", atJerusalemTime("2026-11-28", 14).toISOString()],
+        ["countdown_11", "2026-11-29T07:00:00.000Z"], // باقي 3 أيام
+        ["countdown_12", "2026-11-30T07:00:00.000Z"], // باقي يومان
+        ["countdown_13", "2026-12-01T07:00:00.000Z"], // باقي يوم واحد
+        ["countdown_14", "2026-12-02T07:00:00.000Z"], // webinar morning
+        ["reminder_1h", "2026-12-02T14:00:00.000Z"],
+        ["post_webinar", "2026-12-02T17:00:00.000Z"],
+    ]
+);
+assert.ok(render("countdown_11", "A").html.includes("باقي 3 أيام"));
+
 // Registering 20 days early: all 14 emails, starting 13 days before.
 assert.equal(keys(atJerusalemTime("2026-11-12", 10), "email").filter((k) => k.startsWith("countdown_")).length, 14);
 

@@ -5,7 +5,10 @@
  * Runs periodically to check and send pending emails
  */
 
-import { processEmailQueue } from "../services/emailQueueService";
+import { processEmailQueue as processChecklistEmails } from "../services/emailQueueService";
+import { processWebinarNotifications } from "../services/webinarNotificationService";
+
+const processEmailQueue = async () => (await processChecklistEmails()) + (await processWebinarNotifications());
 
 let intervalId: NodeJS.Timeout | null = null;
 const PROCESS_INTERVAL = 5 * 60 * 1000; // Check every 5 minutes

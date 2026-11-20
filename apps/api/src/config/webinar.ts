@@ -6,6 +6,12 @@ export const SUPPORT_NUMBER = "+972528268954";
 export interface Webinar {
     id: string;
     startsAt: Date;
+    durationMinutes?: number;
+}
+
+/** Where the post-webinar email sends people to buy the course (the funnel's course checkout). */
+export function courseLink(): string {
+    return `${process.env.FRONTEND_URL || "https://stoxacademy.org"}/ar/funnel/register`;
 }
 
 export function webinarLink(id: string): string {

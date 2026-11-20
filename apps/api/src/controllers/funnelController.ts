@@ -50,7 +50,7 @@ export const submitWebinarRegistration = async (req: Request, res: Response) => 
             Promise.all([
                 syncLeadToHubSpot({ email, fullName, phone, country, source: "webinar" }),
                 webinar &&
-                    scheduleWebinarNotifications(registration.id, new Date(registration.created_at), webinar.startsAt)
+                    scheduleWebinarNotifications(registration.id, new Date(registration.created_at), webinar.startsAt, webinar.durationMinutes)
                         .then(() => processWebinarNotifications(registration.id))
                         .catch((err) => console.error("Webinar notification error:", err)),
             ])

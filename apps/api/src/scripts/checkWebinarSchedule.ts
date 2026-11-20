@@ -10,7 +10,7 @@ import { sendWhatsAppTemplate, toWhatsAppNumber } from "../services/whatsappServ
 const start = new Date("2026-12-02T15:00:00Z");
 const webinar = { id: "48d99176-77c2-4965-8774-d8c19685a72f", startsAt: start };
 const planWebinarNotifications = (at: Date) => planFor(at, start);
-const render = (key: string, name: string) => renderWebinarEmail(key, name, webinar);
+const render = (key: string, name: string) => renderWebinarEmail(key, name, webinar)!;
 
 const keys = (at: Date, channel: string) =>
     planWebinarNotifications(at).filter((n) => n.channel === channel).map((n) => n.templateKey);
@@ -26,10 +26,15 @@ assert.deepEqual(emails.map((n) => n.templateKey), [
     "confirmation",
     ...Array.from({ length: 12 }, (_, i) => `countdown_${i + 3}`),
     "reminder_1h",
+    "post_webinar",
 ]);
 assert.equal(emails[1].scheduledFor.toISOString(), "2026-11-21T07:00:00.000Z"); // 9:00 Jerusalem next day
 assert.equal(emails[12].scheduledFor.toISOString(), "2026-12-02T07:00:00.000Z"); // countdown_14 on webinar morning
 assert.equal(emails[13].scheduledFor.toISOString(), "2026-12-02T14:00:00.000Z"); // 1 hour before
+assert.equal(emails[14].scheduledFor.toISOString(), "2026-12-02T17:00:00.000Z"); // post_webinar: 17:00 + 60 min + 1h = 19:00 Jerusalem
+assert.equal(planFor(nov20, start, 90).slice(-1)[0].scheduledFor.toISOString(), "2026-12-02T17:30:00.000Z"); // follows the session's duration
+// Copy not written yet → render returns null and the sender marks it skipped (never sends placeholder text).
+assert.equal(renderWebinarEmail("post_webinar", "A", webinar), null);
 assert.deepEqual(keys(nov20, "whatsapp"), ["confirmation", "reminder_10d", "reminder_8d", "reminder_6d", "reminder_4d", "reminder_2d", "reminder_1h"]);
 
 // Registering 20 days early: all 14 emails, starting 13 days before.
@@ -39,7 +44,7 @@ assert.equal(keys(atJerusalemTime("2026-11-12", 10), "email").filter((k) => k.st
 assert.equal(keys(atJerusalemTime("2026-11-22", 10), "whatsapp")[1], "reminder_8d");
 
 // Registering on webinar day: confirmation + 1h reminder only; after the start: nothing.
-assert.deepEqual(keys(atJerusalemTime("2026-12-02", 12), "email"), ["confirmation", "reminder_1h"]);
+assert.deepEqual(keys(atJerusalemTime("2026-12-02", 12), "email"), ["confirmation", "reminder_1h", "post_webinar"]);
 assert.deepEqual(planWebinarNotifications(atJerusalemTime("2026-12-02", 18)), []);
 
 // Countdown text and Arabic counting.

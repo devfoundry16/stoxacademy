@@ -60,6 +60,7 @@ export default function LiveSessionDetailPage({ params }) {
             try {
                 setEnrolling(true);
                 const response = await paymentService.createLiveSessionPaymentIntent(session.id);
+                if (response.free) return handleFreeEnrolled(response);
                 setClientSecret(response.clientSecret);
                 setPaymentIntentId(response.paymentIntentId);
                 setDiscountInfo({
@@ -77,6 +78,14 @@ export default function LiveSessionDetailPage({ params }) {
             // Guest flow: open modal immediately — Step 1 (email form) will be shown
             setCheckoutModalOpen(true);
         }
+    };
+
+    // Free session (or 100% coupon): the API enrolled them directly, no payment step.
+    const handleFreeEnrolled = async (response) => {
+        setCheckoutModalOpen(false);
+        toast.success(t('successfullyEnrolled'));
+        if (response.isNewUser) toast.success(t('checkEmailToSetPassword'), { duration: 6000 });
+        await fetchSession();
     };
 
     const handleApplyCoupon = async (couponCode) => {
@@ -105,6 +114,7 @@ export default function LiveSessionDetailPage({ params }) {
                 session.id,
                 couponCode
             );
+            if (response.free) return handleFreeEnrolled(response); // 100% coupon
 
             setClientSecret(response.clientSecret);
             setPaymentIntentId(response.paymentIntentId);
@@ -501,6 +511,7 @@ export default function LiveSessionDetailPage({ params }) {
                     onApplyCoupon={isAuthenticated ? handleApplyCoupon : undefined}
                     onSuccess={handlePaymentSuccess}
                     onError={handlePaymentError}
+                    onFreeEnrolled={handleFreeEnrolled}
                     isGuest={!isAuthenticated}
                     onGuestCreateIntent={(email, firstName, lastName) =>
                         paymentService.createGuestLiveSessionPaymentIntent(

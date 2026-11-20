@@ -16,7 +16,7 @@ interface GuestTokenPayload {
     email: string;
 }
 
-async function findOrCreateGuestUser(
+export async function findOrCreateGuestUser(
     email: string,
     firstName?: string,
     lastName?: string,
@@ -90,13 +90,9 @@ function verifyGuestToken(token: string): GuestTokenPayload {
     return jwt.verify(token, GUEST_TOKEN_SECRET) as GuestTokenPayload;
 }
 
-/**
- * Guest buyers get one email: the booking confirmation with a "Set your password" button.
- * If the link can't be generated the receipt still goes out (they can use "Forgot password").
- */
-async function sendGuestBookingEmail(email: string, item: string, details: string[] = []): Promise<void> {
+/** One-time "set your password" link for a passwordless guest account. Null if it can't be generated. */
+export async function generateSetPasswordLink(email: string): Promise<string | null> {
     const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
-    let action: { label: string; url: string; note: string } | undefined;
     try {
         const { data, error } = await supabaseAdmin.auth.admin.generateLink({
             type: "recovery",
@@ -107,17 +103,66 @@ async function sendGuestBookingEmail(email: string, item: string, details: strin
         });
         if (error || !data?.properties?.action_link) {
             console.error("Failed to generate password setup link:", error?.message);
-        } else {
-            action = {
-                label: "Set My Password",
-                url: data.properties.action_link,
-                note: "To access your content, please set a password for your account.",
-            };
+            return null;
         }
+        return data.properties.action_link;
     } catch (err: any) {
         console.error("Failed to generate password setup link:", email, err?.message);
+        return null;
     }
+}
+
+/**
+ * Guest buyers get one email: the booking confirmation with a "Set your password" button.
+ * If the link can't be generated the receipt still goes out (they can use "Forgot password").
+ */
+async function sendGuestBookingEmail(email: string, item: string, details: string[] = []): Promise<void> {
+    const url = await generateSetPasswordLink(email);
+    const action = url
+        ? { label: "Set My Password", url, note: "To access your content, please set a password for your account." }
+        : undefined;
     await sendBookingConfirmation(email, item, details, action);
+}
+
+/**
+ * Enrolls a user in a live session without payment (free session or 100% coupon).
+ * Returns false when they were already enrolled.
+ */
+export async function enrollWithoutPayment(
+    userId: string,
+    sessionId: string,
+    coupon?: { code: string | null; discountPercentage: number; originalPrice: number }
+): Promise<boolean> {
+    const { data: existing } = await supabaseAdmin
+        .from("user_live_sessions")
+        .select("id")
+        .eq("user_id", userId)
+        .eq("session_id", sessionId)
+        .maybeSingle();
+    if (existing) return false;
+
+    const { data: session } = await supabaseAdmin
+        .from("live_sessions")
+        .select("price, participants_count")
+        .eq("id", sessionId)
+        .single();
+
+    const { error } = await supabaseAdmin.from("user_live_sessions").insert({
+        user_id: userId,
+        session_id: sessionId,
+        price_paid: 0,
+        coupon_code: coupon?.code || null,
+        discount_percentage: coupon?.discountPercentage || null,
+        original_price: coupon?.originalPrice ?? parseFloat(session?.price ?? "0"),
+    });
+    if (error) throw new Error(`Failed to enroll: ${error.message}`);
+
+    if (coupon?.code) await incrementCouponUsage(coupon.code);
+    await supabaseAdmin
+        .from("live_sessions")
+        .update({ participants_count: (session?.participants_count || 0) + 1, updated_at: new Date().toISOString() })
+        .eq("id", sessionId);
+    return true;
 }
 
 // ==================== Course Payment ====================
@@ -419,6 +464,17 @@ export const createLiveSessionPaymentIntent = async (req: Request, res: Response
             discountPercentage = coupon.percentage;
             finalPrice = finalPrice * (1 - discountPercentage / 100);
             validCouponCode = upperCode;
+        }
+
+        // Stripe can't charge $0: free sessions (or a 100% coupon) enroll directly.
+        if (finalPrice <= 0) {
+            await enrollWithoutPayment(userData.user.id, session.id, {
+                code: validCouponCode,
+                discountPercentage,
+                originalPrice: parseFloat(session.price),
+            });
+            await sendBookingConfirmation(userData.user.email, session.title);
+            return res.status(200).json({ free: true });
         }
 
         // Create Stripe payment intent
@@ -1127,7 +1183,7 @@ export const createGuestLiveSessionPaymentIntent = async (req: Request, res: Res
             .single();
 
         if (existingEnrollment) {
-            return res.status(400).json({ error: "Already enrolled in this live session" });
+            return res.status(400).json({ error: "You're already registered for this session. Sign in with this email to join." });
         }
 
         let finalPrice = parseFloat(session.price);
@@ -1151,6 +1207,17 @@ export const createGuestLiveSessionPaymentIntent = async (req: Request, res: Res
             discountPercentage = coupon.percentage;
             finalPrice = finalPrice * (1 - discountPercentage / 100);
             validCouponCode = upperCode;
+        }
+
+        // Stripe can't charge $0: free sessions (or a 100% coupon) enroll directly.
+        if (finalPrice <= 0) {
+            await enrollWithoutPayment(userId, session.id, {
+                code: validCouponCode,
+                discountPercentage,
+                originalPrice: parseFloat(session.price),
+            });
+            await sendGuestBookingEmail(userEmail, session.title);
+            return res.status(200).json({ free: true, isNewUser });
         }
 
         const paymentIntent = await stripe.paymentIntents.create({

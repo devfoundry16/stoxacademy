@@ -216,6 +216,11 @@ export const enrollInLiveSession = async (req: Request, res: Response) => {
             return res.status(404).json({ error: "Live session not found" });
         }
 
+        // Enrolling without payment is only for free sessions; paid ones go through Stripe checkout.
+        if (parseFloat(session.price) > 0) {
+            return res.status(402).json({ error: "Payment required for this session" });
+        }
+
         // Check if max participants reached
         if (session.max_participants && session.participants_count >= session.max_participants) {
             return res.status(400).json({ error: "Session is full. Maximum participants reached." });
@@ -233,11 +238,7 @@ export const enrollInLiveSession = async (req: Request, res: Response) => {
             return res.status(400).json({ error: "Already enrolled in this live session" });
         }
 
-        // Calculate actual price paid (with discount if applicable)
-        let pricePaid = parseFloat(session.price);
-        if (discountPercentage && discountPercentage > 0) {
-            pricePaid = pricePaid * (1 - discountPercentage / 100);
-        }
+        const pricePaid = 0; // only free sessions reach this point
 
         // Create enrollment record
         const { data: enrollment, error: enrollmentError } = await supabaseAdmin

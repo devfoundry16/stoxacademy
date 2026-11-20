@@ -11,6 +11,7 @@ import { DAILY_SEND_HOUR, Webinar, WEBINAR_TZ } from "../config/webinar";
 import { renderWebinarEmail, whatsappParams } from "../templates/webinarTemplates";
 import { sendEmail } from "./emailService";
 import { sendWhatsAppTemplate } from "./whatsappService";
+import { generateSetPasswordLink } from "../controllers/paymentController";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const HOUR_MS = 60 * 60 * 1000;
@@ -46,7 +47,7 @@ const daysBetween = (from: string, to: string) => Math.round((Date.parse(to) - D
 export async function getUpcomingWebinar(): Promise<Webinar | null> {
     const { data, error } = await supabaseAdmin
         .from("live_sessions")
-        .select("id, scheduled_at")
+        .select("id, scheduled_at, price")
         .eq("session_type", "webinar")
         .in("status", ["scheduled", "live"])
         .gt("scheduled_at", new Date().toISOString())
@@ -54,7 +55,7 @@ export async function getUpcomingWebinar(): Promise<Webinar | null> {
         .limit(1)
         .maybeSingle();
     if (error) console.error("Error loading upcoming webinar:", error);
-    return data ? { id: data.id, startsAt: new Date(data.scheduled_at) } : null;
+    return data ? { id: data.id, startsAt: new Date(data.scheduled_at), price: parseFloat(data.price ?? "0") } : null;
 }
 
 export function planWebinarNotifications(registeredAt: Date, start: Date): PlannedNotification[] {
@@ -108,6 +109,14 @@ export async function scheduleWebinarNotifications(registrationId: string, regis
     if (error) console.error("Failed to schedule webinar notifications:", error);
 }
 
+/** A set-password link only for accounts that never set one (created by webinar registration). */
+async function setPasswordLinkFor(userId: string | null, email: string): Promise<string | null> {
+    if (!userId) return null;
+    const { data } = await supabaseAdmin.auth.admin.getUserById(userId);
+    if (data?.user?.user_metadata?.password_set !== false) return null;
+    return generateSetPasswordLink(email);
+}
+
 async function finish(id: string, status: "sent" | "failed" | "skipped", error?: string) {
     await supabaseAdmin
         .from("webinar_notifications")
@@ -120,7 +129,7 @@ export async function processWebinarNotifications(registrationId?: string): Prom
     const now = new Date();
     let query = supabaseAdmin
         .from("webinar_notifications")
-        .select("id, channel, template_key, scheduled_for, webinar_registrations(full_name, email, phone_number, live_sessions(id, scheduled_at, status))")
+        .select("id, channel, template_key, scheduled_for, webinar_registrations(full_name, email, phone_number, user_id, live_sessions(id, scheduled_at, status))")
         .eq("status", "pending")
         .lte("scheduled_for", now.toISOString())
         .order("scheduled_for")
@@ -164,7 +173,9 @@ export async function processWebinarNotifications(registrationId?: string): Prom
 
         try {
             if (item.channel === "email") {
-                const { subject, html } = renderWebinarEmail(item.template_key, reg.full_name, webinar);
+                const setPasswordLink =
+                    item.template_key === "confirmation" ? await setPasswordLinkFor(reg.user_id, reg.email) : null;
+                const { subject, html } = renderWebinarEmail(item.template_key, reg.full_name, webinar, setPasswordLink);
                 const result = await sendEmail({ to: reg.email, subject, html });
                 await finish(item.id, result.success ? "sent" : "failed", result.error);
                 if (result.success) sent++;

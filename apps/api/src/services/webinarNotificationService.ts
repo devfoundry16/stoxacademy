@@ -115,16 +115,18 @@ async function finish(id: string, status: "sent" | "failed" | "skipped", error?:
         .eq("id", id);
 }
 
-/** Sends all due webinar notifications. Returns how many were sent. */
-export async function processWebinarNotifications(): Promise<number> {
+/** Sends due webinar notifications (only one registration's when given). Returns how many were sent. */
+export async function processWebinarNotifications(registrationId?: string): Promise<number> {
     const now = new Date();
-    const { data: due, error } = await supabaseAdmin
+    let query = supabaseAdmin
         .from("webinar_notifications")
         .select("id, channel, template_key, scheduled_for, webinar_registrations(full_name, email, phone_number, live_sessions(id, scheduled_at, status))")
         .eq("status", "pending")
         .lte("scheduled_for", now.toISOString())
         .order("scheduled_for")
         .limit(100);
+    if (registrationId) query = query.eq("registration_id", registrationId);
+    const { data: due, error } = await query;
 
     if (error) {
         console.error("Error fetching webinar notifications:", error);

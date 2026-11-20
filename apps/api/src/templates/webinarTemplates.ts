@@ -391,7 +391,8 @@ export function webinarLabels(startsAt: Date): { date: string; time: string } {
 }
 
 function baseValues(name: string, webinar: Webinar): TokenValues {
-    return { name, ...webinarLabels(webinar.startsAt), link: webinarLink(webinar.id), support: SUPPORT_NUMBER };
+    // LRM marks keep "+" before the digits in Arabic text, even where clients strip dir attributes.
+    return { name, ...webinarLabels(webinar.startsAt), link: webinarLink(webinar.id), support: `\u200E${SUPPORT_NUMBER}\u200E` };
 }
 
 /** Renders a webinar email. key: "confirmation" | "countdown_<1-14>" | "reminder_1h". */
@@ -411,7 +412,7 @@ export function renderWebinarEmail(key: string, fullName: string, webinar: Webin
         .map((line) =>
             line === "{link}"
                 ? `<p dir="ltr" style="margin:0 0 12px;text-align:right;word-break:break-all;"><a href="${values.link}" style="color:#667eea;">${values.link}</a></p>`
-                : `<p dir="rtl" style="margin:0 0 12px;text-align:right;">${fill(line, { ...values, support: `<span dir="ltr">${SUPPORT_NUMBER}</span>` })}</p>`
+                : `<p dir="rtl" style="margin:0 0 12px;text-align:right;">${fill(line, values)}</p>`
         )
         .join("\n");
 

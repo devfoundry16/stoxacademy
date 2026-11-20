@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { waitUntil } from "@vercel/functions";
 import { supabaseAdmin } from "../config/supabase";
 import { syncLeadToHubSpot } from "../services/hubspotService";
 import {
@@ -44,16 +45,16 @@ export const submitWebinarRegistration = async (req: Request, res: Response) => 
             return res.status(500).json({ error: "Failed to save registration" });
         }
 
-        await syncLeadToHubSpot({ email, fullName, phone, country, source: "webinar" });
-        // Awaited: on Vercel, work left running after the response is cut off. The rest is sent by the scheduled job.
-        if (webinar) {
-            try {
-                await scheduleWebinarNotifications(registration.id, new Date(registration.created_at), webinar.startsAt);
-                await processWebinarNotifications();
-            } catch (err) {
-                console.error("Webinar notification error:", err);
-            }
-        }
+        // waitUntil keeps the Vercel function alive after the response, so the form doesn't wait for HubSpot or email.
+        waitUntil(
+            Promise.all([
+                syncLeadToHubSpot({ email, fullName, phone, country, source: "webinar" }),
+                webinar &&
+                    scheduleWebinarNotifications(registration.id, new Date(registration.created_at), webinar.startsAt)
+                        .then(() => processWebinarNotifications(registration.id))
+                        .catch((err) => console.error("Webinar notification error:", err)),
+            ])
+        );
 
         return res.status(201).json({ success: true });
     } catch (error: any) {

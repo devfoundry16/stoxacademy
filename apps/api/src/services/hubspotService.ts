@@ -4,8 +4,8 @@
  * Upserts website leads into HubSpot as contacts (matched by email).
  * No-op until HUBSPOT_ACCESS_TOKEN (a HubSpot service key) is set.
  * syncLeadToHubSpot never throws: a HubSpot failure must not break registration.
- * Always await it: on Vercel the function is frozen once the response is sent,
- * so a fire-and-forget call never reaches HubSpot.
+ * Always await it or pass it to waitUntil (@vercel/functions): on Vercel the function is frozen
+ * once the response is sent, so a plain fire-and-forget call never reaches HubSpot.
  */
 
 const HUBSPOT_API = "https://api.hubapi.com";

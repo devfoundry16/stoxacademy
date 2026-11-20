@@ -59,6 +59,8 @@ assert.deepEqual(webinarLabels(new Date("2027-06-15T07:30:00Z")), { date: "15 ي
 assert.ok(email3.html.includes("/en/live-sessions/48d99176-77c2-4965-8774-d8c19685a72f"));
 assert.ok(email3.html.includes("2 ديسمبر 2026"));
 
+assert.ok(render("confirmation", "A").html.includes("\u200E+972528268954\u200E")); // "+" stays before digits in RTL
+
 // WhatsApp params follow token order; numbers need a country code.
 assert.deepEqual(whatsappParams("reminder_4d", "Ali", webinar).params.length, 3); // no name in message 4
 assert.equal(whatsappParams("reminder_2d", "Ali", webinar).params[0], "Ali");

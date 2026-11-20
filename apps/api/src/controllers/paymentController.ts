@@ -3,7 +3,7 @@ import { stripe } from "../config/stripe";
 import { supabaseAdmin } from "../config/supabase";
 import { incrementCouponUsage } from "./couponController";
 import jwt from "jsonwebtoken";
-import { sendBookingConfirmation } from "../services/emailService";
+import { sendBookingConfirmation, sendEmail } from "../services/emailService";
 import { LeadSource, syncLeadToHubSpot } from "../services/hubspotService";
 
 // ==================== Guest Checkout Helpers ====================
@@ -112,6 +112,10 @@ async function generateSetPasswordLink(email: string): Promise<string | null> {
     }
 }
 
+// Booking emails (added 18 Nov 2026) go out only for the funnel course (Gold & Forex) and webinar
+// live sessions, per the PM on 20 Nov 2026. Other products keep the earlier behaviour: guests get
+// the original password-setup email (sendPasswordSetupEmail), logged-in buyers get no email.
+
 /**
  * Guest buyers get one email: the booking confirmation with a "Set your password" button.
  * If the link can't be generated the receipt still goes out (they can use "Forgot password").
@@ -122,6 +126,36 @@ async function sendGuestBookingEmail(email: string, item: string, details: strin
         ? { label: "Set My Password", url, note: "To access your content, please set a password for your account." }
         : undefined;
     await sendBookingConfirmation(email, item, details, action);
+}
+
+/** The original guest purchase email (before booking emails): just a "Set My Password" link. */
+async function sendPasswordSetupEmail(email: string): Promise<void> {
+    try {
+        const setupLink = await generateSetPasswordLink(email);
+        if (!setupLink) return;
+        await sendEmail({
+            to: email,
+            subject: "Set your STOX Academy password",
+            html: `
+                <div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:32px;background:#f9fafb;border-radius:12px;">
+                    <h2 style="color:#1e3a5f;margin-bottom:8px;">Welcome to STOX Academy!</h2>
+                    <p style="color:#374151;margin-bottom:24px;">
+                        Your purchase was successful. To access your content, please set a password for your account.
+                    </p>
+                    <a href="${setupLink}"
+                       style="display:inline-block;padding:14px 28px;background:#2563eb;color:#ffffff;text-decoration:none;border-radius:8px;font-weight:600;font-size:16px;">
+                        Set My Password
+                    </a>
+                    <p style="color:#6b7280;font-size:13px;margin-top:24px;">
+                        This link expires in 24 hours. If you did not make a purchase, you can ignore this email.
+                    </p>
+                </div>
+            `,
+        });
+    } catch (err: any) {
+        // Non-fatal — log but don't fail the purchase confirmation
+        console.error("Failed to send password setup email to:", email, err?.message);
+    }
 }
 
 /**
@@ -374,9 +408,6 @@ export const confirmCoursePayment = async (req: Request, res: Response) => {
         }
 
         await recordPurchase(userData.user.email, course?.title || "your course");
-        await sendBookingConfirmation(userData.user.email, course?.title || "your course", [
-            `Amount paid: $${pricePaid.toFixed(2)}`,
-        ]);
 
         return res.status(201).json({
             message: "Course purchased successfully",
@@ -410,7 +441,7 @@ export const createLiveSessionPaymentIntent = async (req: Request, res: Response
         // Get session details
         const { data: session, error: sessionError } = await supabaseAdmin
             .from("live_sessions")
-            .select("id, title, price, max_participants, participants_count")
+            .select("id, title, price, max_participants, participants_count, session_type")
             .eq("id", sessionId)
             .single();
 
@@ -473,7 +504,9 @@ export const createLiveSessionPaymentIntent = async (req: Request, res: Response
                 discountPercentage,
                 originalPrice: parseFloat(session.price),
             });
-            await sendBookingConfirmation(userData.user.email, session.title);
+            if (session.session_type === "webinar") {
+                await sendBookingConfirmation(userData.user.email, session.title);
+            }
             return res.status(200).json({ free: true });
         }
 
@@ -558,7 +591,7 @@ export const confirmLiveSessionPayment = async (req: Request, res: Response) => 
         // Get session for price
         const { data: session } = await supabaseAdmin
             .from("live_sessions")
-            .select("price")
+            .select("price, session_type")
             .eq("id", sessionId)
             .single();
 
@@ -615,9 +648,11 @@ export const confirmLiveSessionPayment = async (req: Request, res: Response) => 
         }
 
         await recordPurchase(userData.user.email, paymentIntent.metadata.sessionTitle || "your live session", "live_session");
-        await sendBookingConfirmation(userData.user.email, paymentIntent.metadata.sessionTitle || "your live session", [
-            `Amount paid: $${pricePaid.toFixed(2)}`,
-        ]);
+        if (session?.session_type === "webinar") {
+            await sendBookingConfirmation(userData.user.email, paymentIntent.metadata.sessionTitle || "your live session", [
+                `Amount paid: $${pricePaid.toFixed(2)}`,
+            ]);
+        }
 
         return res.status(201).json({
             message: "Successfully enrolled in live session",
@@ -764,11 +799,6 @@ export const confirmSubscriptionPayment = async (req: Request, res: Response) =>
         }
 
         await recordPurchase(userData.user.email, `The 90 Circle — ${PROGRAM_LABELS[programType]}`);
-        await sendBookingConfirmation(userData.user.email, `The 90 Circle — ${PROGRAM_LABELS[programType]}`, [
-            `Amount paid: $${SUBSCRIPTION_PRICE_USD.toFixed(2)}`,
-            "12 group sessions and 8 individual sessions",
-            `Valid until: ${expiresAt.toDateString()}`,
-        ]);
 
         return res.status(201).json({
             message: "90 Circle subscription activated successfully",
@@ -901,9 +931,6 @@ export const confirmSessionPackagePayment = async (req: Request, res: Response) 
         }
 
         await recordPurchase(userData.user.email, `${sessionsTotal} individual sessions — ${PROGRAM_LABELS[category] || category}`);
-        await sendBookingConfirmation(userData.user.email, `${sessionsTotal} individual sessions — ${PROGRAM_LABELS[category] || category}`, [
-            `Amount paid: $${price.toFixed(2)}`,
-        ]);
 
         return res.status(201).json({
             message: "Session package purchased successfully",
@@ -1026,6 +1053,7 @@ export const createGuestCoursePaymentIntent = async (req: Request, res: Response
                 courseId: course.id,
                 courseTitle: course.title,
                 type: "course",
+                funnel: funnel ? "true" : "", // only funnel purchases get a booking email
                 couponCode: validCouponCode || "",
                 discountPercentage: discountPercentage.toString(),
                 originalPrice: basePrice.toString(),
@@ -1134,9 +1162,13 @@ export const confirmGuestCoursePayment = async (req: Request, res: Response) => 
             .eq("id", courseId);
 
         await recordPurchase(payload.email, course?.title || "your course");
-        await sendGuestBookingEmail(payload.email, course?.title || "your course", [
-            `Amount paid: $${pricePaid.toFixed(2)}`,
-        ]);
+        if (paymentIntent.metadata.funnel === "true") {
+            await sendGuestBookingEmail(payload.email, course?.title || "your course", [
+                `Amount paid: $${pricePaid.toFixed(2)}`,
+            ]);
+        } else {
+            await sendPasswordSetupEmail(payload.email);
+        }
 
         return res.status(201).json({
             message: "Course purchased successfully",
@@ -1163,7 +1195,7 @@ export const createGuestLiveSessionPaymentIntent = async (req: Request, res: Res
 
         const { data: session, error: sessionError } = await supabaseAdmin
             .from("live_sessions")
-            .select("id, title, price, max_participants, participants_count")
+            .select("id, title, price, max_participants, participants_count, session_type")
             .eq("id", sessionId)
             .single();
 
@@ -1216,7 +1248,11 @@ export const createGuestLiveSessionPaymentIntent = async (req: Request, res: Res
                 discountPercentage,
                 originalPrice: parseFloat(session.price),
             });
-            await sendGuestBookingEmail(userEmail, session.title);
+            if (session.session_type === "webinar") {
+                await sendGuestBookingEmail(userEmail, session.title);
+            } else {
+                await sendPasswordSetupEmail(userEmail);
+            }
             return res.status(200).json({ free: true, isNewUser });
         }
 
@@ -1295,7 +1331,7 @@ export const confirmGuestLiveSessionPayment = async (req: Request, res: Response
 
         const { data: liveSession } = await supabaseAdmin
             .from("live_sessions")
-            .select("price, participants_count")
+            .select("price, participants_count, session_type")
             .eq("id", sessionId)
             .single();
 
@@ -1338,9 +1374,13 @@ export const confirmGuestLiveSessionPayment = async (req: Request, res: Response
             .eq("id", sessionId);
 
         await recordPurchase(payload.email, paymentIntent.metadata.sessionTitle || "your live session", "live_session");
-        await sendGuestBookingEmail(payload.email, paymentIntent.metadata.sessionTitle || "your live session", [
-            `Amount paid: $${pricePaid.toFixed(2)}`,
-        ]);
+        if (liveSession?.session_type === "webinar") {
+            await sendGuestBookingEmail(payload.email, paymentIntent.metadata.sessionTitle || "your live session", [
+                `Amount paid: $${pricePaid.toFixed(2)}`,
+            ]);
+        } else {
+            await sendPasswordSetupEmail(payload.email);
+        }
 
         return res.status(201).json({
             message: "Successfully enrolled in live session",
@@ -1472,11 +1512,7 @@ export const confirmGuestSubscriptionPayment = async (req: Request, res: Respons
         }
 
         await recordPurchase(payload.email, `The 90 Circle — ${PROGRAM_LABELS[guestProgramType]}`);
-        await sendGuestBookingEmail(payload.email, `The 90 Circle — ${PROGRAM_LABELS[guestProgramType]}`, [
-            `Amount paid: $${SUBSCRIPTION_PRICE_USD.toFixed(2)}`,
-            "12 group sessions and 8 individual sessions",
-            `Valid until: ${expiresAt.toDateString()}`,
-        ]);
+        await sendPasswordSetupEmail(payload.email);
 
         return res.status(201).json({
             message: "90 Circle subscription activated successfully",
@@ -1595,9 +1631,7 @@ export const confirmGuestSessionPackagePayment = async (req: Request, res: Respo
         }
 
         await recordPurchase(payload.email, `${sessionsTotal} individual sessions — ${PROGRAM_LABELS[category] || category}`);
-        await sendGuestBookingEmail(payload.email, `${sessionsTotal} individual sessions — ${PROGRAM_LABELS[category] || category}`, [
-            `Amount paid: $${price.toFixed(2)}`,
-        ]);
+        await sendPasswordSetupEmail(payload.email);
 
         return res.status(201).json({
             message: "Session package purchased successfully",

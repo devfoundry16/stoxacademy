@@ -5,6 +5,8 @@ import assert from "node:assert/strict";
 import { atJerusalemTime, planWebinarNotifications as planFor } from "../services/webinarNotificationService";
 import { arabicDaysLeft, renderWebinarEmail, webinarLabels, whatsappParams } from "../templates/webinarTemplates";
 import { sendWhatsAppTemplate, toWhatsAppNumber } from "../services/whatsappService";
+import { planCourseNotifications } from "../services/courseNotificationService";
+import { renderCourseEmail } from "../templates/courseTemplates";
 
 // Webinar is 2 Dec 2026, 17:00 Jerusalem (UTC+2 in winter) = 15:00 UTC.
 const start = new Date("2026-12-02T15:00:00Z");
@@ -39,6 +41,24 @@ assert.match(postWebinar.subject, /للخطوة التالية/);
 assert.match(postWebinar.html, /\/ar\/funnel\/register/);
 assert.match(postWebinar.html, /\+972528268954/);
 assert.doesNotMatch(postWebinar.html, /\{\w+\}/); // no unfilled tokens
+
+// Course buyers: confirmation now, then 9:00 and 17:00 Jerusalem reminders for sessions still ahead.
+const early = planCourseNotifications(atJerusalemTime("2026-12-01", 12));
+assert.equal(early.length, 17);
+assert.deepEqual(early.slice(1, 3).map((n) => [n.templateKey, n.scheduledFor.toISOString()]), [
+    ["s1_morning", "2026-12-06T07:00:00.000Z"],
+    ["s1_1h", "2026-12-06T15:00:00.000Z"],
+]);
+// Bought at noon on session 1's day: morning reminder already passed, 1-hour reminder still due.
+assert.deepEqual(planCourseNotifications(atJerusalemTime("2026-12-06", 12)).slice(0, 3).map((n) => n.templateKey), ["confirmation", "s1_1h", "s2_morning"]);
+assert.deepEqual(planCourseNotifications(new Date("2027-01-01T00:00:00Z")).map((n) => n.templateKey), ["confirmation"]);
+for (const n of early) {
+    const { subject, html } = renderCourseEmail(n.templateKey, "<A>");
+    assert.ok(subject && html.includes("&lt;A&gt;") && html.includes("+972528268954"), n.templateKey);
+    assert.doesNotMatch(html, /\{\w+\}/, n.templateKey);
+}
+assert.equal((renderCourseEmail("confirmation", "A").html.match(/zoom\.us\/j\//g) || []).length, 16); // 8 links, each as href + text
+assert.match(renderCourseEmail("s2_1h", "A").html, /87684026593/);
 assert.deepEqual(keys(nov20, "whatsapp"), ["confirmation", "reminder_10d", "reminder_8d", "reminder_6d", "reminder_4d", "reminder_2d", "reminder_1h"]);
 
 // PM's question: registering 4 days before (28 Nov) → only emails 11–14, one per day, then the 1-hour reminder.

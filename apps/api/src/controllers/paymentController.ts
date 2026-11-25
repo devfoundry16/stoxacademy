@@ -5,6 +5,7 @@ import { incrementCouponUsage } from "./couponController";
 import jwt from "jsonwebtoken";
 import { sendBookingConfirmation, sendEmail } from "../services/emailService";
 import { LeadSource, syncLeadToHubSpot } from "../services/hubspotService";
+import { processCourseNotifications, scheduleCourseNotifications } from "../services/courseNotificationService";
 
 // ==================== Guest Checkout Helpers ====================
 
@@ -115,6 +116,8 @@ async function generateSetPasswordLink(email: string): Promise<string | null> {
 // Booking emails (added 18 Nov 2026) go out only for the funnel course (Gold & Forex) and webinar
 // live sessions, per the PM on 20 Nov 2026. Other products keep the earlier behaviour: guests get
 // the original password-setup email (sendPasswordSetupEmail), logged-in buyers get no email.
+// Funnel course buyers get the Arabic confirmation and session reminders (courseNotificationService)
+// instead, plus the password-setup email so guests can log in.
 
 /**
  * Guest buyers get one email: the booking confirmation with a "Set your password" button.
@@ -1163,12 +1166,17 @@ export const confirmGuestCoursePayment = async (req: Request, res: Response) => 
 
         await recordPurchase(payload.email, course?.title || "your course");
         if (paymentIntent.metadata.funnel === "true") {
-            await sendGuestBookingEmail(payload.email, course?.title || "your course", [
-                `Amount paid: $${pricePaid.toFixed(2)}`,
-            ]);
-        } else {
-            await sendPasswordSetupEmail(payload.email);
+            // Arabic confirmation now, then morning and one-hour reminders for each session still ahead.
+            try {
+                const { data: buyer } = await supabaseAdmin.from("users").select("first_name, last_name").eq("id", userId).maybeSingle();
+                const fullName = `${buyer?.first_name ?? ""} ${buyer?.last_name ?? ""}`.trim();
+                await scheduleCourseNotifications(purchase.id, payload.email, fullName, new Date());
+                await processCourseNotifications(purchase.id);
+            } catch (err: any) {
+                console.error("Course notification error:", err?.message);
+            }
         }
+        await sendPasswordSetupEmail(payload.email);
 
         return res.status(201).json({
             message: "Course purchased successfully",

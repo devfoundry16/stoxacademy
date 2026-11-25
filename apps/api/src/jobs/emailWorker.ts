@@ -7,8 +7,9 @@
 
 import { processEmailQueue as processChecklistEmails } from "../services/emailQueueService";
 import { processWebinarNotifications } from "../services/webinarNotificationService";
+import { processCourseNotifications } from "../services/courseNotificationService";
 
-const processEmailQueue = async () => (await processChecklistEmails()) + (await processWebinarNotifications());
+const processEmailQueue = async () => (await processChecklistEmails()) + (await processWebinarNotifications()) + (await processCourseNotifications());
 
 let intervalId: NodeJS.Timeout | null = null;
 const PROCESS_INTERVAL = 5 * 60 * 1000; // Check every 5 minutes

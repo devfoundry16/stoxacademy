@@ -10,7 +10,7 @@ const DETAILS_SHORT = ["📅 تاريخ اللقاء: {date}", "⏰ الساعة
 const DETAILS_TODAY = ["📅 اليوم: {date}", "⏰ نبدأ الساعة: {time}", "🔗 هذا رابط حضورك:", "{link}"];
 const SIGN = "فريق أكاديمية ستوكس";
 
-interface WebinarEmail {
+export interface WebinarEmail {
     subject: string;
     lines: string[];
 }
@@ -403,11 +403,11 @@ export function arabicDaysLeft(n: number): string {
 }
 
 const TOKENS = ["name", "left", "date", "time", "link", "support", "course"] as const;
-type TokenValues = Partial<Record<(typeof TOKENS)[number], string>>;
+export type TokenValues = Partial<Record<(typeof TOKENS)[number], string>>;
 
 const fill = (text: string, v: TokenValues) => text.replace(/\{(\w+)\}/g, (m, k) => (v as any)[k] ?? m);
 
-const escapeHtml = (s: string) =>
+export const escapeHtml = (s: string) =>
     s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
 
 const ARABIC_MONTHS = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
@@ -440,13 +440,18 @@ export function renderWebinarEmail(key: string, fullName: string, webinar: Webin
         values.left = arabicDaysLeft(14 - n);
     }
     if (!email) throw new Error(`Unknown webinar email: ${key}`);
+    return renderArabicEmail(email, values);
+}
 
+/** Right-to-left Arabic email; a line that is just a URL (e.g. "{link}") renders as a left-to-right link. */
+export function renderArabicEmail(email: WebinarEmail, values: TokenValues): { subject: string; html: string } {
     const body = email.lines
-        .map((line) =>
-            line === "{link}" || line === "{course}"
-                ? `<p dir="ltr" style="margin:0 0 12px;text-align:right;word-break:break-all;"><a href="${values[line === "{link}" ? "link" : "course"]}" style="color:#667eea;">${values[line === "{link}" ? "link" : "course"]}</a></p>`
-                : `<p dir="rtl" style="margin:0 0 12px;text-align:right;">${fill(line, values)}</p>`
-        )
+        .map((line) => {
+            const text = fill(line, values);
+            return /^https?:\/\/\S+$/.test(text)
+                ? `<p dir="ltr" style="margin:0 0 12px;text-align:right;word-break:break-all;"><a href="${text}" style="color:#667eea;">${text}</a></p>`
+                : `<p dir="rtl" style="margin:0 0 12px;text-align:right;">${text}</p>`;
+        })
         .join("\n");
 
     const html = `<!DOCTYPE html>

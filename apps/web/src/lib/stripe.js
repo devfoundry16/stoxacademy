@@ -6,3 +6,8 @@ const stripePromise = loadStripe(
 );
 
 export default stripePromise;
+
+// The /funnel course checkout uses a separate Stripe account; falls back to the main one until its key is set.
+export const funnelStripePromise = process.env.NEXT_PUBLIC_STRIPE_FUNNEL_PUBLISHABLE_KEY
+  ? loadStripe(process.env.NEXT_PUBLIC_STRIPE_FUNNEL_PUBLISHABLE_KEY)
+  : stripePromise;

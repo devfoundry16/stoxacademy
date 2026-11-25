@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { stripe } from "../config/stripe";
+import { funnelStripe, stripe } from "../config/stripe";
 import { supabaseAdmin } from "../config/supabase";
 import { incrementCouponUsage } from "./couponController";
 import jwt from "jsonwebtoken";
@@ -15,6 +15,7 @@ interface GuestTokenPayload {
     userId: string;
     paymentIntentId: string;
     email: string;
+    funnel?: boolean; // payment intent lives on the funnel Stripe account
 }
 
 async function findOrCreateGuestUser(
@@ -81,8 +82,8 @@ const recordPurchase = async (email: string | undefined, item: string, source: L
     if (email) await syncLeadToHubSpot({ email, source, lastPurchase: item });
 };
 
-function signGuestToken(userId: string, paymentIntentId: string, email: string): string {
-    return jwt.sign({ userId, paymentIntentId, email } as GuestTokenPayload, GUEST_TOKEN_SECRET, {
+function signGuestToken(userId: string, paymentIntentId: string, email: string, funnel = false): string {
+    return jwt.sign({ userId, paymentIntentId, email, funnel } as GuestTokenPayload, GUEST_TOKEN_SECRET, {
         expiresIn: "2h",
     });
 }
@@ -1048,7 +1049,7 @@ export const createGuestCoursePaymentIntent = async (req: Request, res: Response
             validCouponCode = upperCode;
         }
 
-        const paymentIntent = await stripe.paymentIntents.create({
+        const paymentIntent = await (funnel ? funnelStripe : stripe).paymentIntents.create({
             amount: Math.round(finalPrice * 100),
             currency: "usd",
             metadata: {
@@ -1064,7 +1065,7 @@ export const createGuestCoursePaymentIntent = async (req: Request, res: Response
             automatic_payment_methods: { enabled: true },
         });
 
-        const guestToken = signGuestToken(userId, paymentIntent.id, userEmail);
+        const guestToken = signGuestToken(userId, paymentIntent.id, userEmail, !!funnel);
 
         return res.status(200).json({
             clientSecret: paymentIntent.client_secret,
@@ -1100,7 +1101,7 @@ export const confirmGuestCoursePayment = async (req: Request, res: Response) => 
             return res.status(403).json({ error: "Token does not match payment intent" });
         }
 
-        const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+        const paymentIntent = await (payload.funnel ? funnelStripe : stripe).paymentIntents.retrieve(paymentIntentId);
         if (paymentIntent.status !== "succeeded") {
             return res.status(400).json({ error: "Payment not completed" });
         }

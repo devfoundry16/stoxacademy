@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Elements } from "@stripe/react-stripe-js";
-import stripePromise from "@/lib/stripe";
+import { funnelStripePromise } from "@/lib/stripe";
 import { paymentService } from "@/lib/paymentService";
 import CheckoutForm from "@/components/CheckoutForm";
 import { FIELDS, forms } from "../content";
@@ -52,7 +52,7 @@ export default function RegisterClient() {
         <Notice>{f.success}</Notice>
       ) : intent ? (
         <div className="rounded-2xl bg-white p-5 text-gray-900" dir="ltr">
-          <Elements key={intent.clientSecret} options={{ clientSecret: intent.clientSecret }} stripe={stripePromise}>
+          <Elements key={intent.clientSecret} options={{ clientSecret: intent.clientSecret }} stripe={funnelStripePromise}>
             <CheckoutForm onSuccess={confirm} onError={() => {}} amount={parseFloat(intent.finalPrice)} itemName="Gold & Forex" originalPrice={parseFloat(intent.originalPrice)} discountPercentage={0} />
           </Elements>
           {error && <p className="mt-3 text-sm text-red-600">{error}</p>}

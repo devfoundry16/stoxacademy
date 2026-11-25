@@ -179,12 +179,7 @@ export async function processWebinarNotifications(registrationId?: string): Prom
 
         try {
             if (item.channel === "email") {
-                const rendered = renderWebinarEmail(item.template_key, reg.full_name, webinar);
-                if (!rendered) {
-                    await finish(item.id, "skipped", "Email copy not added yet");
-                    continue;
-                }
-                const { subject, html } = rendered;
+                const { subject, html } = renderWebinarEmail(item.template_key, reg.full_name, webinar);
                 const result = await sendEmail({ to: reg.email, subject, html });
                 await finish(item.id, result.success ? "sent" : "failed", result.error);
                 if (result.success) sent++;

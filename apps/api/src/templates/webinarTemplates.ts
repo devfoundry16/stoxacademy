@@ -235,11 +235,36 @@ export const COUNTDOWN_EMAILS: WebinarEmail[] = [
 ];
 
 /**
- * Course invitation, sent 1 hour after the webinar ends. Waiting for the PM's Arabic copy:
- * while this is null, these emails are marked "skipped" instead of sent. To add it, set
- * { subject, lines } like the emails above; a line that is exactly "{course}" renders as the course link.
+ * Course invitation, sent 1 hour after the webinar ends (from "Invitation for Course Purchase (EN–AR)").
+ * A line that is exactly "{course}" renders as the course link. Course dates are fixed copy for the December 2026 cohort.
  */
-export const POST_WEBINAR_EMAIL: WebinarEmail | null = null;
+export const POST_WEBINAR_EMAIL: WebinarEmail = {
+    subject: "بعد لقائنا المجاني… هل أنت مستعدّ للخطوة التالية؟",
+    lines: [
+        "مرحبًا {name}،",
+        "بعد لقائنا المجاني عن أساسيات تداول الذهب والفوركس، ندعوك إلى الخطوة التالية: تحويل اهتمامك إلى تعلّم منظّم ضمن دورة الذهب والفوركس من أكاديمية ستوكس.",
+        "قد يفتح لقاء واحد باب فضولك. أمّا فهم كيف تترابط المفاهيم والأدوات، فيحتاج إلى وقت وتطبيق.",
+        "إذا كنت مستعدًا للانتقال من فيديوهات متفرّقة ومصطلحات غير مألوفة إلى مسار تعلّم واضح، يسعدنا أن تنضمّ إلينا.",
+        "خلال 8 جلسات مباشرة، ستتعرّف إلى:",
+        "- ما الذي يحرّك أسعار الذهب والعملات.",
+        "- كيفية قراءة الشارت والشموع اليابانية.",
+        "- طريقة استخدام منصّات التداول وأدوات التحليل.",
+        "- أهمية حجم الصفقة وإدارة المخاطر والانضباط في التداول.",
+        "لا تحتاج إلى معرفة كل شيء قبل البداية. نبدأ من الأساسيات ونتقدّم خطوة بخطوة، مع أمثلة عملية ووقت للأسئلة.",
+        "هذه خطّتك للتعلّم خلال ديسمبر:",
+        "📅 البداية: 6 ديسمبر 2026",
+        "🗓️ مواعيد الجلسات: 6، 9، 13، 16، 20، 23، 27 و30 ديسمبر",
+        "⏰ من 6:00 إلى 7:30 مساءً بتوقيت القدس",
+        "💻 8 جلسات مباشرة على مدى 4 أسابيع",
+        "هل أنت مستعدّ لتخصيص وقت لهذا الاهتمام؟",
+        "اطّلع على تفاصيل الدورة وأكمل عملية الشراء من هنا:",
+        "{course}",
+        "لعلّ لديك محتوى كثيرًا حفظته لوقت لاحق. هذه المرّة، امنح نفسك موعدًا واضحًا للبداية.",
+        "يسعدنا أن نرحّب بك في الجلسة الأولى! 🙌",
+        SIGN,
+        "لديك أسئلة قبل التسجيل؟ {support}",
+    ],
+};
 
 export const ONE_HOUR_EMAIL: WebinarEmail = {
     subject: "ساعة واحدة ونلتقي! رابط اللقاء المجاني عن الذهب والفوركس ⏳",
@@ -402,17 +427,13 @@ function baseValues(name: string, webinar: Webinar): TokenValues {
     return { name, ...webinarLabels(webinar.startsAt), link: webinarLink(webinar.id), course: courseLink(), support: `\u200E${SUPPORT_NUMBER}\u200E` };
 }
 
-/** Renders a webinar email. key: "confirmation" | "countdown_<1-14>" | "reminder_1h". */
-/** Renders a webinar email; null when its copy isn't written yet (post_webinar until the PM sends it). */
-export function renderWebinarEmail(key: string, fullName: string, webinar: Webinar): { subject: string; html: string } | null {
+/** Renders a webinar email. key: "confirmation" | "countdown_<1-14>" | "reminder_1h" | "post_webinar". */
+export function renderWebinarEmail(key: string, fullName: string, webinar: Webinar): { subject: string; html: string } {
     let email: WebinarEmail | undefined;
     const values = baseValues(escapeHtml(fullName), webinar);
     if (key === "confirmation") email = CONFIRMATION_EMAIL;
     else if (key === "reminder_1h") email = ONE_HOUR_EMAIL;
-    else if (key === "post_webinar") {
-        if (!POST_WEBINAR_EMAIL) return null;
-        email = POST_WEBINAR_EMAIL;
-    }
+    else if (key === "post_webinar") email = POST_WEBINAR_EMAIL;
     else if (key.startsWith("countdown_")) {
         const n = Number(key.slice("countdown_".length));
         email = COUNTDOWN_EMAILS[n - 1];

@@ -33,8 +33,12 @@ assert.equal(emails[12].scheduledFor.toISOString(), "2026-12-02T07:00:00.000Z");
 assert.equal(emails[13].scheduledFor.toISOString(), "2026-12-02T14:00:00.000Z"); // 1 hour before
 assert.equal(emails[14].scheduledFor.toISOString(), "2026-12-02T17:00:00.000Z"); // post_webinar: 17:00 + 60 min + 1h = 19:00 Jerusalem
 assert.equal(planFor(nov20, start, 90).slice(-1)[0].scheduledFor.toISOString(), "2026-12-02T17:30:00.000Z"); // follows the session's duration
-// Copy not written yet → render returns null and the sender marks it skipped (never sends placeholder text).
-assert.equal(renderWebinarEmail("post_webinar", "A", webinar), null);
+// Course invitation links to the funnel checkout and shows the support number.
+const postWebinar = render("post_webinar", "A");
+assert.match(postWebinar.subject, /للخطوة التالية/);
+assert.match(postWebinar.html, /\/ar\/funnel\/register/);
+assert.match(postWebinar.html, /\+972528268954/);
+assert.doesNotMatch(postWebinar.html, /\{\w+\}/); // no unfilled tokens
 assert.deepEqual(keys(nov20, "whatsapp"), ["confirmation", "reminder_10d", "reminder_8d", "reminder_6d", "reminder_4d", "reminder_2d", "reminder_1h"]);
 
 // PM's question: registering 4 days before (28 Nov) → only emails 11–14, one per day, then the 1-hour reminder.
